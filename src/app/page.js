@@ -1,17 +1,13 @@
-import Image from "next/image";
-import MyNavBar from "@/components/MyNavBar";
-
+import MyNavBar from "@/components/MyNavBar.js";
+import MyHero from "@/components/MyHeroSection.jsx";
+import ProjectPreviewCard from "@/components/project-card.jsx";
 
 export default function Home() {
   return (
-    <main>
+    <main className="flex flex-col w-full">
       <MyNavBar />
-      <div>
-        <h1 className="text-4xl font-bold">Welcome to My Portfolio</h1>
-      </div>
+      <MyHero />
+      <ProjectPreviewCard count={3} />
     </main>
-
   );
 }
-
-
