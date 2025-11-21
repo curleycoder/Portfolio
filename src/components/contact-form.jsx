@@ -14,6 +14,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { toast } from "sonner";
 
 export default function ContactForm() {
   const form = useForm({
@@ -26,9 +27,31 @@ export default function ContactForm() {
   });
 
   const onSubmit = async (data) => {
-    // we'll wire this to /api/contact-me in Step 3
-    alert("Form submitted! (API wiring is next)");
-    console.log("Contact form data:", data);
+    const t = toast.loading("Sending...");
+
+    try {
+      const res = await fetch("/api/contact-me", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      const result = await res.json();
+
+      if (!res.ok || !result.ok) {
+        toast.error(result.message || "Failed to send message.");
+        toast.dismiss(t);
+        return;
+      }
+
+      toast.success("Message sent!");
+      toast.dismiss(t);
+      form.reset();
+    } catch (err) {
+      console.error("Contact error:", err);
+      toast.error("Unexpected error. Please try again.");
+      toast.dismiss(t);
+    }
   };
 
   return (
