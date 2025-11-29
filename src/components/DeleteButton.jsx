@@ -1,0 +1,31 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+
+export default function DeleteProjectButton({ id }) {
+  const router = useRouter();
+
+  const handleDelete = async () => {
+    const ok = window.confirm("Are you sure you want to delete this project?");
+    if (!ok) return;
+
+    const res = await fetch(`/api/projects/${id}`, {
+      method: "DELETE",
+    });
+
+    if (!res.ok) {
+      alert("Failed to delete project");
+      return;
+    }
+
+    router.push("/projects");
+    router.refresh();
+  };
+
+  return (
+    <Button variant="destructive" onClick={handleDelete}>
+      Delete
+    </Button>
+  );
+}

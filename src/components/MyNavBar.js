@@ -9,18 +9,18 @@ import {
   NavigationMenuViewport,
 } from "@/components/ui/navigation-menu";
 import Link from "next/link";
-
+import AuthButton from "@/components/AuthButton";
 
 export default function MyNavBar() {
   return (
     <NavigationMenu>
       <NavigationMenuList>
         <NavigationMenuItem>
-            <NavigationMenuLink asChild>
-        <Link href="/">Home</Link>
-      </NavigationMenuLink>
+          <NavigationMenuLink asChild>
+            <Link href="/">Home</Link>
+          </NavigationMenuLink>
         </NavigationMenuItem>
-        
+
         <NavigationMenuItem>
           <NavigationMenuLink asChild>
             <Link href="/projects">Projects</Link>
@@ -36,13 +36,9 @@ export default function MyNavBar() {
         </NavigationMenuItem>
 
         <NavigationMenuItem>
-          <NavigationMenuLink asChild>
-            <Link href="/login">Login</Link>
-          </NavigationMenuLink>
+          <AuthButton />
         </NavigationMenuItem>
-
       </NavigationMenuList>
     </NavigationMenu>
-
   );
 }

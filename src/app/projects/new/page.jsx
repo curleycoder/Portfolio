@@ -9,11 +9,23 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+const imageSchema = z
+  .string()
+  .refine(
+    (val) =>
+      val.startsWith("http://") ||
+      val.startsWith("https://") ||
+      val.startsWith("/"),
+    {
+      message:
+        "Must be a full URL (https://...) or a /public path like `/forge.png`",
+    }
+  );
 
 const newProjectSchema = z.object({
   title: z.string().min(2, { message: "Your title is too short" }).max(200),
   description: z.string().min(5).max(500),
-  img: z.string().url(),
+  image: imageSchema,
   link: z.string().url(),
   keywords: z.array(z.string().min(1)).max(10).optional().default([]),
 });
@@ -26,7 +38,7 @@ export default function NewProjectPage() {
     defaultValues: {
       title: "Write your project title here...",
       description: "Write your project description here...",
-      img: "https://placehold.co/300.png",
+      image: "https://placehold.co/300.png",
       link: "https://your-project-link.com",
       keywords: [],
     },
@@ -36,7 +48,7 @@ export default function NewProjectPage() {
     const formData = new FormData();
     formData.append("title", values.title);
     formData.append("description", values.description);
-    formData.append("img", values.img);
+    formData.append("image", values.image);
     formData.append("link", values.link);
     (values.keywords || []).forEach((k) => formData.append("keywords", k));
 
@@ -94,7 +106,7 @@ export default function NewProjectPage() {
 
           <FormField
             control={form.control}
-            name="img"
+            name="image"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Image URL</FormLabel>

@@ -1,27 +1,40 @@
-// GET /api/projects
-export async function GET() {
-  const projects = [
-    {
-      title: "Conway's Game of Life",
-      description: "Cellular automaton visualizer.",
-      image: "/project2.png",
-      link: "https://example.com/game-of-life",
-      keywords: ["algorithms", "simulation"],
-    },
-    {
-      title: "Next.js Starter",
-      description: "Minimal starter with App Router.",
-      image: "/project3.png",
-      link: "https://example.com/next-starter",
-      keywords: ["nextjs", "app-router"],
-    },
-    {
-      title: "Forge",
-      description: "App to help students to get information about the trade skills industry.",
-      image: "/forge.png",
-      link: "https://example.com/forge",
-      keywords: ["nextjs", "app-router"],
-    },
-  ];
-  return Response.json({ projects });
+import { NextResponse } from "next/server";
+import {
+  ensureProjectsTable,
+  seedProjectsTable,
+  fetchProjects,
+} from "@/lib/db";
+import { PROJECT_SEED } from "@/lib/project-seed";
+
+export async function GET(req) {
+  try {
+    await ensureProjectsTable();
+    await seedProjectsTable(PROJECT_SEED);
+
+    const { searchParams } = new URL(req.url);
+    const page = Number(searchParams.get("page") || "1");
+    const limit = 6;
+    const offset = (page - 1) * limit;
+
+    const projects = await fetchProjects({ limit, offset });
+
+    return NextResponse.json({ projects, page });
+  } catch (err) {
+    console.error("GET /api/projects error:", err);
+    return NextResponse.json(
+      { message: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+export async function insertAuditLog({ projectId, userEmail, action, payload }) {
+  await sql`
+    INSERT INTO project_audit_logs (project_id, user_email, action, payload)
+    VALUES (
+      ${projectId},
+      ${userEmail},
+      ${action},
+      ${JSON.stringify(payload)}
+    );
+  `;
 }
