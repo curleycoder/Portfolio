@@ -1,17 +1,21 @@
-// REMOVE: "use client";  <-- this must go (server component)
-
 import Link from "next/link";
 import Image from "next/image";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export default async function ProjectPreviewCard({ count = 3 }) {
-  const res = await fetch("/api/projects", {
-    cache: "no-store",
-  });
-  const { projects } = await res.json();
+import {
+  ensureProjectsTable,
+  seedProjectsTable,
+  fetchProjects,
+} from "@/lib/db";
+import { PROJECT_SEED } from "@/lib/project-seed";
 
+export default async function ProjectPreviewCard({ count = 3 }) {
+  await ensureProjectsTable();
+  await seedProjectsTable(PROJECT_SEED);
+
+  const projects = await fetchProjects({ limit: count, offset: 0 });
   const items = (projects ?? []).slice(0, Math.max(1, count));
 
   return (
