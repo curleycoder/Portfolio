@@ -1,6 +1,14 @@
 import { insertProject, insertAuditLog } from "@/lib/db";
 import { auth0 } from "@/lib/auth0";
-import { isAdmin } from "@/lib/auth-roles";
+
+// ✅ Admin helper IN THIS FILE (no extra import)
+const adminEmails =
+  process.env.ADMIN_EMAILS?.split(",").map((e) => e.trim().toLowerCase()) ?? [];
+
+function isAdmin(user) {
+  if (!user?.email) return false;
+  return adminEmails.includes(user.email.toLowerCase());
+}
 
 export async function POST(req) {
   try {
