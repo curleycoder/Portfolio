@@ -6,13 +6,20 @@ import {
 } from "@/lib/db";
 import { PROJECT_SEED } from "@/lib/project-seed";
 
+// 🔥 Make route dynamic so Next never tries to statically optimize it
+export const dynamic = "force-dynamic";
+
 export async function GET(req) {
   try {
+    // Ensure tables + seed
     await ensureProjectsTable();
     await seedProjectsTable(PROJECT_SEED);
 
-    const { searchParams } = new URL(req.url);
-    const page = Number(searchParams.get("page") || "1");
+    // ✅ Use nextUrl instead of new URL(req.url)
+    const searchParams = req.nextUrl.searchParams;
+    const pageParam = searchParams.get("page");
+    const page = pageParam ? Number(pageParam) || 1 : 1;
+
     const limit = 6;
     const offset = (page - 1) * limit;
 
@@ -26,15 +33,4 @@ export async function GET(req) {
       { status: 500 }
     );
   }
-}
-export async function insertAuditLog({ projectId, userEmail, action, payload }) {
-  await sql`
-    INSERT INTO project_audit_logs (project_id, user_email, action, payload)
-    VALUES (
-      ${projectId},
-      ${userEmail},
-      ${action},
-      ${JSON.stringify(payload)}
-    );
-  `;
 }
