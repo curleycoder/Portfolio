@@ -2,13 +2,21 @@ import { createSlug } from "@/lib/utils";
 import EditProjectForm from "@/components/EditForm";
 import { auth0 } from "@/lib/auth0";
 
+import {
+  ensureProjectsTable,
+  seedProjectsTable,
+  fetchProjects,
+} from "@/lib/db";
+import { PROJECT_SEED } from "@/lib/project-seed";
+
+const LIMIT = 200;
+
 export default async function EditProjectPage({ params }) {
   const { slug } = params;
 
-  // 🔒 server-side guard: redirect or error if not logged in
+  // 🔒 server-side guard
   const session = await auth0.getSession();
   if (!session?.user) {
-    // you can also redirect("/api/auth/login?returnTo=/projects/...") if you want
     return (
       <div className="p-6">
         <p>You must be logged in to edit projects.</p>
@@ -16,10 +24,10 @@ export default async function EditProjectPage({ params }) {
     );
   }
 
-  const res = await fetch("/api/projects", {
-    cache: "no-store",
-  });
-  const { projects } = await res.json();
+  await ensureProjectsTable();
+  await seedProjectsTable(PROJECT_SEED);
+
+  const projects = await fetchProjects({ limit: LIMIT, offset: 0 });
 
   const project = projects.find((p) => createSlug(p.title) === slug);
 

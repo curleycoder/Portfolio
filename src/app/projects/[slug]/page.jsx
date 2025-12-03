@@ -4,23 +4,30 @@ import { auth0 } from "@/lib/auth0";
 import { createSlug } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import DeleteProjectButton from "@/components/DeleteButton";
-// import { isAdmin } from "@/lib/auth-roles";
 
+import {
+  ensureProjectsTable,
+  seedProjectsTable,
+  fetchProjects,
+} from "@/lib/db";
+import { PROJECT_SEED } from "@/lib/project-seed";
+
+const LIMIT = 200; // just make sure we load enough for slug search
 
 export default async function ProjectDetailsPage({ params }) {
   const { slug } = params;
 
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/projects`, {
-    cache: "no-store",
-  });
-  const { projects } = await res.json();
+  // DB side
+  await ensureProjectsTable();
+  await seedProjectsTable(PROJECT_SEED);
+
+  const projects = await fetchProjects({ limit: LIMIT, offset: 0 });
 
   // 🔹 pick the matching project
   const project =
     projects.find((p) => createSlug(p.title) === slug) ??
     projects.find((p) => p.id?.toString() === slug);
 
-  // now you can safely check it
   if (!project) {
     return (
       <div className="p-6">
@@ -32,10 +39,8 @@ export default async function ProjectDetailsPage({ params }) {
     );
   }
 
-
-const session = await auth0.getSession();
-const canEdit = !!session?.user; // anyone logged-in can edit
-
+  const session = await auth0.getSession();
+  const canEdit = !!session?.user; // anyone logged-in can edit
 
   return (
     <section className="max-w-3xl mx-auto p-6 space-y-4">
@@ -72,13 +77,13 @@ const canEdit = !!session?.user; // anyone logged-in can edit
       </a>
 
       {canEdit && (
-  <div className="mt-6 flex gap-3">
-    <Button asChild variant="outline">
-      <Link href={`/projects/${slug}/edit`}>Edit</Link>
-    </Button>
-    <DeleteProjectButton id={project.id} />
-  </div>
-)}
+        <div className="mt-6 flex gap-3">
+          <Button asChild variant="outline">
+            <Link href={`/projects/${slug}/edit`}>Edit</Link>
+          </Button>
+          <DeleteProjectButton id={project.id} />
+        </div>
+      )}
 
       <div className="mt-4">
         <Link href="/projects" className="text-sm text-blue-600 underline">

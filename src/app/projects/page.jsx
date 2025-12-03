@@ -5,16 +5,24 @@ import { Button } from "@/components/ui/button";
 import { createSlug } from "@/lib/utils";
 import { auth0 } from "@/lib/auth0";
 
+import {
+  ensureProjectsTable,
+  seedProjectsTable,
+  fetchProjects,
+} from "@/lib/db";
+import { PROJECT_SEED } from "@/lib/project-seed";
+
+const LIMIT = 50; // or whatever you want
+
 export default async function ProjectsPage() {
   const session = await auth0.getSession();
   const isLoggedIn = !!session?.user;
 
-  const res = await fetch("/api/projects", {
-    cache: "no-store",
-  });
-  const { projects } = await res.json();
-//   const pageParam = searchParams?.page ?? "1";
-// const page = Number(pageParam || "1");
+  // 🔹 talk directly to DB, NOT /api/projects
+  await ensureProjectsTable();
+  await seedProjectsTable(PROJECT_SEED);
+
+  const projects = await fetchProjects({ limit: LIMIT, offset: 0 });
 
   return (
     <div className="p-6 space-y-4">
@@ -63,19 +71,6 @@ export default async function ProjectsPage() {
           );
         })}
       </div>
-      {/* <div className="flex justify-between mt-6">
-  {page > 1 ? (
-    <Link href={`/projects?page=${page - 1}`} className="text-blue-600 underline">
-      ← Previous
-    </Link>
-  ) : <span />}
-
-  {projects.length === 6 && (
-    <Link href={`/projects?page=${page + 1}`} className="text-blue-600 underline">
-      Next →
-    </Link>
-  )}
-</div> */}
     </div>
   );
 }
