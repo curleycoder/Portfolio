@@ -9,7 +9,7 @@ export default async function ProjectsPage() {
   const session = await auth0.getSession();
   const isLoggedIn = !!session?.user;
 
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/projects`, {
+  const res = await fetch("/api/projects", {
     cache: "no-store",
   });
   const { projects } = await res.json();

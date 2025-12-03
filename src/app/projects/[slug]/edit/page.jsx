@@ -16,7 +16,7 @@ export default async function EditProjectPage({ params }) {
     );
   }
 
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/projects`, {
+  const res = await fetch("/api/projects", {
     cache: "no-store",
   });
   const { projects } = await res.json();

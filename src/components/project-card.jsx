@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default async function ProjectPreviewCard({ count = 3 }) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/projects`, {
+  const res = await fetch("/api/projects", {
     cache: "no-store",
   });
   const { projects } = await res.json();
