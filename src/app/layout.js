@@ -3,6 +3,7 @@ import "./globals.css";
 import { Inter } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { Providers } from "./providers";
+import { Suspense } from "react";
 import AnalyticsTracker from "@/components/Analytics";
 
 
@@ -21,7 +22,9 @@ export default function RootLayout({ children }) {
         <div className="sticky top-0 z-50">
             <MyNavBar />
         </div>
-       <AnalyticsTracker />
+       <Suspense fallback={null}>
+           <AnalyticsTracker />
+        </Suspense>
 
         <Toaster/>
         <main>{children}</main>
