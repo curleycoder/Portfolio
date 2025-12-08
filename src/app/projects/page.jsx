@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { auth0 } from "@/lib/auth0";
 import { fetchProjects } from "@/lib/db";
-import ProjectsGrid from "./ProjectsGrid";
+import ProjectsGrid from "./projectsGrid";
 
 const LIMIT = 50;
 
