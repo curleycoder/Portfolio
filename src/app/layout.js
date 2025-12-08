@@ -10,8 +10,11 @@ import AnalyticsTracker from "@/components/Analytics";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "Shabnam's Portfolio",
+  title: "Shabnam Beiraghian",
   description: "A showcase of Shabnam's work and projects",
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({ children }) {
