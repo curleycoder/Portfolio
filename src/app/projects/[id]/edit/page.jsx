@@ -1,13 +1,10 @@
 import Link from "next/link";
-import { createSlug } from "@/lib/utils";
 import EditProjectForm from "@/components/EditForm";
 import { auth0 } from "@/lib/auth0";
-import { fetchProjects } from "@/lib/db";
-
-const LIMIT = 200;
+import { getProjectById } from "@/lib/db"; // 👈 use direct DB lookup
 
 export default async function EditProjectPage({ params }) {
-  const { slug } = params;
+  const { id } = params; // /projects/:id/edit
 
   // 🔒 server-side guard
   const session = await auth0.getSession();
@@ -16,7 +13,9 @@ export default async function EditProjectPage({ params }) {
       <main className="min-h-screen bg-neutral-950 text-neutral-50">
         <div className="mx-auto max-w-4xl px-4 py-16">
           <div className="rounded-2xl border border-neutral-800 bg-neutral-900/70 p-6 text-sm text-neutral-200">
-            <p className="mb-3 font-medium">You must be logged in to edit projects.</p>
+            <p className="mb-3 font-medium">
+              You must be logged in to edit projects.
+            </p>
             <Link
               href="/projects"
               className="text-xs text-blue-400 hover:text-blue-300"
@@ -29,8 +28,8 @@ export default async function EditProjectPage({ params }) {
     );
   }
 
-  const projects = await fetchProjects({ limit: LIMIT, offset: 0 });
-  const project = projects.find((p) => createSlug(p.title) === slug);
+  // ✅ load exactly one project by id
+  const project = await getProjectById(id);
 
   if (!project) {
     return (
@@ -39,7 +38,8 @@ export default async function EditProjectPage({ params }) {
           <div className="rounded-2xl border border-red-900/60 bg-red-950/40 p-6 text-sm text-red-100">
             <h1 className="mb-2 text-lg font-semibold">Project not found</h1>
             <p className="mb-4 text-xs text-red-200/80">
-              We couldn’t find a project matching this URL. It may have been deleted or renamed.
+              We couldn’t find a project matching this URL. It may have been
+              deleted or renamed.
             </p>
             <Link
               href="/projects"
@@ -75,7 +75,7 @@ export default async function EditProjectPage({ params }) {
         </div>
 
         {/* glass card */}
-        <div className="overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900/70 p-6 shadow-xl shadow-blue-500/20">
+        <div className="overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900/70 p-6 shadow-[0_0_25px_rgba(59,130,246,0.35)]">
           <EditProjectForm project={project} />
         </div>
       </div>

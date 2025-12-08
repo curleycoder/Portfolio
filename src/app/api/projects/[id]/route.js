@@ -58,14 +58,6 @@ export async function PUT(req, { params }) {
       return NextResponse.json({ message: "Not found" }, { status: 404 });
     }
 
-    // 🔇 audit logging disabled (project_audit_logs table not created)
-    // await insertAuditLog({
-    //   projectId: updated.id,
-    //   userEmail: user.email ?? "unknown",
-    //   action: "update",
-    //   payload: updated,
-    // });
-
     return NextResponse.json({
       message: "Project updated",
       project: updated,

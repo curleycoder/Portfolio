@@ -27,14 +27,20 @@ export async function POST(req) {
 
     const title = formData.get("title")?.toString().trim();
     const description = formData.get("description")?.toString().trim();
-    const img = formData.get("img")?.toString().trim();
+    const image = formData.get("image")?.toString().trim(); // 👈 FIXED NAME
     const link = formData.get("link")?.toString().trim();
+
     const keywords = formData
       .getAll("keywords")
       .map((k) => k.toString().trim())
       .filter(Boolean);
 
-    if (!title || !description || !img || !link) {
+    const images = formData
+      .getAll("images")
+      .map((v) => v.toString().trim())
+      .filter(Boolean); // 👈 NEW
+
+    if (!title || !description || !image || !link) {
       return Response.json(
         { ok: false, error: "Missing required fields" },
         { status: 400 }
@@ -45,9 +51,10 @@ export async function POST(req) {
     const project = await insertProject({
       title,
       description,
-      image: img, // map img -> image
+      image,
       link,
       keywords,
+      images, // 👈 pass extra screenshots to DB
     });
 
     // audit log

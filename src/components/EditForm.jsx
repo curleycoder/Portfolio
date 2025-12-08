@@ -18,20 +18,22 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { createSlug } from "@/lib/utils";
+
+// allow URL OR data:image/... from file upload
 const imageSchema = z
   .string()
+  .min(1)
   .refine(
     (val) =>
       val.startsWith("http://") ||
       val.startsWith("https://") ||
-      val.startsWith("/"),
+      val.startsWith("/") ||
+      val.startsWith("data:image"),
     {
       message:
-        "Must be a full URL (https://...) or a /public path like `/forge.png`",
+        "Must be a URL (https://...) or an uploaded image (data:image/...).",
     }
   );
-
 
 const projectSchema = z.object({
   title: z.string().min(2).max(200),
@@ -39,11 +41,14 @@ const projectSchema = z.object({
   image: imageSchema,
   link: z.string().url(),
   keywords: z.array(z.string()).default([]),
+  images: z.array(imageSchema).optional().default([]),
 });
 
 export default function EditProjectForm({ project }) {
   const router = useRouter();
   const [draftKeyword, setDraftKeyword] = useState("");
+  const [fileError, setFileError] = useState("");
+  const [preview, setPreview] = useState(project.image || null);
 
   const form = useForm({
     resolver: zodResolver(projectSchema),
@@ -53,8 +58,46 @@ export default function EditProjectForm({ project }) {
       image: project.image,
       link: project.link,
       keywords: project.keywords ?? [],
+      images: project.images ?? [],
     },
   });
+
+  // helper: file -> data URL
+  function fileToDataUrl(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target.result);
+      reader.onerror = (e) => reject(e);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function handleFilesChange(e) {
+    const files = Array.from(e.target.files || []);
+    setFileError("");
+
+    if (!files.length) return;
+
+    try {
+      const dataUrls = await Promise.all(files.map(fileToDataUrl));
+
+      // first upload = main image
+      form.setValue("image", dataUrls[0], { shouldValidate: true });
+      setPreview(dataUrls[0]);
+
+      // rest = extras (replace existing extras, not append − simpler UX)
+      const extras = dataUrls.slice(1);
+      const currentExtras = form.getValues("images") || [];
+      form.setValue(
+        "images",
+        extras.length ? extras : currentExtras,
+        { shouldValidate: true }
+      );
+    } catch (err) {
+      console.error(err);
+      setFileError("Failed to read files. Try smaller images or fewer files.");
+    }
+  }
 
   const onSubmit = async (values) => {
     const res = await fetch(`/api/projects/${project.id}`, {
@@ -66,22 +109,25 @@ export default function EditProjectForm({ project }) {
         image: values.image,
         link: values.link,
         keywords: values.keywords,
+        images: values.images,
       }),
     });
 
     if (!res.ok) {
       alert("Failed to update project");
+      console.error("Update error:", await res.text());
       return;
     }
 
-    const slug = createSlug(values.title);
-    router.push(`/projects/${slug}`);
+    // we are using /projects/:id routes now
+    router.push(`/projects/${project.id}`);
     router.refresh();
   };
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        {/* TITLE */}
         <FormField
           control={form.control}
           name="title"
@@ -92,13 +138,14 @@ export default function EditProjectForm({ project }) {
                 <Input placeholder="My awesome project" {...field} />
               </FormControl>
               <FormDescription>
-                This will be used to generate the project slug.
+                This is shown on cards and the details page.
               </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
 
+        {/* DESCRIPTION */}
         <FormField
           control={form.control}
           name="description"
@@ -106,31 +153,83 @@ export default function EditProjectForm({ project }) {
             <FormItem>
               <FormLabel>Project Description</FormLabel>
               <FormControl>
-                <Input placeholder="Brief summary of your project" {...field} />
+                <Input
+                  placeholder="Brief summary of your project"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
 
+        {/* IMAGE URL / DATA URL */}
         <FormField
           control={form.control}
           name="image"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Image URL</FormLabel>
+              <FormLabel>Image URL or uploaded image</FormLabel>
               <FormControl>
-                <Input placeholder="https://your-image-url.png" {...field} />
+                <Input
+                  placeholder="https://your-image-url.png"
+                  {...field}
+                />
               </FormControl>
               <FormDescription>
-                Must be a valid URL. You can use an image from /public with
-                something like `/forge.png` if Next/Image allows it.
+                You can paste a URL, or upload images below – the first upload
+                becomes the main image.
               </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
 
+        {/* FILE UPLOADS FROM DESKTOP */}
+        <FormField
+          control={form.control}
+          name="images"
+          render={() => (
+            <FormItem>
+              <FormLabel>Upload Image</FormLabel>
+              <FormControl>
+                <div className="space-y-2 no-border">
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleFilesChange}
+                    className="file:mr-3 file:rounded-md file:border-0 file:bg-blue-500/80 file:px-3 file:py-1 file:text-xs file:font-medium file:text-white hover:file:bg-blue-400"
+                  />
+                  {fileError && (
+                    <p className="text-xs text-red-400">{fileError}</p>
+                  )}
+
+                  {preview && (
+                    <div className="mt-2 inline-flex flex-col gap-1">
+                      <span className="text-[11px] text-neutral-500">
+                        Main image preview:
+                      </span>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={preview}
+                        alt="Preview"
+                        className="h-24 w-auto rounded-md border border-neutral-700 object-cover"
+                      />
+                    </div>
+                  )}
+                </div>
+              </FormControl>
+              <FormDescription>
+                First file = main image, others will show in the slideshow on
+                the details page.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* LINK */}
         <FormField
           control={form.control}
           name="link"
@@ -138,14 +237,18 @@ export default function EditProjectForm({ project }) {
             <FormItem>
               <FormLabel>Project Link</FormLabel>
               <FormControl>
-                <Input placeholder="https://your-project-link.com" {...field} />
+                <Input
+                  placeholder="https://your-project-link.com"
+                  {...field}
+                />
               </FormControl>
-              <FormDescription>Link to your project.</FormDescription>
+              <FormDescription>Deployed site, GitHub repo, or demo.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
 
+        {/* KEYWORDS */}
         <FormField
           control={form.control}
           name="keywords"
@@ -167,10 +270,10 @@ export default function EditProjectForm({ project }) {
               <FormItem>
                 <FormLabel>Keywords</FormLabel>
                 <FormDescription>
-                  Add technologies or tags for this project.
+                  Add technologies or tags (e.g. nextjs, react-native, mobile).
                 </FormDescription>
 
-                <div className="flex gap-2 mt-1">
+                <div className="mt-1 flex gap-2">
                   <Input
                     placeholder="e.g. react, nextjs"
                     value={draftKeyword}
@@ -182,12 +285,16 @@ export default function EditProjectForm({ project }) {
                       }
                     }}
                   />
-                  <Button className="border border-blue-500/80" type="button" onClick={handleAdd}>
+                  <Button
+                    className="border border-blue-500/80"
+                    type="button"
+                    onClick={handleAdd}
+                  >
                     Add
                   </Button>
                 </div>
 
-                <div className="flex flex-wrap gap-2 mt-2">
+                <div className="mt-2 flex flex-wrap gap-2">
                   {current.map((value) => (
                     <Badge
                       key={value}

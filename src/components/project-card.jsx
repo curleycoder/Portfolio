@@ -11,7 +11,9 @@ export default async function ProjectPreviewCard({ count = 3 }) {
 
   if (!projects || projects.length === 0) {
     return (
+
       <section className="space-y-4">
+        
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold tracking-tight text-neutral-100">
             Projects

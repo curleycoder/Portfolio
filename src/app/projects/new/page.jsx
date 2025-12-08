@@ -18,29 +18,35 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
+// allow URL OR data:image/... from file upload
 const imageSchema = z
   .string()
+  .min(1)
   .refine(
     (val) =>
       val.startsWith("http://") ||
       val.startsWith("https://") ||
-      val.startsWith("/"),
+      val.startsWith("/") ||
+      val.startsWith("data:image"),
     {
       message:
-        "Must be a full URL (https://...) or a /public path like `/forge.png`",
+        "Must be a URL (https://...) or an uploaded image (data:image/...).",
     }
   );
 
 const newProjectSchema = z.object({
   title: z.string().min(2, { message: "Your title is too short" }).max(200),
   description: z.string().min(5).max(500),
-  image: imageSchema,
+  image: imageSchema, // main image (first upload or URL)
   link: z.string().url(),
   keywords: z.array(z.string().min(1)).max(10).optional().default([]),
+  images: z.array(imageSchema).optional().default([]), // extra screenshots
 });
 
 export default function NewProjectPage() {
   const [draftKeyword, setDraftKeyword] = useState("");
+  const [fileError, setFileError] = useState("");
+  const [preview, setPreview] = useState(null);
 
   const form = useForm({
     resolver: zodResolver(newProjectSchema),
@@ -50,8 +56,46 @@ export default function NewProjectPage() {
       image: "https://placehold.co/300.png",
       link: "https://your-project-link.com",
       keywords: [],
+      images: [],
     },
   });
+
+  // helper: file -> data URL
+  function fileToDataUrl(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target.result);
+      reader.onerror = (e) => reject(e);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function handleFilesChange(e) {
+    const files = Array.from(e.target.files || []);
+    setFileError("");
+
+    if (!files.length) return;
+
+    try {
+      const dataUrls = await Promise.all(files.map(fileToDataUrl));
+
+      // first image -> main image
+      form.setValue("image", dataUrls[0], { shouldValidate: true });
+      setPreview(dataUrls[0]);
+
+      // remaining images -> images[]
+      const extras = dataUrls.slice(1);
+      if (extras.length) {
+        const current = form.getValues("images") || [];
+        form.setValue("images", [...current, ...extras], {
+          shouldValidate: true,
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      setFileError("Failed to read files. Try smaller images or fewer files.");
+    }
+  }
 
   function onSubmit(values) {
     const formData = new FormData();
@@ -59,7 +103,9 @@ export default function NewProjectPage() {
     formData.append("description", values.description);
     formData.append("image", values.image);
     formData.append("link", values.link);
+
     (values.keywords || []).forEach((k) => formData.append("keywords", k));
+    (values.images || []).forEach((img) => formData.append("images", img));
 
     fetch("/api/projects/new", {
       method: "POST",
@@ -68,7 +114,7 @@ export default function NewProjectPage() {
       .then(async (r) => {
         if (!r.ok) throw new Error("Failed");
         const data = await r.json();
-        alert("Created (check server logs).");
+        alert("Project Saved!");
         console.log("Server response:", data);
       })
       .catch((e) => {
@@ -97,6 +143,7 @@ export default function NewProjectPage() {
               onSubmit={form.handleSubmit(onSubmit)}
               className="space-y-5 text-sm"
             >
+              {/* TITLE */}
               <FormField
                 control={form.control}
                 name="title"
@@ -120,6 +167,7 @@ export default function NewProjectPage() {
                 )}
               />
 
+              {/* DESCRIPTION */}
               <FormField
                 control={form.control}
                 name="description"
@@ -143,13 +191,14 @@ export default function NewProjectPage() {
                 )}
               />
 
+              {/* IMAGE URL (optional override) */}
               <FormField
                 control={form.control}
                 name="image"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs text-neutral-300">
-                      Image URL
+                      Image URL or uploaded image
                     </FormLabel>
                     <FormControl>
                       <Input
@@ -159,13 +208,64 @@ export default function NewProjectPage() {
                       />
                     </FormControl>
                     <FormDescription className="text-[11px] text-neutral-500">
-                      Screenshot or hero image for the project.
+                      You can paste a URL or upload images below – the first one
+                      becomes the main image.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
+              {/* FILE UPLOADS FROM DESKTOP */}
+              <FormField
+                control={form.control}
+                name="images"
+                render={() => (
+                  <FormItem>
+                    <FormLabel className="text-xs text-neutral-300">
+                      Upload Photo
+                    </FormLabel>
+                    <FormControl>
+                      <div className="space-y-2">
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={handleFilesChange}
+                          className="border-neutral-700 bg-neutral-950 text-sm text-neutral-50 file:mr-3 file:rounded-md file:border-0 file:bg-blue-500/80 file:px-3 file:py-1 file:text-xs file:font-medium file:text-white hover:file:bg-blue-400"
+                        />
+                        {fileError && (
+                          <p className="text-[11px] text-red-400">
+                            {fileError}
+                          </p>
+                        )}
+
+                        {preview && (
+                          <div className="mt-2 inline-flex flex-col gap-1">
+                            <span className="text-[11px] text-neutral-400">
+                              Main image preview:
+                            </span>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={preview}
+                              alt="Preview"
+                              className="h-24 w-auto rounded-md border border-neutral-700 object-cover"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </FormControl>
+                    <FormDescription className="text-[11px] text-neutral-500">
+                      Select one or more image from your computer. The
+                      first one becomes the main image; others show in the
+                      slider.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* LINK */}
               <FormField
                 control={form.control}
                 name="link"
@@ -189,6 +289,7 @@ export default function NewProjectPage() {
                 )}
               />
 
+              {/* KEYWORDS */}
               <FormField
                 control={form.control}
                 name="keywords"

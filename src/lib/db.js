@@ -144,6 +144,9 @@ export async function insertAuditLog({
   action,
   payload,
 }) {
+  // make sure table exists before inserting
+  await ensureAuditTable();
+
   await sql`
     INSERT INTO project_audit_logs (project_id, user_email, action, payload)
     VALUES (
@@ -154,6 +157,7 @@ export async function insertAuditLog({
     );
   `;
 }
+
 
 export async function ensureHeroTable() {
   await sql`

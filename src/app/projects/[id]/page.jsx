@@ -1,21 +1,14 @@
 import Link from "next/link";
 import { auth0 } from "@/lib/auth0";
-import { createSlug } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import DeleteProjectButton from "@/components/DeleteButton";
-import { fetchProjects } from "@/lib/db";
+import { getProjectById } from "@/lib/db";
 import { ProjectMediaFrame } from "@/components/ProjectMediaFrame";
 
-const LIMIT = 200;
-
 export default async function ProjectDetailsPage({ params }) {
-  const { slug } = params;
+  const { id } = params; // 👈 comes from /projects/:id
 
-  const projects = await fetchProjects({ limit: LIMIT, offset: 0 });
-
-  const project =
-    projects.find((p) => createSlug(p.title) === slug) ??
-    projects.find((p) => p.id?.toString() === slug);
+  const project = await getProjectById(id);
 
   if (!project) {
     return (
@@ -43,7 +36,6 @@ export default async function ProjectDetailsPage({ params }) {
   const session = await auth0.getSession();
   const canEdit = !!session?.user;
 
-  // detect mobile vs web based on keywords (same as cards)
   const keywords = (project.keywords || []).map((k) =>
     String(k).toLowerCase()
   );
@@ -52,12 +44,9 @@ export default async function ProjectDetailsPage({ params }) {
     keywords.includes("expo") ||
     keywords.includes("mobile");
 
-  // images array for slider (works now with just image, future-proof for more)
   const images = [];
   if (project.image) images.push(project.image);
-  if (Array.isArray(project.images)) {
-    images.push(...project.images);
-  }
+  if (Array.isArray(project.images)) images.push(...project.images);
 
   return (
     <main className="min-h-screen bg-neutral-950 text-neutral-50">
@@ -125,7 +114,7 @@ export default async function ProjectDetailsPage({ params }) {
                   variant="outline"
                   className="text-sm text-black"
                 >
-                  <Link href={`/projects/${slug}/edit`}>Edit</Link>
+                  <Link href={`/projects/${project.id}/edit`}>Edit</Link>
                 </Button>
                 <DeleteProjectButton id={project.id} />
               </>

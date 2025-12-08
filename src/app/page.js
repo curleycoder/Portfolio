@@ -14,7 +14,7 @@ const hero = {
 
 export default function HomePage() {
   return (
-    <main className="relative min-h-screen bg-neutral-950 text-neutral-50">
+    <main className="relative min-h-screen mb-0 bg-neutral-950 text-neutral-50">
       {/* GAMEY GLOW BACKGROUND */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -left-40 top-10 h-72 w-72 rounded-full bg-blue-500/25 blur-3xl" />

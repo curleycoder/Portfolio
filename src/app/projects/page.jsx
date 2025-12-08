@@ -2,7 +2,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { createSlug } from "@/lib/utils";
 import { auth0 } from "@/lib/auth0";
 import { fetchProjects } from "@/lib/db";
 
@@ -41,7 +40,7 @@ export default async function ProjectsPage() {
         {/* Grid of cards */}
         <div className="grid items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {projects.map((p) => {
-            const slug = createSlug(p.title);
+            // const slug = createSlug(p.title);
             const keywords = (p.keywords || []).map((k) =>
               String(k).toLowerCase()
             );
@@ -56,7 +55,7 @@ export default async function ProjectsPage() {
             return (
               <Link
                 key={p.id}
-                href={`/projects/${slug}`}
+                href={`/projects/${p.id}`}
                 className="group block h-full"
               >
                 <Card
