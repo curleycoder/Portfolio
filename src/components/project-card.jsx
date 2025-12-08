@@ -100,7 +100,7 @@ export default async function ProjectPreviewCard({ count = 3 }) {
                             "localhost:3000"}
                         </span>
                       </div>
-                      <div className="relative h-48 w-full bg-neutral-900">
+                      <div className="relative h-50 w-full bg-neutral-900">
                         {p.image ? (
                           <Image
                             src={p.image}
