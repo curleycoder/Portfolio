@@ -12,7 +12,10 @@ export const defaultHeroContent = {
 
 const sql = neon(process.env.NEON_DB_URL);
 
+// ---------- PROJECTS ----------
+
 function mapProject(row) {
+  if (!row) return null;
   return {
     id: row.id,
     title: row.title,
@@ -20,14 +23,13 @@ function mapProject(row) {
     image: row.image,
     link: row.link,
     keywords: row.keywords ?? [],
-    images: row.images ?? [], // 👈 NEW
+    images: row.images ?? [],
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
 }
 
 export async function ensureProjectsTable() {
-  // IMPORTANT: only ONE statement here, no CREATE EXTENSION
   await sql`
     CREATE TABLE IF NOT EXISTS projects (
       id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -62,11 +64,32 @@ export async function seedProjectsTable(seed) {
 
 export async function fetchProjects({ limit = 20, offset = 0 } = {}) {
   const rows = await sql`
-    SELECT * FROM projects
+    SELECT *
+    FROM projects
     ORDER BY created_at DESC
-    LIMIT ${limit} OFFSET ${offset}
+    LIMIT ${limit} OFFSET ${offset};
   `;
   return rows.map(mapProject);
+}
+
+export async function fetchProjectById(id) {
+  const rows = await sql`
+    SELECT *
+    FROM projects
+    WHERE id = ${id}
+    LIMIT 1;
+  `;
+  return mapProject(rows[0]);
+}
+
+export async function getProjectById(id) {
+  const rows = await sql`
+    SELECT *
+    FROM projects
+    WHERE id = ${id}
+    LIMIT 1;
+  `;
+  return mapProject(rows[0]);
 }
 
 export async function insertProject(data) {
@@ -82,48 +105,42 @@ export async function insertProject(data) {
     )
     RETURNING *;
   `;
-
-  const row = rows[0];
-  return mapProject(row);
-}
-
-export async function getProjectById(id) {
-  const rows = await sql`select * from projects where id = ${id} limit 1`;
-  const row = rows[0];
-  return row ? mapProject(row) : null;
+  return mapProject(rows[0]);
 }
 
 export async function updateProject(id, updates) {
   const rows = await sql`
-    update projects
-    set
-      title = coalesce(${updates.title}, title),
-      description = coalesce(${updates.description}, description),
-      image = coalesce(${updates.image}, image),
-      link = coalesce(${updates.link}, link),
-      keywords = coalesce(
+    UPDATE projects
+    SET
+      title = COALESCE(${updates.title}, title),
+      description = COALESCE(${updates.description}, description),
+      image = COALESCE(${updates.image}, image),
+      link = COALESCE(${updates.link}, link),
+      keywords = COALESCE(
         ${updates.keywords ? JSON.stringify(updates.keywords) : null},
         keywords
       ),
-      images = coalesce(
+      images = COALESCE(
         ${updates.images ? JSON.stringify(updates.images) : null},
         images
       ),
       updated_at = now()
-    where id = ${id}
-    returning *;
+    WHERE id = ${id}
+    RETURNING *;
   `;
-  const row = rows[0];
-  return row ? mapProject(row) : null;
+  return mapProject(rows[0]);
 }
 
 export async function deleteProject(id) {
   const rows = await sql`
-    delete from projects where id = ${id} returning *;
+    DELETE FROM projects
+    WHERE id = ${id}
+    RETURNING *;
   `;
-  const row = rows[0];
-  return row ? mapProject(row) : null;
+  return mapProject(rows[0]);
 }
+
+// ---------- AUDIT LOGS ----------
 
 export async function ensureAuditTable() {
   await sql`
@@ -131,20 +148,14 @@ export async function ensureAuditTable() {
       id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
       project_id uuid NOT NULL,
       user_email text NOT NULL,
-      action text NOT NULL,             -- "create" | "update" | "delete"
+      action text NOT NULL,
       payload jsonb NOT NULL,
       created_at timestamptz NOT NULL DEFAULT now()
     );
   `;
 }
 
-export async function insertAuditLog({
-  projectId,
-  userEmail,
-  action,
-  payload,
-}) {
-  // make sure table exists before inserting
+export async function insertAuditLog({ projectId, userEmail, action, payload }) {
   await ensureAuditTable();
 
   await sql`
@@ -158,25 +169,28 @@ export async function insertAuditLog({
   `;
 }
 
+// ---------- HERO ----------
 
 export async function ensureHeroTable() {
   await sql`
-    create table if not exists hero (
-      id uuid primary key,
-      avatar text not null default '',
-      full_name text not null,
-      short_description text not null check (char_length(short_description) <= 120),
-      long_description text not null,
-      created_at timestamptz not null default now(),
-      updated_at timestamptz not null default now()
+    CREATE TABLE IF NOT EXISTS hero (
+      id uuid PRIMARY KEY,
+      avatar text NOT NULL DEFAULT '',
+      full_name text NOT NULL,
+      short_description text NOT NULL CHECK (char_length(short_description) <= 120),
+      long_description text NOT NULL,
+      created_at timestamptz NOT NULL DEFAULT now(),
+      updated_at timestamptz NOT NULL DEFAULT now()
     );
   `;
 
-  const [{ count }] = await sql`select count(*)::int as count from hero`;
+  const [{ count }] = await sql`
+    SELECT count(*)::int AS count FROM hero;
+  `;
   if (Number(count) === 0) {
     await sql`
-      insert into hero (id, avatar, full_name, short_description, long_description)
-      values (
+      INSERT INTO hero (id, avatar, full_name, short_description, long_description)
+      VALUES (
         gen_random_uuid(),
         ${defaultHeroContent.avatar},
         ${defaultHeroContent.fullName},
@@ -205,20 +219,20 @@ export async function getHero() {
   await ensureHeroTable();
 
   const [row] = await sql`
-    select
+    SELECT
       id,
       avatar,
       full_name,
       short_description,
       long_description,
-      created_at as "createdAt",
-      updated_at as "updatedAt"
-    from hero
-    order by created_at asc
-    limit 1;
+      created_at AS "createdAt",
+      updated_at AS "updatedAt"
+    FROM hero
+    ORDER BY created_at ASC
+    LIMIT 1;
   `;
 
-  return row ? mapHeroRow(row) : null;
+  return mapHeroRow(row);
 }
 
 export async function upsertHero(updates = {}) {
@@ -245,44 +259,44 @@ export async function upsertHero(updates = {}) {
 
   if (current?.id) {
     const [row] = await sql`
-      update hero
-      set
+      UPDATE hero
+      SET
         avatar = ${normalizedAvatar},
         full_name = ${fullName},
         short_description = ${shortDescription},
         long_description = ${longDescription},
         updated_at = now()
-      where id = ${current.id}
-      returning
+      WHERE id = ${current.id}
+      RETURNING
         id,
         avatar,
         full_name,
         short_description,
         long_description,
-        created_at as "createdAt",
-        updated_at as "updatedAt";
+        created_at AS "createdAt",
+        updated_at AS "updatedAt";
     `;
 
     return mapHeroRow(row);
   }
 
   const [row] = await sql`
-    insert into hero (id, avatar, full_name, short_description, long_description)
-    values (
+    INSERT INTO hero (id, avatar, full_name, short_description, long_description)
+    VALUES (
       gen_random_uuid(),
       ${normalizedAvatar},
       ${fullName},
       ${shortDescription},
       ${longDescription}
     )
-    returning
+    RETURNING
       id,
       avatar,
       full_name,
       short_description,
       long_description,
-      created_at as "createdAt",
-      updated_at as "updatedAt";
+      created_at AS "createdAt",
+      updated_at AS "updatedAt";
   `;
 
   return mapHeroRow(row);

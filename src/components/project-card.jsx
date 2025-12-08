@@ -63,8 +63,7 @@ export default async function ProjectPreviewCard({ count = 3 }) {
               className="
                 flex h-full flex-col border-neutral-800 bg-black text-neutral-50
                 shadow-[0_0_18px_rgba(15,23,42,0.9)]
-              "
-            >
+              ">
               {/* CLICKABLE AREA → project details */}
               <Link
                 href={`/projects/${p.id}`}

@@ -6,7 +6,7 @@ export default function ResumePdfPage() {
       <header className="flex flex-col gap-2 sm:flex-row sm:items-baseline sm:justify-between">
         <h1 className="text-2xl font-semibold">Resume (PDF)</h1>
         <a
-          href="/ShabnamBeiraghian_CASpecialist.pdf"
+          href="/Shabnam_Beiraghian_Resume.pdf"
           className="inline-flex items-center rounded-md border border-neutral-300 bg-white px-4 py-2 text-sm font-medium shadow-sm hover:bg-neutral-50 dark:bg-neutral-900 dark:hover:bg-neutral-800"
         >
           Download
@@ -23,4 +23,3 @@ export default function ResumePdfPage() {
     </main>
   );
 }
-

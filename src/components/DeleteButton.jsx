@@ -3,10 +3,13 @@
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
-export default function DeleteProjectButton({ id }) {
+export function DeleteButton({ id, size = "sm", className = "" }) {
   const router = useRouter();
 
-  const handleDelete = async () => {
+  const handleDelete = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
     const ok = window.confirm("Are you sure you want to delete this project?");
     if (!ok) return;
 
@@ -24,7 +27,12 @@ export default function DeleteProjectButton({ id }) {
   };
 
   return (
-    <Button variant="destructive" onClick={handleDelete}>
+    <Button
+      variant="destructive"
+      size={size}
+      className={className}
+      onClick={handleDelete}
+    >
       Delete
     </Button>
   );

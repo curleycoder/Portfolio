@@ -27,23 +27,58 @@ export default function HomePage() {
       {/* CONTENT WRAPPER */}
       <div className="relative mx-auto flex max-w-6xl flex-col gap-10 px-4 pb-16 pt-8 md:px-6 md:pt-12">
         {/* SMALL STATUS BAR */}
-        <div className="mb-2 flex items-center justify-between text-[11px] text-neutral-400">
-          <span className="uppercase tracking-[0.2em]">
-            CurleyCoder · BCIT · 2025
-          </span>
-          <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
-            Next.js
-          </span>
-          <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
-App Router
-          </span>
-          <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
-            Auth0
-          </span>
-          <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
-REST APIs
-          </span>
-        </div>
+  <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-neutral-300">
+
+    {/* TECH BADGES */}
+    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
+      JavaScript
+    </span>
+    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
+      TypeScript
+    </span>
+    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
+      HTML & EJS
+    </span>
+    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
+      CSS & Tailwind
+    </span>
+    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
+      React
+    </span>
+    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
+      React Native
+    </span>
+    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
+      Expo
+    </span>
+    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
+      Next.js
+    </span>
+    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
+      App Router
+    </span>
+    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
+      Auth0
+    </span>
+    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
+      REST APIs
+    </span>
+    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
+      Neon Serverless SQL
+    </span>
+    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
+      PostgreSQL
+    </span>
+    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
+      Drizzle ORM
+    </span>
+    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
+      Node.js
+    </span>
+    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
+      Git & GitHub
+    </span>
+  </div>
 
         {/* HERO (WRAPS MyHero) */}
         <div className="overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-950/80 shadow-xl shadow-blue-500/20">

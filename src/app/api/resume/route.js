@@ -1,26 +1,39 @@
-import { NextResponse } from "next/server";
-
 const resumeData = {
   name: "Shabnam Beiraghian",
-  title: "Apple Specialist Candidate · Customer-Obsessed Retail Professional",
+  title: "Full-Stack Web Developer",
   location: "Burnaby, BC",
-  email: "your.email@example.com",
-  linkedin: "https://www.linkedin.com/in/your-linkedin",
-  github: "https://github.com/your-github",
+  email: "shabnambeiraghian@gmail.com",
+  linkedin: "https://www.linkedin.com/in/shabnam-beiraghian/",
+  github: "https://github.com/curleycoder",
+
   summary:
-    "Energetic, customer-obsessed retail professional with 5+ years of high-volume customer service and product recommendation experience. Strong interest in technology (currently studying Full-Stack Web Development at BCIT) and eager to bring that to an Apple Retail team.",
+    "Full-Stack Web Development student at BCIT with a background in Architecture Engineering and a strong foundation in design thinking, problem-solving, and technical precision. I am transitioning into software development by combining my architectural mindset—systems thinking, structured planning, and visual communication—with modern web technologies. With several years of customer-facing experience as a cashier and sales associate, I’ve developed high-volume communication skills, product education abilities, and a strong focus on accuracy. Currently volunteering as Social Media Director for the Women in Computing Club at BCIT, where I manage digital content and community engagement.",
+
   experience: [
     {
+      role: "Social Media Director (Volunteer)",
+      company: "Women in Computing Club · BCIT",
+      location: "Burnaby, BC",
+      start: "2025",
+      end: "Present",
+      bullets: [
+        "Manage digital content, social campaigns, and event promotion for Women in Computing at BCIT.",
+        "Create graphics, announcements, and community engagement posts across Instagram, Discord, and Linkedin.",
+        "Support club leadership with event organization, outreach, and digital communications.",
+      ],
+    },
+    {
       role: "Inside Automotive Sales Associate",
-      company: "Inside Automotive",
+      company: "Lordco / Inside Automotive",
       location: "Vancouver, BC",
       start: "Jul 2022",
       end: "Mar 2025",
       bullets: [
-        "Engaged daily with 100+ customers, diagnosing their needs and recommending appropriate parts.",
-        "Educated customers on product features, compatibility, and installation.",
-        "Collaborated with warehouse and delivery teams to ensure timely fulfilment and accuracy.",
-        "Organized and corrected catalog entries, improving lookup speed and reducing wait times.",
+        "Ranked #1 in cash sales among seven associates, as shown in internal performance reports.",
+        "Achieved second-highest total charge revenue and consistently surpassed weekly sales targets.",
+        "Educated customers on product compatibility, troubleshooting, and part recommendations.",
+        "Served 100+ customers/day with high accuracy and professionalism.",
+        "Collaborated with warehouse and delivery teams to fulfill orders quickly and accurately.",
       ],
     },
     {
@@ -30,29 +43,38 @@ const resumeData = {
       start: "Nov 2019",
       end: "Jul 2022",
       bullets: [
-        "Managed cash operations and led a team of cashiers while keeping register discrepancies at zero.",
-        "Trained staff on customer service standards and product knowledge.",
-        "Worked with store leadership to align front-end operations with customer experience goals.",
+        "Led front-end operations, trained new hires, and maintained 0 cash discrepancies.",
+        "Supported complex customer inquiries, returns, and product knowledge requests.",
+        "Improved checkout flow efficiency by coordinating queues and troubleshooting POS issues.",
+        "Won the ACDelco Sky Trip Award for outstanding sales achievement and customer satisfaction.",
       ],
     },
   ],
+
   education: [
     {
       program: "Diploma, Full-Stack Web Development",
       school: "British Columbia Institute of Technology (BCIT)",
-      location: "Vancouver, BC",
+      location: "Burnaby, BC",
       start: "Sep 2024",
-      end: "Apr 2026 (in progress)",
+      end: "Apr 2026 (In Progress)",
+    },
+    {
+      program: "Bachelor’s Degree, Architecture Engineering",
+      school: "Azad University",
+      location: "Iran",
+      start: "Sep 2015",
+      end: "Completed",
     },
   ],
+
   skills: [
-    "Customer service & customer experience",
-    "Explaining products clearly",
-    "High-volume communication (100+ interactions/day)",
-    "Accountability and accuracy",
+    "Full-Stack Development (in progress: JavaScript, React, Next.js, Node.js)",
+    "UI/UX fundamentals · Design thinking",
+    "Product education & technical explanation",
+    "Sales performance & metric-driven communication",
+    "Content creation & social media management",
+    "Accuracy, problem-solving, and accountability",
+    "Team collaboration & leadership",
   ],
 };
-
-export async function GET() {
-  return NextResponse.json(resumeData);
-}

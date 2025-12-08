@@ -149,11 +149,15 @@ export default async function ProjectsPage() {
                       </div>
                     ) : null}
 
-                    <div className="mt-4 flex items-center justify-between text-[11px] text-neutral-500">
-                      <span className="opacity-80">View details</span>
-                      <span className="translate-x-0 transition-transform duration-200 group-hover:translate-x-1">
-                        →
-                      </span>
+                    <div className="mt-6 flex flex-wrap gap-3">
+                      {/* Visual only; card link handles navigation */}
+                      <Button
+                        type="button"
+                        size="sm"
+                        className="text-xs border border-blue-500/80 pointer-events-none"
+                      >
+                        View details
+                      </Button>
                     </div>
                   </div>
                 </Card>
