@@ -14,11 +14,9 @@ export default function AnalyticsTracker() {
     const search = searchParams?.toString();
     const fullPath = search ? `${pathname}?${search}` : pathname;
 
-    // avoid double-logging same path
     if (lastPathRef.current === fullPath) return;
     lastPathRef.current = fullPath;
 
-    // fire-and-forget, no await
     fetch("/api/analytics", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
