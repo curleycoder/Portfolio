@@ -5,27 +5,32 @@ import {
   getProjectById,
   updateProject,
   deleteProject,
-  // insertAuditLog, // 🔴 disabled – table doesn't exist
+  // insertAuditLog, // 🔴 still disabled
 } from "@/lib/db";
+
+// 👇 shared image schema: URL OR data:image
+const imageSchema = z
+  .string()
+  .min(1)
+  .refine(
+    (val) =>
+      val.startsWith("http://") ||
+      val.startsWith("https://") ||
+      val.startsWith("/") ||
+      val.startsWith("data:image"),
+    {
+      message:
+        "Must be a URL (https://...) or an uploaded image (data:image/...).",
+    }
+  );
 
 const projectUpdateSchema = z.object({
   title: z.string().min(1).optional(),
   description: z.string().min(5).max(500).optional(),
-  image: z
-    .string()
-    .refine(
-      (val) =>
-        val.startsWith("http://") ||
-        val.startsWith("https://") ||
-        val.startsWith("/"),
-      {
-        message:
-          "Must be a full URL (https://...) or a /public path like `/forge.png`",
-      }
-    )
-    .optional(),
+  image: imageSchema.optional(),
   link: z.string().url().optional(),
   keywords: z.array(z.string()).optional(),
+  images: z.array(imageSchema).optional(), // 👈 extra screenshots
 });
 
 // GET /api/projects/:id -> one project (public)
@@ -50,7 +55,7 @@ export async function PUT(req, { params }) {
     }
 
     const json = await req.json();
-    const body = projectUpdateSchema.parse(json);
+    const body = projectUpdateSchema.parse(json); // 👈 validates data:image
 
     const updated = await updateProject(params.id, body);
 
@@ -65,7 +70,7 @@ export async function PUT(req, { params }) {
   } catch (err) {
     console.error("PUT /api/projects/[id] error:", err);
 
-    if (err.name === "ZodError") {
+    if (err instanceof z.ZodError) {
       return NextResponse.json(
         { message: "Invalid payload", issues: err.errors },
         { status: 400 }
@@ -76,10 +81,7 @@ export async function PUT(req, { params }) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    return NextResponse.json(
-      { message: "Server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ message: "Server error" }, { status: 500 });
   }
 }
 
@@ -99,13 +101,8 @@ export async function DELETE(_req, { params }) {
       return NextResponse.json({ message: "Not found" }, { status: 404 });
     }
 
-    // 🔇 audit logging disabled
-    // await insertAuditLog({
-    //   projectId: deleted.id,
-    //   userEmail: user.email ?? "unknown",
-    //   action: "delete",
-    //   payload: deleted,
-    // });
+    // 🔇 audit logging still disabled
+    // await insertAuditLog({ ... });
 
     return NextResponse.json({
       message: "Project deleted",
@@ -118,9 +115,6 @@ export async function DELETE(_req, { params }) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    return NextResponse.json(
-      { message: "Server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ message: "Server error" }, { status: 500 });
   }
 }

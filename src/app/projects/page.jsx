@@ -1,3 +1,6 @@
+// src/app/projects/page.jsx
+export const dynamic = "force-dynamic";
+
 import Link from "next/link";
 import Image from "next/image";
 import { Card } from "@/components/ui/card";
@@ -40,15 +43,14 @@ export default async function ProjectsPage() {
         {/* Grid of cards */}
         <div className="grid items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {projects.map((p) => {
-            // const slug = createSlug(p.title);
             const keywords = (p.keywords || []).map((k) =>
               String(k).toLowerCase()
             );
 
             const isMobile =
-              keywords.includes("react-native") ||
-              keywords.includes("expo") ||
-              keywords.includes("mobile");
+              keywords.some((k) => k.includes("react-native")) ||
+              keywords.some((k) => k.includes("expo")) ||
+              keywords.some((k) => k.includes("mobile"));
 
             const label = isMobile ? "Mobile App" : "Web App";
 
@@ -72,13 +74,13 @@ export default async function ProjectsPage() {
                     {isMobile ? (
                       // PHONE FRAME
                       <div className="relative flex items-center justify-center">
-                        <div className="relative h-[260px] w-[120px] overflow-hidden rounded-[1.4rem]">
+                        <div className="relative h-[260px] w-[120px] overflow-hidden rounded-[1.4rem] bg-neutral-900">
                           {p.image ? (
                             <Image
                               src={p.image}
                               alt={p.title}
                               fill
-                              className="object-cover transition-transform duration-200 group-hover:scale-[1.0]"
+                              className="object-cover transition-transform duration-200 group-hover:scale-[1.02]"
                             />
                           ) : (
                             <div className="flex h-full items-center justify-center text-[10px] text-neutral-500">
@@ -89,7 +91,7 @@ export default async function ProjectsPage() {
                       </div>
                     ) : (
                       // WEB BROWSER FRAME
-                      <div className="relative mt-2 mb-4 w-full max-w-md overflow-hidden rounded-xl border border-neutral-700 bg-neutral-950 ">
+                      <div className="relative mt-2 mb-4 w-full max-w-md overflow-hidden rounded-xl border border-neutral-700 bg-neutral-950">
                         {/* Fake browser toolbar */}
                         <div className="flex items-center gap-2 px-3 py-2 text-[10px] text-neutral-400">
                           <span className="flex gap-1">

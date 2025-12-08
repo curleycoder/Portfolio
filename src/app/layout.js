@@ -15,7 +15,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={`${inter.className} min-h-screen`}>
+      <body className={`${inter.className} min-h-screen bg-neutral-950 text-neutral-50`}>
         <Providers>
         <div className="sticky top-0 z-50">
             <MyNavBar />

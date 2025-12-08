@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import MyHero from "@/components/MyHeroSection";
 import ProjectPreviewCard from "@/components/project-card";
 import GitHubCalendar from "@/components/github-calender";
@@ -54,7 +56,7 @@ REST APIs
         </div>
 
         {/* GITHUB CALENDAR */}
-        <div className="rounded-2xl border border-neutral-800 bg-neutral-950/80 p-4">
+        <div className="rounded-2xl border border-neutral-800 bg-neutral-950/80 p-4 shadow-xl shadow-cyan-500/12">
           <GitHubCalendar />
         </div>
       </div>
