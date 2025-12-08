@@ -301,3 +301,138 @@ export async function upsertHero(updates = {}) {
 
   return mapHeroRow(row);
 }
+// --- BLOG HELPERS ----------------------------------------------------
+
+import { slugify } from "./slug";
+
+// 1. Create table helper – called from top-level places, not every query
+export async function ensureBlogPostTable() {
+  await sql`
+    CREATE TABLE IF NOT EXISTS blog_posts (
+      id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      slug         text NOT NULL UNIQUE,
+      title        text NOT NULL,
+      excerpt      text,
+      content      text NOT NULL,
+      author_email text NOT NULL,
+      published_at timestamptz NOT NULL DEFAULT now(),
+      created_at   timestamptz NOT NULL DEFAULT now(),
+      updated_at   timestamptz NOT NULL DEFAULT now()
+    );
+  `;
+}
+
+function mapBlogPostRow(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    slug: row.slug,
+    title: row.title,
+    excerpt: row.excerpt || "",
+    content: row.content,
+    authorEmail: row.author_email,
+    publishedAt: row.publishedAt,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  };
+}
+
+async function blogSlugExists(slug) {
+  const [{ count }] = await sql`
+    SELECT count(*)::int AS count
+    FROM blog_posts
+    WHERE slug = ${slug};
+  `;
+  return Number(count) > 0;
+}
+
+// 2. Create post – we keep ensureBlogPostTable here
+export async function insertBlogPost({ title, excerpt = "", content, authorEmail }) {
+  await ensureBlogPostTable();
+
+  if (!title || !content) {
+    throw new Error("Title and content are required");
+  }
+
+  const baseSlug = slugify(title) || "post";
+  let slug = baseSlug;
+  let suffix = 1;
+
+  while (await blogSlugExists(slug)) {
+    slug = `${baseSlug}-${suffix++}`;
+  }
+
+  const [row] = await sql`
+    INSERT INTO blog_posts (slug, title, excerpt, content, author_email)
+    VALUES (
+      ${slug},
+      ${title},
+      ${excerpt},
+      ${content},
+      ${authorEmail}
+    )
+    RETURNING
+      id,
+      slug,
+      title,
+      excerpt,
+      content,
+      author_email,
+      published_at AS "publishedAt",
+      created_at AS "createdAt",
+      updated_at AS "updatedAt";
+  `;
+
+  return mapBlogPostRow(row);
+}
+
+// 3. Read one post – assume table exists (created either via insert or page)
+export async function fetchBlogPostBySlug(slug) {
+  const [row] = await sql`
+    SELECT
+      id,
+      slug,
+      title,
+      excerpt,
+      content,
+      author_email,
+      published_at AS "publishedAt",
+      created_at AS "createdAt",
+      updated_at AS "updatedAt"
+    FROM blog_posts
+    WHERE slug = ${slug}
+    LIMIT 1;
+  `;
+
+  return mapBlogPostRow(row);
+}
+
+// 4. Count posts – no ensure here
+export async function countBlogPosts() {
+  const [{ count }] = await sql`
+    SELECT count(*)::int AS count
+    FROM blog_posts;
+  `;
+  return Number(count) || 0;
+}
+
+// 5. Paginated list – no ensure here
+export async function fetchBlogPostsPage({ limit, offset }) {
+  const rows = await sql`
+    SELECT
+      id,
+      slug,
+      title,
+      excerpt,
+      content,
+      author_email,
+      published_at AS "publishedAt",
+      created_at AS "createdAt",
+      updated_at AS "updatedAt"
+    FROM blog_posts
+    ORDER BY published_at DESC
+    LIMIT ${limit}
+    OFFSET ${offset};
+  `;
+  return rows.map(mapBlogPostRow);
+}

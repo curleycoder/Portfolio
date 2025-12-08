@@ -1,27 +1,31 @@
+// src/app/dashboard/page.jsx
 "use client";
 
 import { useEffect } from "react";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import { toast } from "sonner";
-import HeroEditorForm from "@/components/hero-editor-form";
+import Link from "next/link";
 
 export default function DashboardPage() {
   const { user, error, isLoading } = useUser();
+  const router = useRouter();
 
+  // show error + kick to login if auth breaks
   useEffect(() => {
-    if (error) toast.error(error.message);
-  }, [error]);
-
-  if (error) redirect("/auth/login");
+    if (error) {
+      toast.error(error.message);
+      router.push("/auth/login");
+    }
+  }, [error, router]);
 
   return (
-    <div className="flex flex-col min-h-screen items-center bg-zinc-50 dark:bg-black">
+    <div className="flex flex-col min-h-screen items-center bg-neutral-950">
       <h1 className="mt-8 text-4xl font-bold">Dashboard</h1>
 
       {isLoading && <p className="mt-4">Loading...</p>}
 
-      {!isLoading && !user && (
+      {!isLoading && !user && !error && (
         <p className="mt-4 text-lg">
           Log in to update your portfolio content.
         </p>
@@ -30,9 +34,14 @@ export default function DashboardPage() {
       {user && (
         <div className="mt-6 w-full max-w-5xl px-4 pb-10">
           <p className="mb-4 text-lg">
-            Welcome to your dashboard, {user.nickname}!
+            Welcome to your dashboard, {user.nickname || user.name}!
           </p>
-          <HeroEditorForm />
+
+          <Link href="/dashboard/hero">
+            <button className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500">
+              Edit hero section
+            </button>
+          </Link>
         </div>
       )}
     </div>

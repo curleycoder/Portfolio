@@ -78,7 +78,7 @@ export default function HeroEditorForm() {
     try {
       setIsSubmitting(true);
       const res = await fetch("/api/hero", {
-        method: "PUT", // change to POST if your API expects POST
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },

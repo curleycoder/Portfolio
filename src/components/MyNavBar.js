@@ -61,7 +61,14 @@ export default function MyNavBar() {
               </NavigationMenuItem>
             </NavigationMenuList>
           </NavigationMenu>
+          <Link
+            href="/blog"
+            className="text-sm text-neutral-100 hover:underline"
+          >
+            Blog
+          </Link>
         </div>
+        
 
         {/* RIGHT: contact + auth */}
         <div className="flex items-center gap-5">
