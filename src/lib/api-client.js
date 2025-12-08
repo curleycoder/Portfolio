@@ -4,7 +4,6 @@ export async function apiFetch(url, options = {}) {
   try {
     data = await res.json();
   } catch {
-    // ignore JSON errors for 204/etc
   }
   if (!res.ok) {
     const message = data?.error || data?.message || "Request failed";
