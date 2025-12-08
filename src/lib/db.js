@@ -1,5 +1,7 @@
 import { neon } from "@neondatabase/serverless";
-export const HERO_PLACEHOLDER_AVATAR = "data:image/gif;base64,R0lGODlhAQABAAAAACw=";
+
+export const HERO_PLACEHOLDER_AVATAR =
+  "data:image/gif;base64,R0lGODlhAQABAAAAACw=";
 
 export const defaultHeroContent = {
   avatar: HERO_PLACEHOLDER_AVATAR,
@@ -7,7 +9,6 @@ export const defaultHeroContent = {
   shortDescription: "...",
   longDescription: "...",
 };
-
 
 const sql = neon(process.env.NEON_DB_URL);
 
@@ -19,6 +20,7 @@ function mapProject(row) {
     image: row.image,
     link: row.link,
     keywords: row.keywords ?? [],
+    images: row.images ?? [], // 👈 NEW
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -34,6 +36,7 @@ export async function ensureProjectsTable() {
       image text NOT NULL,
       link text NOT NULL,
       keywords jsonb NOT NULL DEFAULT '[]'::jsonb,
+      images jsonb NOT NULL DEFAULT '[]'::jsonb,
       created_at timestamptz NOT NULL DEFAULT now(),
       updated_at timestamptz NOT NULL DEFAULT now()
     );
@@ -43,13 +46,14 @@ export async function ensureProjectsTable() {
 export async function seedProjectsTable(seed) {
   for (const item of seed) {
     await sql`
-      INSERT INTO projects (title, description, image, link, keywords)
+      INSERT INTO projects (title, description, image, link, keywords, images)
       VALUES (
         ${item.title},
         ${item.description},
         ${item.image},
         ${item.link},
-        ${JSON.stringify(item.keywords ?? [])}
+        ${JSON.stringify(item.keywords ?? [])},
+        ${JSON.stringify(item.images ?? [])}
       )
       ON CONFLICT DO NOTHING;
     `;
@@ -67,29 +71,22 @@ export async function fetchProjects({ limit = 20, offset = 0 } = {}) {
 
 export async function insertProject(data) {
   const rows = await sql`
-    INSERT INTO projects (title, description, image, link, keywords)
+    INSERT INTO projects (title, description, image, link, keywords, images)
     VALUES (
       ${data.title},
       ${data.description},
       ${data.image},
       ${data.link},
-      ${JSON.stringify(data.keywords ?? [])}
+      ${JSON.stringify(data.keywords ?? [])},
+      ${JSON.stringify(data.images ?? [])}
     )
     RETURNING *;
   `;
 
   const row = rows[0];
-  return {
-    id: row.id,
-    title: row.title,
-    description: row.description,
-    image: row.image,
-    link: row.link,
-    keywords: row.keywords ?? [],
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-  };
+  return mapProject(row);
 }
+
 export async function getProjectById(id) {
   const rows = await sql`select * from projects where id = ${id} limit 1`;
   const row = rows[0];
@@ -107,6 +104,10 @@ export async function updateProject(id, updates) {
       keywords = coalesce(
         ${updates.keywords ? JSON.stringify(updates.keywords) : null},
         keywords
+      ),
+      images = coalesce(
+        ${updates.images ? JSON.stringify(updates.images) : null},
+        images
       ),
       updated_at = now()
     where id = ${id}
@@ -136,7 +137,13 @@ export async function ensureAuditTable() {
     );
   `;
 }
-export async function insertAuditLog({ projectId, userEmail, action, payload }) {
+
+export async function insertAuditLog({
+  projectId,
+  userEmail,
+  action,
+  payload,
+}) {
   await sql`
     INSERT INTO project_audit_logs (project_id, user_email, action, payload)
     VALUES (
@@ -147,6 +154,7 @@ export async function insertAuditLog({ projectId, userEmail, action, payload }) 
     );
   `;
 }
+
 export async function ensureHeroTable() {
   await sql`
     create table if not exists hero (
@@ -174,13 +182,15 @@ export async function ensureHeroTable() {
     `;
   }
 }
+
 function mapHeroRow(row) {
   if (!row) return null;
   return {
     id: row.id,
     avatar: row.avatar || HERO_PLACEHOLDER_AVATAR,
     fullName: row.full_name || defaultHeroContent.fullName,
-    shortDescription: row.short_description || defaultHeroContent.shortDescription,
+    shortDescription:
+      row.short_description || defaultHeroContent.shortDescription,
     longDescription: row.long_description || defaultHeroContent.longDescription,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
@@ -206,6 +216,7 @@ export async function getHero() {
 
   return row ? mapHeroRow(row) : null;
 }
+
 export async function upsertHero(updates = {}) {
   await ensureHeroTable();
   const current = await getHero();
@@ -217,11 +228,14 @@ export async function upsertHero(updates = {}) {
   };
 
   const normalizedAvatar =
-    typeof merged.avatar === "string" && merged.avatar.trim().startsWith("data:")
+    typeof merged.avatar === "string" &&
+    merged.avatar.trim().startsWith("data:")
       ? merged.avatar.trim()
       : HERO_PLACEHOLDER_AVATAR;
 
-  const shortDescription = (merged.shortDescription || "").trim().slice(0, 120);
+  const shortDescription = (merged.shortDescription || "")
+    .trim()
+    .slice(0, 120);
   const fullName = (merged.fullName || "").trim();
   const longDescription = (merged.longDescription || "").trim();
 

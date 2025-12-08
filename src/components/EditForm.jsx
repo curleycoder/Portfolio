@@ -182,7 +182,7 @@ export default function EditProjectForm({ project }) {
                       }
                     }}
                   />
-                  <Button type="button" onClick={handleAdd}>
+                  <Button className="border border-blue-500/80" type="button" onClick={handleAdd}>
                     Add
                   </Button>
                 </div>
@@ -206,7 +206,7 @@ export default function EditProjectForm({ project }) {
           }}
         />
 
-        <Button type="submit" className="mt-2">
+        <Button type="submit" className="mt-2 border border-blue-500/80">
           Save Changes
         </Button>
       </form>

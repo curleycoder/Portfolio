@@ -1,95 +1,138 @@
-import Image from "next/image";
 import Link from "next/link";
 import { auth0 } from "@/lib/auth0";
 import { createSlug } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import DeleteProjectButton from "@/components/DeleteButton";
+import { fetchProjects } from "@/lib/db";
+import { ProjectMediaFrame } from "@/components/ProjectMediaFrame";
 
-import {
-  ensureProjectsTable,
-  seedProjectsTable,
-  fetchProjects,
-} from "@/lib/db";
-import { PROJECT_SEED } from "@/lib/project-seed";
-
-const LIMIT = 200; // just make sure we load enough for slug search
+const LIMIT = 200;
 
 export default async function ProjectDetailsPage({ params }) {
   const { slug } = params;
 
-  // DB side
-  await ensureProjectsTable();
-  await seedProjectsTable(PROJECT_SEED);
-
   const projects = await fetchProjects({ limit: LIMIT, offset: 0 });
 
-  // 🔹 pick the matching project
   const project =
     projects.find((p) => createSlug(p.title) === slug) ??
     projects.find((p) => p.id?.toString() === slug);
 
   if (!project) {
     return (
-      <div className="p-6">
-        <h1 className="text-2xl font-bold">Project not found</h1>
-        <Link href="/projects" className="text-blue-600 underline mt-4 block">
-          Back to projects
-        </Link>
-      </div>
+      <main className="min-h-screen bg-neutral-950 text-neutral-50">
+        <div className="mx-auto max-w-4xl px-4 py-16">
+          <div className="rounded-2xl border border-red-900/60 bg-red-950/40 p-6">
+            <h1 className="mb-2 text-2xl font-semibold text-red-50">
+              Project not found
+            </h1>
+            <p className="mb-4 text-sm text-red-100/80">
+              We couldn’t find a project matching this URL.
+            </p>
+            <Link
+              href="/projects"
+              className="text-xs text-blue-300 hover:text-blue-200"
+            >
+              ← Back to projects
+            </Link>
+          </div>
+        </div>
+      </main>
     );
   }
 
   const session = await auth0.getSession();
-  const canEdit = !!session?.user; // anyone logged-in can edit
+  const canEdit = !!session?.user;
+
+  // detect mobile vs web based on keywords (same as cards)
+  const keywords = (project.keywords || []).map((k) =>
+    String(k).toLowerCase()
+  );
+  const isMobile =
+    keywords.includes("react-native") ||
+    keywords.includes("expo") ||
+    keywords.includes("mobile");
+
+  // images array for slider (works now with just image, future-proof for more)
+  const images = [];
+  if (project.image) images.push(project.image);
+  if (Array.isArray(project.images)) {
+    images.push(...project.images);
+  }
 
   return (
-    <section className="max-w-3xl mx-auto p-6 space-y-4">
-      <h1 className="text-3xl font-bold">{project.title}</h1>
-
-      <Image
-        src={project.image}
-        alt={project.title}
-        width={800}
-        height={450}
-        className="w-full h-64 object-cover rounded-md"
-      />
-
-      <p className="text-lg mt-4">{project.description}</p>
-
-      <div className="flex gap-2 flex-wrap mt-3">
-        {project.keywords?.map((k) => (
-          <span
-            key={k}
-            className="px-2 py-1 bg-gray-200 rounded-full text-xs uppercase tracking-wide"
+    <main className="min-h-screen bg-neutral-950 text-neutral-50">
+      <div className="mx-auto max-w-4xl px-4 py-12 space-y-6">
+        {/* top bar */}
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h1 className="text-3xl font-semibold tracking-tight text-neutral-50">
+              {project.title}
+            </h1>
+            <p className="mt-2 text-xs text-neutral-400">
+              This is how it appears across your portfolio.
+            </p>
+          </div>
+          <Link
+            href="/projects"
+            className="text-xs text-blue-400 hover:text-blue-300"
           >
-            {k}
-          </span>
-        ))}
-      </div>
-
-      <a
-        href={project.link}
-        target="_blank"
-        rel="noreferrer"
-        className="inline-block mt-5 px-4 py-2 bg-blue-600 text-white rounded-md"
-      >
-        Visit Project
-      </a>
-
-      {canEdit && (
-        <div className="mt-6 flex gap-3">
-          <Button asChild variant="outline">
-            <Link href={`/projects/${slug}/edit`}>Edit</Link>
-          </Button>
-          <DeleteProjectButton id={project.id} />
+            ← Back to projects
+          </Link>
         </div>
-      )}
 
-      <div className="mt-4">
-        <Link href="/projects" className="text-sm text-blue-600 underline">
-          ← Back to projects
-        </Link>
+        {/* main card */}
+        <section className="overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900/70 p-5 shadow-[0_0_25px_rgba(59,130,246,0.35)]">
+          {/* DEVICE / BROWSER FRAME + SLIDER */}
+          <ProjectMediaFrame
+            title={project.title}
+            images={images}
+            isMobile={isMobile}
+            link={project.link}
+          />
+
+          {/* description + keywords */}
+          <div className="mt-6 space-y-4">
+            <p className="text-sm leading-relaxed text-neutral-200">
+              {project.description}
+            </p>
+
+            {project.keywords?.length ? (
+              <div className="flex flex-wrap gap-2">
+                {project.keywords.map((k) => (
+                  <span
+                    key={k}
+                    className="rounded-full bg-neutral-800 px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-neutral-300"
+                  >
+                    {k}
+                  </span>
+                ))}
+              </div>
+            ) : null}
+          </div>
+
+          {/* actions */}
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Button asChild className="text-sm border border-blue-500/80">
+              <a href={project.link} target="_blank" rel="noreferrer">
+                Visit project
+              </a>
+            </Button>
+
+            {canEdit && (
+              <>
+                <Button
+                  asChild
+                  variant="outline"
+                  className="text-sm text-black"
+                >
+                  <Link href={`/projects/${slug}/edit`}>Edit</Link>
+                </Button>
+                <DeleteProjectButton id={project.id} />
+              </>
+            )}
+          </div>
+        </section>
       </div>
-    </section>
+    </main>
   );
 }

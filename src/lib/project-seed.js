@@ -1,8 +1,8 @@
 export const PROJECT_SEED = [
   {
-    title: "Forge Newcomer App",
+    title: "Forge",
     description:
-      "Mobile app helping newcomers explore trades, pathways, and job opportunities.",
+      "Mobile app helping students explore trades, pathways, and job opportunities.",
     image: "/forge.png",
     link: "https://github.com/Forge-IDSP",
     keywords: ["react-native", "expo", "clerk", "ai"],

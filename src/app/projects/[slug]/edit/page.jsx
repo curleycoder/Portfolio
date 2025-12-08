@@ -1,13 +1,8 @@
+import Link from "next/link";
 import { createSlug } from "@/lib/utils";
 import EditProjectForm from "@/components/EditForm";
 import { auth0 } from "@/lib/auth0";
-
-import {
-  ensureProjectsTable,
-  seedProjectsTable,
-  fetchProjects,
-} from "@/lib/db";
-import { PROJECT_SEED } from "@/lib/project-seed";
+import { fetchProjects } from "@/lib/db";
 
 const LIMIT = 200;
 
@@ -18,31 +13,72 @@ export default async function EditProjectPage({ params }) {
   const session = await auth0.getSession();
   if (!session?.user) {
     return (
-      <div className="p-6">
-        <p>You must be logged in to edit projects.</p>
-      </div>
+      <main className="min-h-screen bg-neutral-950 text-neutral-50">
+        <div className="mx-auto max-w-4xl px-4 py-16">
+          <div className="rounded-2xl border border-neutral-800 bg-neutral-900/70 p-6 text-sm text-neutral-200">
+            <p className="mb-3 font-medium">You must be logged in to edit projects.</p>
+            <Link
+              href="/projects"
+              className="text-xs text-blue-400 hover:text-blue-300"
+            >
+              ← Back to projects
+            </Link>
+          </div>
+        </div>
+      </main>
     );
   }
 
-  await ensureProjectsTable();
-  await seedProjectsTable(PROJECT_SEED);
-
   const projects = await fetchProjects({ limit: LIMIT, offset: 0 });
-
   const project = projects.find((p) => createSlug(p.title) === slug);
 
   if (!project) {
     return (
-      <div className="p-6">
-        <h1 className="text-2xl font-bold">Project not found</h1>
-      </div>
+      <main className="min-h-screen bg-neutral-950 text-neutral-50">
+        <div className="mx-auto max-w-4xl px-4 py-16">
+          <div className="rounded-2xl border border-red-900/60 bg-red-950/40 p-6 text-sm text-red-100">
+            <h1 className="mb-2 text-lg font-semibold">Project not found</h1>
+            <p className="mb-4 text-xs text-red-200/80">
+              We couldn’t find a project matching this URL. It may have been deleted or renamed.
+            </p>
+            <Link
+              href="/projects"
+              className="text-xs text-blue-300 hover:text-blue-200"
+            >
+              ← Back to projects
+            </Link>
+          </div>
+        </div>
+      </main>
     );
   }
 
   return (
-    <div className="max-w-3xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-4">Edit Project</h1>
-      <EditProjectForm project={project} />
-    </div>
+    <main className="min-h-screen bg-neutral-950 text-neutral-50">
+      <div className="mx-auto max-w-4xl px-4 py-12">
+        {/* header row */}
+        <div className="mb-6 flex items-center justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight text-neutral-50">
+              Edit project
+            </h1>
+            <p className="mt-1 text-xs text-neutral-400">
+              Update the content that powers your portfolio cards.
+            </p>
+          </div>
+          <Link
+            href="/projects"
+            className="text-xs text-blue-400 hover:text-blue-300"
+          >
+            ← Back to projects
+          </Link>
+        </div>
+
+        {/* glass card */}
+        <div className="overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900/70 p-6 shadow-xl shadow-blue-500/20">
+          <EditProjectForm project={project} />
+        </div>
+      </div>
+    </main>
   );
 }

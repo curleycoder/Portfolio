@@ -1,44 +1,80 @@
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuIndicator,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-  NavigationMenuViewport,
-} from "@/components/ui/navigation-menu";
+"use client";
+
 import Link from "next/link";
 import AuthButton from "@/components/AuthButton";
+import {
+  NavigationMenu,
+  NavigationMenuList,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuTrigger,
+  NavigationMenuContent,
+} from "@/components/ui/navigation-menu";
 
 export default function MyNavBar() {
   return (
-    <NavigationMenu>
-      <NavigationMenuList>
-        <NavigationMenuItem>
-          <NavigationMenuLink asChild>
-            <Link href="/">Home</Link>
-          </NavigationMenuLink>
-        </NavigationMenuItem>
+    <nav className="sticky top-0 z-40 border-b border-neutral-800 shadow-xl shadow-blue-500/20 bg-black backdrop-blur">
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3 text-sm text-neutral-100">
+        {/* LEFT: main nav */}
+        <div className="flex items-center gap-4">
+          {/* Home + Projects as plain links */}
+          <Link href="/" className="text-sm text-neutral-100 hover:underline">
+            Home
+          </Link>
 
-        <NavigationMenuItem>
-          <NavigationMenuLink asChild>
-            <Link href="/projects">Projects</Link>
-          </NavigationMenuLink>
-        </NavigationMenuItem>
+          <Link
+            href="/projects"
+            className="text-sm text-neutral-100 hover:underline"
+          >
+            Projects
+          </Link>
 
-        <NavigationMenuItem>
-          <NavigationMenuTrigger>Resume</NavigationMenuTrigger>
-          <NavigationMenuContent>
-            <NavigationMenuLink href="/resume">Latex</NavigationMenuLink>
-            <NavigationMenuLink href="/resume/pdf">PDF</NavigationMenuLink>
-          </NavigationMenuContent>
-        </NavigationMenuItem>
+          {/* Resume dropdown using NavigationMenu */}
+          <NavigationMenu>
+            <NavigationMenuList>
+              <NavigationMenuItem>
+                <NavigationMenuTrigger className="bg-transparent text-neutral-100 hover:bg-neutral-800">
+                  Resume
+                </NavigationMenuTrigger>
 
-        <NavigationMenuItem>
-          <AuthButton />
-        </NavigationMenuItem>
-      </NavigationMenuList>
-    </NavigationMenu>
+                <NavigationMenuContent
+                  className="mt-2 min-w-[120px] rounded-md border border-neutral-700 bg-neutral-900 p-2 shadow-lg"
+                >
+                  <NavigationMenuLink asChild>
+                    <Link
+                      href="/resume"
+                      className="block rounded px-2 py-1 text-neutral-200 hover:bg-neutral-800"
+                    >
+                      Online
+                    </Link>
+                  </NavigationMenuLink>
+
+                  <NavigationMenuLink asChild>
+                    <Link
+                      href="/resume/pdf"
+                      className="block rounded px-2 py-3 text-neutral-200 hover:bg-neutral-800"
+                    >
+                      PDF
+                    </Link>
+                  </NavigationMenuLink>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
+            </NavigationMenuList>
+          </NavigationMenu>
+        </div>
+
+        {/* RIGHT: contact + auth */}
+        <div className="flex items-center gap-5">
+          <Link
+            href="/contact"
+            className="text-sm text-neutral-200 hover:text-white hover:underline"
+          >
+            Contact
+          </Link>
+
+          <AuthButton className="text-sm text-neutral-200 hover:text-white hover:underline" />
+        </div>
+      </div>
+    </nav>
   );
 }

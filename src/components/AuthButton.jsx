@@ -3,32 +3,30 @@
 
 import { useUser } from "@auth0/nextjs-auth0/client";
 import Link from "next/link";
-import { NavigationMenuLink } from "@/components/ui/navigation-menu";
 
-export default function AuthButton() {
+export default function AuthButton({ className = "" }) {
   const { user, isLoading } = useUser();
 
   if (isLoading) {
-    return (
-      <NavigationMenuLink asChild>
-        <span>Loading...</span>
-      </NavigationMenuLink>
-    );
+    return <span className={className}>Loading...</span>;
   }
 
-  // Not logged in → show LOGIN
+  // Not logged in → LOGIN
   if (!user) {
     return (
-      <NavigationMenuLink asChild>
-        <Link href="/api/auth/login?returnTo=/dashboard">Login</Link>
-      </NavigationMenuLink>
+      <Link
+        href="/api/auth/login?returnTo=/dashboard"
+        className={className}
+      >
+        Login
+      </Link>
     );
   }
 
-  // Logged in → show LOGOUT
+  // Logged in → LOGOUT
   return (
-    <NavigationMenuLink asChild>
-      <Link href="/api/auth/logout?returnTo=/">Logout</Link>
-    </NavigationMenuLink>
+    <Link href="/api/auth/logout?returnTo=/" className={className}>
+      Logout
+    </Link>
   );
 }

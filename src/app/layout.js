@@ -17,7 +17,7 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body className={`${inter.className} min-h-screen`}>
         <Providers>
-        <div className="sticky top-0 z-50 p-4">
+        <div className="sticky top-0 z-50">
             <MyNavBar />
         </div>
         <Toaster/>
