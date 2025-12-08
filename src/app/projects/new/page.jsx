@@ -77,11 +77,9 @@ export default function NewProjectPage() {
     try {
       const dataUrls = await Promise.all(files.map(fileToDataUrl));
 
-      // first image -> main image
       form.setValue("image", dataUrls[0], { shouldValidate: true });
       setPreview(dataUrls[0]);
 
-      // remaining images -> images[]
       const extras = dataUrls.slice(1);
       if (extras.length) {
         const current = form.getValues("images") || [];

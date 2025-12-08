@@ -1,4 +1,3 @@
-// src/components/AuthButton.jsx
 "use client";
 
 import { useUser } from "@auth0/nextjs-auth0/client";
@@ -11,7 +10,6 @@ export default function AuthButton({ className = "" }) {
     return <span className={className}>Loading...</span>;
   }
 
-  // Not logged in → LOGIN
   if (!user) {
     return (
       <Link
@@ -23,7 +21,6 @@ export default function AuthButton({ className = "" }) {
     );
   }
 
-  // Logged in → LOGOUT
   return (
     <Link href="/api/auth/logout?returnTo=/" className={className}>
       Logout

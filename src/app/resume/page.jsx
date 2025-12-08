@@ -45,13 +45,13 @@ export default function ResumePage() {
         <div className="pt-2 flex gap-3">
           <a
             href="/resume/pdf"
-            className="inline-flex items-center rounded-md border border-blue-500/80 px-4 py-2 text-sm font-medium shadow-sm hover:bg-neutral-50 dark:bg-neutral-900 dark:hover:bg-neutral-800"
+            className="inline-flex items-center rounded-md border border-blue-500/80 px-4 py-2 text-sm font-medium shadow-sm hover:bg-blue-300/80 dark:bg-neutral-900 dark:hover:bg-neutral-800"
           >
             View PDF
           </a>
           <a
             href="/Shabnam_Beiraghian_Resume.pdf"
-            className="inline-flex items-center rounded-md bg-blue-500/80 px-4 py-2 text-sm font-medium shadow-sm hover:bg-neutral-50 dark:bg-neutral-900 dark:hover:bg-neutral-800"
+            className="inline-flex items-center rounded-md bg-blue-500/80 px-4 py-2 text-sm font-medium shadow-sm hover:bg-blue-800/60 dark:bg-neutral-900 dark:hover:bg-neutral-800"
           >
             Download PDF
           </a>
