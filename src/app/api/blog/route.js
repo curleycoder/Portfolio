@@ -2,7 +2,6 @@ import { auth0 } from "@/lib/auth0";
 import { insertBlogPost } from "@/lib/db";
 
 export async function POST(req) {
-  // auth guard – only logged-in user can post
   const session = await auth0.getSession();
   const user = session?.user;
 
@@ -33,7 +32,6 @@ export async function POST(req) {
       authorEmail: user.email,
     });
 
-    // NewPostForm expects a JSON with slug
     return new Response(JSON.stringify({ slug: post.slug }), {
       status: 201,
       headers: { "Content-Type": "application/json" },

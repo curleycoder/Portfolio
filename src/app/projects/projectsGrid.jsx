@@ -1,4 +1,3 @@
-// src/app/projects/ProjectsGrid.jsx
 "use client";
 
 import { useMemo, useState } from "react";
@@ -13,7 +12,6 @@ export default function ProjectsGrid({ initialProjects }) {
 
   const projects = Array.isArray(initialProjects) ? initialProjects : [];
 
-  // collect unique keyword tags
   const allTags = useMemo(() => {
     const s = new Set();
     projects.forEach((p) => {
@@ -26,7 +24,6 @@ export default function ProjectsGrid({ initialProjects }) {
     return Array.from(s).sort((a, b) => a.localeCompare(b));
   }, [projects]);
 
-  // apply search + tag filter
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
 
@@ -176,7 +173,6 @@ export default function ProjectsGrid({ initialProjects }) {
                   ) : (
                     // WEB BROWSER FRAME
                     <div className="relative mt-2 mb-4 w-full max-w-md overflow-hidden rounded-xl border border-neutral-700 bg-neutral-950">
-                      {/* Fake browser toolbar */}
                       <div className="flex items-center gap-2 px-3 py-2 text-[10px] text-neutral-400">
                         <span className="flex gap-1">
                           <span className="h-2 w-2 rounded-full bg-red-500/70" />
@@ -188,7 +184,6 @@ export default function ProjectsGrid({ initialProjects }) {
                             "localhost:3000"}
                         </span>
                       </div>
-                      {/* Site preview */}
                       <div className="relative h-48 w-full bg-neutral-900">
                         {p.image ? (
                           <Image

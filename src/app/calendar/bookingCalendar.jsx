@@ -11,7 +11,7 @@ const TIME_SLOTS = [
 ];
 
 function formatDateISO(d) {
-  return d.toISOString().slice(0, 10); // YYYY-MM-DD
+  return d.toISOString().slice(0, 10);
 }
 
 function makeNext7Days() {
@@ -37,7 +37,6 @@ export default function BookingCalendar() {
 
   const days = useMemo(() => makeNext7Days(), []);
 
-  // load bookings for the next 7 days
   useEffect(() => {
     const start = formatDateISO(days[0]);
     const end = formatDateISO(days[days.length - 1]);
@@ -88,7 +87,6 @@ export default function BookingCalendar() {
 
       setMessage("Request sent! I’ll email you to confirm.");
       setNote("");
-      // optionally re-fetch bookings to mark this slot taken:
       setBookings((prev) => [
         ...prev,
         { date: selectedDate, timeSlot: selectedTime },

@@ -18,7 +18,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-// allow URL OR data:image/... from file upload
 const imageSchema = z
   .string()
   .min(1)
@@ -37,10 +36,10 @@ const imageSchema = z
 const newProjectSchema = z.object({
   title: z.string().min(2, { message: "Your title is too short" }).max(200),
   description: z.string().min(5).max(500),
-  image: imageSchema, // main image (first upload or URL)
+  image: imageSchema,
   link: z.string().url(),
   keywords: z.array(z.string().min(1)).max(10).optional().default([]),
-  images: z.array(imageSchema).optional().default([]), // extra screenshots
+  images: z.array(imageSchema).optional().default([]),
 });
 
 export default function NewProjectPage() {
@@ -60,7 +59,6 @@ export default function NewProjectPage() {
     },
   });
 
-  // helper: file -> data URL
   function fileToDataUrl(file) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();

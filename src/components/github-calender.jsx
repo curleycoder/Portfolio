@@ -18,7 +18,6 @@ export default function GitHubCalendar() {
           responsive: true,
         });
 
-        // Give the script a moment to paint
         setTimeout(() => {
           if (isMounted) setLoaded(true);
         }, 600);

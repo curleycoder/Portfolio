@@ -6,7 +6,6 @@ import { fetchProjectById } from "@/lib/db";
 export default async function EditProjectPage({ params }) {
   const { id } = params;
 
-  // 🔒 server-side guard
   const session = await auth0.getSession();
   if (!session?.user) {
     return (
@@ -28,7 +27,6 @@ export default async function EditProjectPage({ params }) {
     );
   }
 
-  // ✅ load exactly one project by id
 const project = await fetchProjectById(id); 
   if (!project) {
     return (

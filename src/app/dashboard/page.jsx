@@ -1,4 +1,3 @@
-// src/app/dashboard/page.jsx
 "use client";
 
 import { useEffect } from "react";
@@ -11,7 +10,6 @@ export default function DashboardPage() {
   const { user, error, isLoading } = useUser();
   const router = useRouter();
 
-  // show error + kick to login if auth breaks
   useEffect(() => {
     if (error) {
       toast.error(error.message);
@@ -42,7 +40,15 @@ export default function DashboardPage() {
               Edit hero section
             </button>
           </Link>
+          <div className="p-3"/>
+                    <Link href="/dashboard/analytics">
+        <button className="rounded-md bg-neutral-800 px-4 py-2 text-sm border border-blue-500/80 font-medium text-neutral-100 hover:bg-neutral-700">
+          View analytics
+        </button>
+      </Link>
+
         </div>
+        
       )}
     </div>
   );

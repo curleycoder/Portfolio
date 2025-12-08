@@ -19,7 +19,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-// allow URL OR data:image/... from file upload
 const imageSchema = z
   .string()
   .min(1)
@@ -62,7 +61,6 @@ export default function EditProjectForm({ project }) {
     },
   });
 
-  // helper: file -> data URL
   function fileToDataUrl(file) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -81,11 +79,9 @@ export default function EditProjectForm({ project }) {
     try {
       const dataUrls = await Promise.all(files.map(fileToDataUrl));
 
-      // first upload = main image
       form.setValue("image", dataUrls[0], { shouldValidate: true });
       setPreview(dataUrls[0]);
 
-      // rest = extras (replace existing extras, not append − simpler UX)
       const extras = dataUrls.slice(1);
       const currentExtras = form.getValues("images") || [];
       form.setValue(
@@ -119,7 +115,6 @@ export default function EditProjectForm({ project }) {
       return;
     }
 
-    // we are using /projects/:id routes now
     router.push(`/projects/${project.id}`);
     router.refresh();
   };

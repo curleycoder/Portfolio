@@ -10,16 +10,13 @@ const heroSchema = z.object({
   longDescription: z.string().trim().min(10).max(5000),
 });
 
-// GET /api/hero -> current hero data
 export async function GET() {
   const hero = (await getHero()) ?? defaultHeroContent;
   return NextResponse.json({ data: hero });
 }
 
-// PUT /api/hero -> update hero (logged-in only)
 export async function PUT(request) {
   try {
-    // same pattern as your projects API
     await auth0.requireSession();
 
     const formData = await request.formData();

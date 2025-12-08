@@ -3,6 +3,7 @@ import "./globals.css";
 import { Inter } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { Providers } from "./providers";
+import AnalyticsTracker from "@/components/Analytics";
 
 
 const inter = Inter({ subsets: ["latin"] });
@@ -20,6 +21,8 @@ export default function RootLayout({ children }) {
         <div className="sticky top-0 z-50">
             <MyNavBar />
         </div>
+       <AnalyticsTracker />
+
         <Toaster/>
         <main>{children}</main>
         </Providers>

@@ -1,4 +1,3 @@
-// src/app/projects/page.jsx
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";

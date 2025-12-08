@@ -4,7 +4,6 @@ import {
   fetchBookingsBetween,
 } from "@/lib/db";
 
-// GET /api/bookings?start=YYYY-MM-DD&end=YYYY-MM-DD
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
   const start = searchParams.get("start");
@@ -25,7 +24,6 @@ export async function GET(req) {
   });
 }
 
-// POST /api/bookings  (public – anyone can request a call)
 export async function POST(req) {
   let body;
   try {
@@ -36,8 +34,8 @@ export async function POST(req) {
 
   const fullName = (body.fullName || "").trim();
   const email = (body.email || "").trim();
-  const date = (body.date || "").trim();       // "2025-12-08"
-  const timeSlot = (body.timeSlot || "").trim(); // "10:00"
+  const date = (body.date || "").trim();
+  const timeSlot = (body.timeSlot || "").trim(); 
   const note = (body.note || "").trim();
 
   if (!fullName || !email || !date || !timeSlot) {

@@ -13,8 +13,6 @@ const hero = {
     "I’m transitioning from fast-paced, customer-facing work into software development. I enjoy building practical web apps with Next.js, React, Tailwind, and Auth0, focusing on clean UI and simple, reliable flows.",
 };
 
-// --- TECH STACK / SKILLS VISUALIZER DATA -----------------------------
-
 const skillLevelClass = {
   beginner:
     "border-sky-500/40 bg-sky-500/10 text-emerald-200",

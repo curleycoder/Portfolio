@@ -305,7 +305,7 @@ export async function upsertHero(updates = {}) {
 
 import { slugify } from "./slug";
 
-// 1. Create table helper – called from top-level places, not every query
+// 1. Create table helper
 export async function ensureBlogPostTable() {
   await sql`
     CREATE TABLE IF NOT EXISTS blog_posts (
@@ -346,7 +346,7 @@ async function blogSlugExists(slug) {
   return Number(count) > 0;
 }
 
-// 2. Create post – we keep ensureBlogPostTable here
+// 2. Create post 
 export async function insertBlogPost({ title, excerpt = "", content, authorEmail }) {
   await ensureBlogPostTable();
 
@@ -386,7 +386,7 @@ export async function insertBlogPost({ title, excerpt = "", content, authorEmail
   return mapBlogPostRow(row);
 }
 
-// 3. Read one post – assume table exists (created either via insert or page)
+// 3. Read one post
 export async function fetchBlogPostBySlug(slug) {
   const [row] = await sql`
     SELECT
@@ -407,7 +407,7 @@ export async function fetchBlogPostBySlug(slug) {
   return mapBlogPostRow(row);
 }
 
-// 4. Count posts – no ensure here
+// 4. Count posts
 export async function countBlogPosts() {
   const [{ count }] = await sql`
     SELECT count(*)::int AS count
@@ -416,7 +416,7 @@ export async function countBlogPosts() {
   return Number(count) || 0;
 }
 
-// 5. Paginated list – no ensure here
+// 5. Paginated list 
 export async function fetchBlogPostsPage({ limit, offset }) {
   const rows = await sql`
     SELECT
@@ -459,15 +459,14 @@ function mapBookingRow(row) {
     id: row.id,
     fullName: row.full_name,
     email: row.email,
-    date: row.date,          // Date string YYYY-MM-DD
-    timeSlot: row.time_slot, // e.g. "10:00"
+    date: row.date,
+    timeSlot: row.time_slot, 
     note: row.note || "",
     status: row.status,
     createdAt: row.created_at,
   };
 }
 
-// Create a new booking request
 export async function insertBookingRequest({
   fullName,
   email,
@@ -494,7 +493,6 @@ export async function insertBookingRequest({
   return mapBookingRow(row);
 }
 
-// Used to mark already-booked slots in the UI
 export async function fetchBookingsBetween({ startDate, endDate }) {
   await ensureBookingRequestsTable();
 
@@ -514,4 +512,42 @@ export async function fetchBookingsBetween({ startDate, endDate }) {
   `;
 
   return rows.map(mapBookingRow);
+}
+// --- ANALYTICS: ROUTE VIEWS ------------------------------------------
+
+export async function ensureRouteViewsTable() {
+  await sql`
+    CREATE TABLE IF NOT EXISTS route_views (
+      id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      path       text NOT NULL,
+      created_at timestamptz NOT NULL DEFAULT now()
+    );
+  `;
+}
+
+export async function insertRouteView(path) {
+  await ensureRouteViewsTable();
+
+  await sql`
+    INSERT INTO route_views (path)
+    VALUES (${path});
+  `;
+}
+
+export async function getRouteViewCounts() {
+  await ensureRouteViewsTable();
+
+  const rows = await sql`
+    SELECT
+      path,
+      count(*)::int AS views
+    FROM route_views
+    GROUP BY path
+    ORDER BY views DESC;
+  `;
+
+  return rows.map((row) => ({
+    path: row.path,
+    views: row.views,
+  }));
 }

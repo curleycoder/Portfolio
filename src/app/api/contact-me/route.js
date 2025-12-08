@@ -6,7 +6,6 @@ export async function POST(request) {
   try {
     const body = await request.json();
 
-    // validate with zod schema you're already using on the client
     const parsed = contactFormSchema.safeParse(body);
 
     if (!parsed.success) {
@@ -22,7 +21,6 @@ export async function POST(request) {
 
     const { name, email, message } = parsed.data;
 
-    // For this project: logging is enough (pretend email/DB here)
     console.log("New contact message:", { name, email, message });
 
     return NextResponse.json(
@@ -45,7 +43,6 @@ export async function POST(request) {
   }
 }
 
-// Optional: simple GET so you can test in browser
 export async function GET() {
   return NextResponse.json({
     ok: true,

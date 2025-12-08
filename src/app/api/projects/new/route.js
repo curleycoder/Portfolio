@@ -1,7 +1,6 @@
 import { insertProject, insertAuditLog } from "@/lib/db";
 import { auth0 } from "@/lib/auth0";
 
-// ✅ Admin helper IN THIS FILE (no extra import)
 const adminEmails =
   process.env.ADMIN_EMAILS?.split(",").map((e) => e.trim().toLowerCase()) ?? [];
 
@@ -15,7 +14,6 @@ export async function POST(req) {
     const session = await auth0.getSession();
     const user = session?.user;
 
-    // 🔒 only admins can create
     if (!user || !isAdmin(user)) {
       return Response.json(
         { ok: false, error: "Forbidden" },
@@ -27,7 +25,7 @@ export async function POST(req) {
 
     const title = formData.get("title")?.toString().trim();
     const description = formData.get("description")?.toString().trim();
-    const image = formData.get("image")?.toString().trim(); // 👈 FIXED NAME
+    const image = formData.get("image")?.toString().trim();
     const link = formData.get("link")?.toString().trim();
 
     const keywords = formData
@@ -38,7 +36,7 @@ export async function POST(req) {
     const images = formData
       .getAll("images")
       .map((v) => v.toString().trim())
-      .filter(Boolean); // 👈 NEW
+      .filter(Boolean); 
 
     if (!title || !description || !image || !link) {
       return Response.json(
@@ -47,17 +45,15 @@ export async function POST(req) {
       );
     }
 
-    // DB insert
     const project = await insertProject({
       title,
       description,
       image,
       link,
       keywords,
-      images, // 👈 pass extra screenshots to DB
+      images,
     });
 
-    // audit log
     await insertAuditLog({
       projectId: project.id,
       userEmail: user.email ?? "unknown",

@@ -5,7 +5,6 @@ export default async function NewProjectLayout({ children }) {
   const session = await auth0.getSession();
 
   if (!session?.user) {
-    // Redirect to login and return here after login
     redirect("/api/auth/login?returnTo=/projects/new");
   }
 
