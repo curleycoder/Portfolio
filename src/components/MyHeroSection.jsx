@@ -8,14 +8,15 @@ export default function MyHero({ hero }) {
       <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-8 md:flex-row md:items-center">
         {/* LEFT: avatar + name + tagline */}
         <div className="flex flex-1 items-center gap-6">
+          {/* BIGGER AVATAR */}
           <div className="flex items-center justify-center">
-            <div className="flex h-24 w-24 items-center justify-center rounded-full border border-neutral-700 bg-neutral-900 shadow-md md:h-28 md:w-28">
+            <div className="relative h-28 w-28 overflow-hidden rounded-full border border-neutral-700 bg-neutral-900 shadow-md md:h-40 md:w-40">
               <Image
                 src={avatar || "/me.jpg"}
                 alt={fullName || "Profile image"}
-                width={200}
-                height={200}
-                className="h-48 w-48 object-contain md:h-40 md:w-40"
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 7rem, 10rem"
                 priority
               />
             </div>
@@ -23,7 +24,7 @@ export default function MyHero({ hero }) {
 
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-neutral-400">
-              Full-stack dev & PM
+              Full-stack dev &amp; PM
             </p>
             <h1 className="mt-1 text-3xl font-semibold tracking-tight text-neutral-50 md:text-4xl">
               {fullName || "Your Name"}

@@ -1,4 +1,3 @@
-// src/app/projects/[id]/page.jsx
 export const dynamic = "force-dynamic";
 
 import Image from "next/image";
@@ -8,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { auth0 } from "@/lib/auth0";
 import { fetchProjectById } from "@/lib/db";
-import { DeleteButton } from "@/components/DeleteButton"; // or "./DeleteButton" if that's where it lives
+import { DeleteButton } from "@/components/DeleteButton";
 
 export default async function ProjectDetailPage({ params }) {
   const { id } = params;
@@ -16,6 +15,7 @@ export default async function ProjectDetailPage({ params }) {
   const session = await auth0.getSession();
   const isLoggedIn = !!session?.user;
 
+  
   const project = await fetchProjectById(id);
   if (!project) notFound();
 

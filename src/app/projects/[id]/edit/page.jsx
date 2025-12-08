@@ -1,10 +1,10 @@
 import Link from "next/link";
 import EditProjectForm from "@/components/EditForm";
 import { auth0 } from "@/lib/auth0";
-import { getProjectById } from "@/lib/db"; // 👈 use direct DB lookup
+import { fetchProjectById } from "@/lib/db";
 
 export default async function EditProjectPage({ params }) {
-  const { id } = params; // /projects/:id/edit
+  const { id } = params;
 
   // 🔒 server-side guard
   const session = await auth0.getSession();
@@ -29,8 +29,7 @@ export default async function EditProjectPage({ params }) {
   }
 
   // ✅ load exactly one project by id
-  const project = await getProjectById(id);
-
+const project = await fetchProjectById(id); 
   if (!project) {
     return (
       <main className="min-h-screen bg-neutral-950 text-neutral-50">

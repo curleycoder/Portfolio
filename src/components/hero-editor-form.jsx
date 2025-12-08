@@ -4,19 +4,27 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import Image from "next/image";
 import { toast } from "sonner";
 
 const heroFormSchema = z.object({
-  avatar: z.string().trim().min(1),
+  avatar: z.string().trim().min(1, "Avatar is required"),
   fullName: z.string().trim().min(2).max(200),
   shortDescription: z.string().trim().min(2).max(120),
   longDescription: z.string().trim().min(10).max(5000),
 });
 
 export default function HeroEditorForm() {
-  const [avatarFile, setAvatarFile] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const form = useForm({
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm({
     resolver: zodResolver(heroFormSchema),
     defaultValues: {
       avatar: "",
@@ -26,46 +34,37 @@ export default function HeroEditorForm() {
     },
   });
 
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    reset,
-    watch,
-    formState: { errors, isSubmitting },
-  } = form;
+  const avatar = watch("avatar");
+  const fullName = watch("fullName");
+  const shortDescription = watch("shortDescription");
+  const longDescription = watch("longDescription");
 
-  const avatarValue = watch("avatar");
-
+  // Fetch current hero
   useEffect(() => {
-    const loadHero = async () => {
+    async function loadHero() {
       try {
         const res = await fetch("/api/hero");
         if (!res.ok) throw new Error("Failed to load hero");
-        const { data } = await res.json();
+        const data = await res.json();
 
-        if (data) {
-          reset({
-            avatar: data.avatar || "",
-            fullName: data.fullName || "",
-            shortDescription: data.shortDescription || "",
-            longDescription: data.longDescription || "",
-          });
-        }
+        setValue("avatar", data.avatar || "");
+        setValue("fullName", data.fullName || "");
+        setValue("shortDescription", data.shortDescription || "");
+        setValue("longDescription", data.longDescription || "");
       } catch (err) {
         console.error(err);
-        toast.error("Could not load hero content, using defaults.");
+        toast.error("Could not load hero data");
+      } finally {
+        setIsLoading(false);
       }
-    };
+    }
 
     loadHero();
-  }, [reset]);
+  }, [setValue]);
 
-  const onAvatarChange = async (event) => {
-    const file = event.target.files?.[0];
+  const onAvatarChange = async (e) => {
+    const file = e.target.files?.[0];
     if (!file) return;
-
-    setAvatarFile(file);
 
     const reader = new FileReader();
     reader.onloadend = () => {
@@ -77,128 +76,188 @@ export default function HeroEditorForm() {
 
   const onSubmit = async (values) => {
     try {
-      const formData = new FormData();
-      formData.append("avatar", values.avatar);
-      formData.append("fullName", values.fullName);
-      formData.append("shortDescription", values.shortDescription);
-      formData.append("longDescription", values.longDescription);
-      if (avatarFile) formData.append("avatarFile", avatarFile);
-
-      const response = await fetch("/api/hero", {
-        method: "PUT",
-        body: formData,
+      setIsSubmitting(true);
+      const res = await fetch("/api/hero", {
+        method: "PUT", // change to POST if your API expects POST
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(values),
       });
 
-      if (!response.ok) {
-        const body = await response.json().catch(() => ({}));
-        throw new Error(body.message || "Failed to update hero");
-      }
-
-      const { data } = await response.json();
-
-      reset({
-        avatar: data.avatar,
-        fullName: data.fullName,
-        shortDescription: data.shortDescription,
-        longDescription: data.longDescription,
-      });
-
-      toast.success("Hero section updated");
+      if (!res.ok) throw new Error("Failed to save hero");
+      toast.success("Hero updated");
     } catch (err) {
       console.error(err);
-      toast.error(err.message || "Error updating hero");
+      toast.error("Could not save hero");
+    } finally {
+      setIsSubmitting(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="rounded-2xl border border-neutral-800 bg-neutral-950/80 p-6 text-sm text-neutral-300">
+        Loading hero…
+      </div>
+    );
+  }
 
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="bg-white dark:bg-zinc-900 rounded-lg shadow p-6 space-y-4"
+      className="rounded-2xl border border-neutral-800 bg-neutral-950/90 p-6 shadow-xl shadow-blue-500/20"
     >
-      <h2 className="text-2xl font-semibold mb-2">Hero Editor</h2>
+      <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-neutral-500">
+        Hero Section Editor
+      </h2>
 
-      <div className="flex gap-6 flex-wrap">
-        <div className="flex flex-col items-center gap-2">
-          <div className="w-32 h-32 rounded-full overflow-hidden border border-zinc-300">
-            {avatarValue ? (
-              <img
-                src={avatarValue}
-                alt="Avatar preview"
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-xs text-zinc-400">
-                No avatar
+      <div className="grid gap-6 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1.4fr)]">
+        {/* LEFT: LIVE PREVIEW, MATCHES MyHeroSection STYLE */}
+        <div className="rounded-2xl border border-neutral-800 bg-neutral-950/80 p-4">
+          <div className="flex flex-col gap-6 md:flex-row md:items-center">
+            {/* BIG AVATAR */}
+            <div className="flex items-center justify-center">
+              <div className="relative h-28 w-28 overflow-hidden rounded-full border border-neutral-700 bg-neutral-900 shadow-md md:h-40 md:w-40">
+                {avatar ? (
+                  <Image
+                    src={avatar}
+                    alt={fullName || "Hero avatar"}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 7rem, 10rem"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-[10px] text-neutral-500">
+                    No avatar
+                  </div>
+                )}
               </div>
-            )}
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-neutral-400">
+                Full-stack dev &amp; PM
+              </p>
+              <h3 className="text-xl font-semibold tracking-tight text-neutral-50 md:text-2xl">
+                {fullName || "Your name here"}
+              </h3>
+              <p className="text-sm text-neutral-200">
+                {shortDescription || "Short one-line summary about what you do."}
+              </p>
+            </div>
           </div>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={onAvatarChange}
-            className="text-sm"
-          />
-          {errors.avatar && (
-            <p className="text-xs text-red-500">{errors.avatar.message}</p>
-          )}
+
+          <p className="mt-4 text-xs leading-relaxed text-neutral-300">
+            {longDescription ||
+              "Use this space to write a 3–4 sentence introduction. Talk about your background, what you’re learning, and the kind of work you like to do."}
+          </p>
         </div>
 
-        <div className="flex-1 space-y-4 min-w-[250px]">
+        {/* RIGHT: FORM FIELDS */}
+        <div className="space-y-4 text-sm">
+          {/* Avatar upload */}
           <div>
-            <label className="block text-sm font-medium mb-1">Full Name</label>
-            <input
-              type="text"
-              className="w-full border rounded px-3 py-2 text-sm bg-white dark:bg-zinc-800"
-              {...register("fullName")}
-            />
-            {errors.fullName && (
-              <p className="text-xs text-red-500">
-                {errors.fullName.message}
-              </p>
-            )}
+            <label className="mb-1 block text-xs font-medium uppercase tracking-[0.16em] text-neutral-400">
+              Avatar image
+            </label>
+            <div className="flex items-center gap-3">
+              <div className="relative h-16 w-16 overflow-hidden rounded-full border border-neutral-700 bg-neutral-900">
+                {avatar ? (
+                  <Image
+                    src={avatar}
+                    alt="Avatar preview"
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-[10px] text-neutral-500">
+                    No avatar
+                  </div>
+                )}
+              </div>
+              <div className="flex flex-col gap-1">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={onAvatarChange}
+                  className="text-xs text-neutral-200 file:mr-3 file:rounded-md file:border-0 file:bg-neutral-800 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-neutral-100 hover:file:bg-neutral-700"
+                />
+                {errors.avatar && (
+                  <p className="text-xs text-red-500">
+                    {errors.avatar.message?.toString()}
+                  </p>
+                )}
+              </div>
+            </div>
           </div>
 
+          {/* Full name */}
           <div>
-            <label className="block text-sm font-medium mb-1">
-              Short Description (max 120 chars)
+            <label className="mb-1 block text-xs font-medium uppercase tracking-[0.16em] text-neutral-400">
+              Full name
             </label>
             <input
               type="text"
-              className="w-full border rounded px-3 py-2 text-sm bg-white dark:bg-zinc-800"
-              {...register("shortDescription")}
+              {...register("fullName")}
+              className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-neutral-50 outline-none ring-0 placeholder:text-neutral-500 focus:border-blue-500"
+              placeholder="Shabnam Beiraghian"
             />
-            {errors.shortDescription && (
-              <p className="text-xs text-red-500">
-                {errors.shortDescription.message}
+            {errors.fullName && (
+              <p className="mt-1 text-xs text-red-500">
+                {errors.fullName.message?.toString()}
               </p>
             )}
           </div>
+
+          {/* Short description */}
+          <div>
+            <label className="mb-1 block text-xs font-medium uppercase tracking-[0.16em] text-neutral-400">
+              Short description
+            </label>
+            <input
+              type="text"
+              {...register("shortDescription")}
+              className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-neutral-50 outline-none ring-0 placeholder:text-neutral-500 focus:border-blue-500"
+              placeholder="BCIT Full-Stack Web Development student building real-world Next.js apps."
+            />
+            <p className="mt-1 text-[11px] text-neutral-500">
+              Max 120 characters – this shows as the one-line tagline.
+            </p>
+            {errors.shortDescription && (
+              <p className="mt-1 text-xs text-red-500">
+                {errors.shortDescription.message?.toString()}
+              </p>
+            )}
+          </div>
+
+          {/* Long description */}
+          <div>
+            <label className="mb-1 block text-xs font-medium uppercase tracking-[0.16em] text-neutral-400">
+              Long description
+            </label>
+            <textarea
+              {...register("longDescription")}
+              rows={6}
+              className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-neutral-50 outline-none ring-0 placeholder:text-neutral-500 focus:border-blue-500"
+              placeholder="Write 3–4 sentences about your background, what you’re transitioning from, and what you’re excited to build."
+            />
+            {errors.longDescription && (
+              <p className="mt-1 text-xs text-red-500">
+                {errors.longDescription.message?.toString()}
+              </p>
+            )}
+          </div>
+
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="mt-2 inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isSubmitting ? "Saving…" : "Save hero"}
+          </button>
         </div>
       </div>
-
-      <div>
-        <label className="block text-sm font-medium mb-1">
-          Long Description
-        </label>
-        <textarea
-          rows={6}
-          className="w-full border rounded px-3 py-2 text-sm bg-white dark:bg-zinc-800"
-          {...register("longDescription")}
-        />
-        {errors.longDescription && (
-          <p className="text-xs text-red-500">
-            {errors.longDescription.message}
-          </p>
-        )}
-      </div>
-
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="mt-2 inline-flex items-center px-4 py-2 rounded bg-black text-white text-sm disabled:opacity-60"
-      >
-        {isSubmitting ? "Saving..." : "Save hero"}
-      </button>
     </form>
   );
 }

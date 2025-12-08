@@ -33,17 +33,17 @@ export default function MyNavBar() {
           <NavigationMenu>
             <NavigationMenuList>
               <NavigationMenuItem>
-                <NavigationMenuTrigger className="bg-transparent text-neutral-100 hover:bg-neutral-800">
+                <NavigationMenuTrigger className="bg-transparent text-neutral-100 hover:bg-blue-500/80">
                   Resume
                 </NavigationMenuTrigger>
 
                 <NavigationMenuContent
-                  className="mt-2 min-w-[120px] rounded-md border border-neutral-700 bg-neutral-900 p-2 shadow-lg"
+                  className="mt-2 mb-2 min-w-[120px] rounded-md border border-neutral-700 bg-white-900/80 p-2 shadow-lg"
                 >
                   <NavigationMenuLink asChild>
                     <Link
                       href="/resume"
-                      className="block rounded px-2 py-1 text-neutral-200 hover:bg-neutral-800"
+                      className="block rounded px-2 py-1 text-black-200 hover:bg-blue-400/80"
                     >
                       Online
                     </Link>
@@ -52,7 +52,7 @@ export default function MyNavBar() {
                   <NavigationMenuLink asChild>
                     <Link
                       href="/resume/pdf"
-                      className="block rounded px-2 py-3 text-neutral-200 hover:bg-neutral-800"
+                      className="block rounded px-2 py-1 text-black-200 hover:bg-blue-400/80"
                     >
                       PDF
                     </Link>

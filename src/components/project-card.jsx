@@ -44,7 +44,7 @@ export default async function ProjectPreviewCard({ count = 3 }) {
     <section className="mx-auto max-w-6xl px-4 py-10">
       <h2 className="mb-6 text-2xl font-semibold text-neutral-50">Projects</h2>
 
-            <div className="grid items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((p) => {
           const keywords = (p.keywords || []).map((k) =>
             String(k).toLowerCase()
@@ -61,14 +61,15 @@ export default async function ProjectPreviewCard({ count = 3 }) {
             <Card
               key={p.id}
               className="
-                flex h-full flex-col border-neutral-800 bg-black text-neutral-50
+                group flex h-full flex-col overflow-hidden
+                border border-neutral-800 bg-neutral-900/70 text-neutral-50
                 shadow-[0_0_18px_rgba(15,23,42,0.9)]
-              ">
+                transition-transform transition-shadow duration-300 ease-out
+                hover:-translate-y-2 hover:shadow-[0_0_28px_rgba(59,130,246,0.45)]
+              "
+            >
               {/* CLICKABLE AREA → project details */}
-              <Link
-                href={`/projects/${p.id}`}
-                className="group block flex-1"
-              >
+              <Link href={`/projects/${p.id}`} className="block flex-1">
                 {/* FRAME AREA */}
                 <div className="flex items-center justify-center px-4 pt-4">
                   {isMobile ? (
@@ -80,7 +81,7 @@ export default async function ProjectPreviewCard({ count = 3 }) {
                             src={p.image}
                             alt={p.title}
                             fill
-                            className="object-cover transition-transform duration-200 group-hover:scale-[1.0]"
+                            className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
                           />
                         ) : (
                           <Skeleton className="h-full w-full" />
@@ -105,7 +106,7 @@ export default async function ProjectPreviewCard({ count = 3 }) {
                             src={p.image}
                             alt={p.title}
                             fill
-                            className="object-cover transition-transform duration-200 group-hover:scale-[1.0]"
+                            className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
                           />
                         ) : (
                           <Skeleton className="h-full w-full" />
@@ -136,11 +137,7 @@ export default async function ProjectPreviewCard({ count = 3 }) {
                   asChild
                   className="w-full border border-blue-400/50 bg-black shadow-xl shadow-accent-foreground hover:bg-blue-400/70"
                 >
-                  <a
-                    href={p.link}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
+                  <a href={p.link} target="_blank" rel="noreferrer">
                     View live project
                   </a>
                 </Button>
@@ -149,7 +146,6 @@ export default async function ProjectPreviewCard({ count = 3 }) {
           );
         })}
       </div>
-
     </section>
   );
 }
