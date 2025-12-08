@@ -37,8 +37,8 @@ export default function MyHero({ hero }) {
         </div>
 
         {/* RIGHT: longer blurb */}
-        <div className="flex-1">
-          <p className="text-sm leading-relaxed text-neutral-300 md:text-sm">
+        <div className="flex">
+          <p className="text-sm flex-2 leading-relaxed text-neutral-300 md:text-sm">
             {longDescription ||
               "Use this space for a 3–4 sentence intro: what you’re good at, what tech you use, and what kinds of projects you like to work on."}
           </p>

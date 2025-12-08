@@ -73,6 +73,13 @@ export default function MyNavBar() {
         {/* RIGHT: contact + auth */}
         <div className="flex items-center gap-5">
           <Link
+  href="/calendar"
+  className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-500"
+>
+  Book a Call
+</Link>
+
+          <Link
             href="/contact"
             className="text-sm text-neutral-200 hover:text-white hover:underline"
           >

@@ -436,3 +436,82 @@ export async function fetchBlogPostsPage({ limit, offset }) {
   `;
   return rows.map(mapBlogPostRow);
 }
+// --- BOOKING / AVAILABILITY -----------------------------------------
+
+export async function ensureBookingRequestsTable() {
+  await sql`
+    CREATE TABLE IF NOT EXISTS booking_requests (
+      id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      full_name  text NOT NULL,
+      email      text NOT NULL,
+      date       date NOT NULL,
+      time_slot  text NOT NULL,
+      note       text,
+      status     text NOT NULL DEFAULT 'pending', -- pending | confirmed | cancelled
+      created_at timestamptz NOT NULL DEFAULT now()
+    );
+  `;
+}
+
+function mapBookingRow(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    fullName: row.full_name,
+    email: row.email,
+    date: row.date,          // Date string YYYY-MM-DD
+    timeSlot: row.time_slot, // e.g. "10:00"
+    note: row.note || "",
+    status: row.status,
+    createdAt: row.created_at,
+  };
+}
+
+// Create a new booking request
+export async function insertBookingRequest({
+  fullName,
+  email,
+  date,
+  timeSlot,
+  note = "",
+}) {
+  await ensureBookingRequestsTable();
+
+  const [row] = await sql`
+    INSERT INTO booking_requests (full_name, email, date, time_slot, note)
+    VALUES (${fullName}, ${email}, ${date}, ${timeSlot}, ${note})
+    RETURNING
+      id,
+      full_name,
+      email,
+      date,
+      time_slot,
+      note,
+      status,
+      created_at;
+  `;
+
+  return mapBookingRow(row);
+}
+
+// Used to mark already-booked slots in the UI
+export async function fetchBookingsBetween({ startDate, endDate }) {
+  await ensureBookingRequestsTable();
+
+  const rows = await sql`
+    SELECT
+      id,
+      full_name,
+      email,
+      date,
+      time_slot,
+      note,
+      status,
+      created_at
+    FROM booking_requests
+    WHERE date BETWEEN ${startDate} AND ${endDate}
+    ORDER BY date ASC, time_slot ASC;
+  `;
+
+  return rows.map(mapBookingRow);
+}
