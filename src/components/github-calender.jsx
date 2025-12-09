@@ -36,7 +36,7 @@ export default function GitHubCalendar() {
       {/* Inner dark card */}
       <div className="rounded-3xl border border-neutral-900 bg-neutral-950/95 p-4 md:p-5">
         {/* HEADER / STATUS BAR */}
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-[11px] text-neutral-400">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-[10px] sm:text-[11px] text-neutral-400">
           <div className="flex items-center gap-2">
             <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-cyan-500/15 text-xs text-cyan-300">
               ⬛
@@ -45,7 +45,7 @@ export default function GitHubCalendar() {
               <span className="uppercase tracking-[0.2em]">
                 GitHub Activity
               </span>
-              <span className="text-[10px] text-neutral-500">
+              <span className="text-[9px] sm:text-[10px] text-neutral-500">
                 Recent contribution heatmap
               </span>
             </div>
@@ -55,7 +55,7 @@ export default function GitHubCalendar() {
             type="button"
             className="
               inline-flex items-center gap-1 rounded-full border border-neutral-700/80
-              bg-neutral-900/80 px-3 py-1 text-[11px] text-neutral-200
+              bg-neutral-900/80 px-3 py-1 text-[10px] sm:text-[11px] text-neutral-200
               transition-colors duration-200 hover:border-cyan-500/70 hover:bg-neutral-900
             "
           >
@@ -65,7 +65,7 @@ export default function GitHubCalendar() {
         </div>
 
         {/* CALENDAR WRAPPER */}
-        <div className="relative mt-1 overflow-x-autop-3 text-xs text-neutral-300">
+        <div className="relative mt-1 overflow-x-auto p-3 text-[10px] sm:text-xs text-neutral-300">
           {/* Loading overlay / skeleton */}
           {!loaded && (
             <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-neutral-900/90 backdrop-blur-sm">
@@ -85,11 +85,11 @@ export default function GitHubCalendar() {
           )}
 
           {/* GitHub Calendar target */}
-          <div className="calendar min-w-[600px]" />
+          <div className="calendar w-full" />
         </div>
 
         {/* FOOTER LEGEND */}
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[10px] text-neutral-500">
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[9px] sm:text-[10px] text-neutral-500">
           <span>Built with github-calendar · dark themed</span>
           <div className="flex items-center gap-1">
             <span className="mr-1">Less</span>
