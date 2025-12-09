@@ -56,7 +56,7 @@ export default function ProjectsGrid({ initialProjects }) {
   return (
     <div className="space-y-6">
       {/* Controls */}
-      <div className="space-y-4 rounded-2xl border border-neutral-800 bg-neutral-900/70 p-4">
+      <div className="space-y-4 rounded-2xl border border-neutral-800 bg-neutral-900/70 p-4 sm:p-5">
         {/* Search */}
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <label className="text-xs font-semibold uppercase tracking-[0.16em] text-neutral-400">
@@ -104,9 +104,9 @@ export default function ProjectsGrid({ initialProjects }) {
                     ? "border-blue-500/80 bg-blue-500/20 text-blue-100"
                     : "border-neutral-700 bg-neutral-900 text-neutral-300 hover:border-neutral-500",
                 ].join(" ")}
-            >
-              {tag}
-            </button>
+              >
+                {tag}
+              </button>
             ))}
           </div>
         </div>
@@ -121,8 +121,8 @@ export default function ProjectsGrid({ initialProjects }) {
         of {projects.length} projects
       </p>
 
-      {/* Grid – your original card layout, reused */}
-      <div className="grid items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {/* Grid */}
+      <div className="grid items-stretch gap-6 sm:grid-cols-2 xl:grid-cols-3">
         {filtered.map((p) => {
           const keywords = (p.keywords || []).map((k) =>
             String(k).toLowerCase()
@@ -154,8 +154,8 @@ export default function ProjectsGrid({ initialProjects }) {
                 <div className="flex items-center justify-center px-4 pt-4">
                   {isMobile ? (
                     // PHONE FRAME
-                    <div className="relative flex items-center justify-center">
-                      <div className="relative h-[260px] w-[120px] overflow-hidden rounded-[1.4rem] bg-neutral-900">
+                    <div className="relative flex w-32 sm:w-36 justify-center">
+                      <div className="relative aspect-[9/19.5] w-full overflow-hidden rounded-[1.4rem] bg-neutral-900">
                         {p.image ? (
                           <Image
                             src={p.image}
@@ -172,7 +172,7 @@ export default function ProjectsGrid({ initialProjects }) {
                     </div>
                   ) : (
                     // WEB BROWSER FRAME
-                    <div className="relative mt-2 mb-4 w-full max-w-md overflow-hidden rounded-xl border border-neutral-700 bg-neutral-950">
+                    <div className="relative mt-2 mb-4 w-full overflow-hidden rounded-xl border border-neutral-700 bg-neutral-950">
                       <div className="flex items-center gap-2 px-3 py-2 text-[10px] text-neutral-400">
                         <span className="flex gap-1">
                           <span className="h-2 w-2 rounded-full bg-red-500/70" />
@@ -184,7 +184,7 @@ export default function ProjectsGrid({ initialProjects }) {
                             "localhost:3000"}
                         </span>
                       </div>
-                      <div className="relative h-48 w-full bg-neutral-900">
+                      <div className="relative aspect-[16/9] w-full bg-neutral-900">
                         {p.image ? (
                           <Image
                             src={p.image}
@@ -238,7 +238,7 @@ export default function ProjectsGrid({ initialProjects }) {
                     <Button
                       type="button"
                       size="sm"
-                      className="text-xs border border-blue-500/80 pointer-events-none"
+                      className="pointer-events-none border border-blue-500/80 text-xs"
                     >
                       View details
                     </Button>

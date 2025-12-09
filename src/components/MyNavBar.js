@@ -64,9 +64,9 @@ export default function MyNavBar() {
           {/* MOBILE LOGO */}
           <Link
             href="/"
-            className="text-sm font-semibold tracking-tight text-neutral-100 md:hidden"
+            className="text-md font-semibold tracking-tight text-neutral-100 md:hidden"
           >
-            Shabnam&apos;s Portfolio
+            Shabnam Beiraghian
           </Link>
 
           {/* RIGHT SIDE (DESKTOP) */}
@@ -97,7 +97,7 @@ export default function MyNavBar() {
   <button
     type="button"
     onClick={() => setOpen((v) => !v)}
-    className="inline-flex items-center justify-center rounded-md border border-neutral-700 p-2 text-neutral-200"
+    className="inline-flex items-center justify-center p-2 text-neutral-200"
   >
     <svg
       className="h-6 w-6"
