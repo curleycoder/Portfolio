@@ -58,7 +58,7 @@ export default function ContactForm() {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="space-y-7"
+        className="space-y-6"
         noValidate
       >
         {/* NAME */}
@@ -67,11 +67,17 @@ export default function ContactForm() {
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Name</FormLabel>
+              <FormLabel className="text-xs font-medium uppercase tracking-[0.16em] text-neutral-400">
+                Name
+              </FormLabel>
               <FormControl>
-                <Input placeholder="Your name" {...field} />
+                <Input
+                  placeholder="Your name"
+                  className="h-10 rounded-lg border-neutral-700 bg-neutral-900/60 text-sm text-neutral-100 placeholder:text-neutral-500 focus-visible:ring-1 focus-visible:ring-blue-500"
+                  {...field}
+                />
               </FormControl>
-              <FormMessage />
+              <FormMessage className="text-xs" />
             </FormItem>
           )}
         />
@@ -82,11 +88,17 @@ export default function ContactForm() {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel className="text-xs font-medium uppercase tracking-[0.16em] text-neutral-400">
+                Email
+              </FormLabel>
               <FormControl>
-                <Input placeholder="you@example.com" {...field} />
+                <Input
+                  placeholder="you@example.com"
+                  className="h-10 rounded-lg border-neutral-700 bg-neutral-900/60 text-sm text-neutral-100 placeholder:text-neutral-500 focus-visible:ring-1 focus-visible:ring-blue-500"
+                  {...field}
+                />
               </FormControl>
-              <FormMessage />
+              <FormMessage className="text-xs" />
             </FormItem>
           )}
         />
@@ -97,22 +109,27 @@ export default function ContactForm() {
           name="message"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Message</FormLabel>
+              <FormLabel className="text-xs font-medium uppercase tracking-[0.16em] text-neutral-400">
+                Message
+              </FormLabel>
               <FormControl>
                 <textarea
                   {...field}
-                  rows={4}
+                  rows={5}
                   placeholder="Write your message..."
-                  className="flex min-h-[100px] w-full text-black rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex min-h-[120px] w-full rounded-lg border border-neutral-700 bg-neutral-900/60 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
                 />
               </FormControl>
-              <FormMessage />
+              <FormMessage className="text-xs" />
             </FormItem>
           )}
         />
 
-        <Button type="submit" className="w-full border border-blue-500/80">
-          Send
+        <Button
+          type="submit"
+          className="mt-2 w-full rounded-lg border border-blue-500/80 bg-blue-500/80 text-sm font-medium hover:bg-blue-400"
+        >
+          Send message
         </Button>
       </form>
     </Form>

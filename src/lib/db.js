@@ -324,18 +324,20 @@ export async function ensureBlogPostTable() {
 
 function mapBlogPostRow(row) {
   if (!row) return null;
+
   return {
     id: row.id,
     slug: row.slug,
     title: row.title,
     excerpt: row.excerpt || "",
     content: row.content,
-    authorEmail: row.author_email,
-    publishedAt: row.publishedAt,
-    createdAt: row.createdAt,
-    updatedAt: row.updatedAt,
+    authorEmail: row.author_email ?? row.authorEmail,
+    publishedAt: row.publishedAt ?? row.published_at,
+    createdAt: row.createdAt ?? row.created_at,
+    updatedAt: row.updatedAt ?? row.updated_at,
   };
 }
+
 
 async function blogSlugExists(slug) {
   const [{ count }] = await sql`
