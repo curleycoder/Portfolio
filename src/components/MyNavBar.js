@@ -35,7 +35,7 @@ export default function MyNavBar() {
                   <NavigationMenuTrigger className="bg-transparent text-neutral-100 hover:bg-blue-600/60">
                     Resume
                   </NavigationMenuTrigger>
-                  <NavigationMenuContent className="mt-2 rounded-md border border-neutral-700 bg-black/90 p-2 shadow-lg">
+                  <NavigationMenuContent className="mt-2 rounded-md border border-neutral-700 bg-white p-2 shadow-lg">
                     <NavigationMenuLink asChild>
                       <Link
                         href="/resume"
