@@ -10,7 +10,7 @@ export default async function AnalyticsDashboardPage() {
   const user = session?.user;
 
   if (!user) {
-    redirect("/auth/login");
+    redirect("/api/auth/login");
   }
 
   const stats = await getRouteViewCounts();

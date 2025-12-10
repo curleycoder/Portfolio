@@ -14,7 +14,7 @@ export default function DashboardPage() {
   useEffect(() => {
     if (error) {
       toast.error(error.message);
-      router.push("/auth/login");
+      router.push("/api/auth/login");
     }
   }, [error, router]);
 
