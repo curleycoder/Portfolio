@@ -13,19 +13,19 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (error) {
-      toast.error(error.message);
       console.error(error);
+      toast.error(error.message);
     }
   }, [error]);
 
   useEffect(() => {
     if (!isLoading && !user && !error) {
-      router.push("/api/auth/login?returnTo=/dashboard");
+      router.push("/api/auth/login?prompt=login&returnTo=/dashboard");
     }
   }, [isLoading, user, error, router]);
 
   return (
-    <div className="flex flex-col min-h-screen items-center bg-neutral-950">
+    <div className="flex flex-col min-h-screen items-center bg-neutral-950 text-neutral-100">
       <h1 className="mt-8 text-4xl font-bold">Dashboard</h1>
 
       {isLoading && <p className="mt-4">Loading...</p>}
@@ -47,15 +47,15 @@ export default function DashboardPage() {
               Edit hero section
             </button>
           </Link>
-          <div className="p-3"/>
+
+          <div className="p-3" />
+
           <Link href="/dashboard/analytics">
             <button className="rounded-md bg-neutral-800 px-4 py-2 text-sm border border-blue-500/80 font-medium text-neutral-100 hover:bg-neutral-700">
               View analytics
             </button>
           </Link>
-
         </div>
-        
       )}
     </div>
   );

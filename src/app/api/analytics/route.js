@@ -13,7 +13,6 @@ export async function POST(req) {
     return new Response("Missing path", { status: 400 });
   }
 
-  // keep path reasonably short
   const path = rawPath.slice(0, 255);
 
   try {
