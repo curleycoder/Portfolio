@@ -26,16 +26,23 @@ export async function POST(request) {
     const toEmail = process.env.CONTACT_TO_EMAIL;
     const fromEmail = process.env.CONTACT_FROM_EMAIL;
 
-    if (!toEmail || !fromEmail) {
-      console.error("Missing email env vars.");
+    if (!toEmail || !fromEmail || !process.env.RESEND_API_KEY) {
+      console.error("CONTACT: missing email env vars.", {
+        HAS_RESEND_API_KEY: !!process.env.RESEND_API_KEY,
+        HAS_CONTACT_TO_EMAIL: !!toEmail,
+        HAS_CONTACT_FROM_EMAIL: !!fromEmail,
+      });
+
       return NextResponse.json(
-        { ok: false, message: "Email config error" },
+        {
+          ok: false,
+          message: "Server email configuration error.",
+        },
         { status: 500 }
       );
     }
 
-    // ⭐ THIS IS WHAT ACTUALLY SENDS THE EMAIL
-    await resend.emails.send({
+    const { data, error } = await resend.emails.send({
       from: fromEmail,
       to: [toEmail],
       subject: `New contact message from ${name}`,
@@ -49,15 +56,31 @@ ${message}
       `.trim(),
     });
 
+    if (error) {
+      console.error("CONTACT: Resend email error:", error);
+      return NextResponse.json(
+        { ok: false, message: "Failed to send email." },
+        { status: 500 }
+      );
+    }
+
+    console.log("CONTACT: email sent via Resend:", data);
+
     return NextResponse.json(
-      { ok: true, message: "Message sent successfully!" },
+      {
+        ok: true,
+        message: "Message sent successfully.",
+      },
       { status: 200 }
     );
-
   } catch (err) {
     console.error("Error in /api/contact-me:", err);
+
     return NextResponse.json(
-      { ok: false, message: "Server error" },
+      {
+        ok: false,
+        message: "Something went wrong on the server.",
+      },
       { status: 500 }
     );
   }
