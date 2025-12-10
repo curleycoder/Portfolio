@@ -1,7 +1,6 @@
 "use client";
 
 import { useUser } from "@auth0/nextjs-auth0/client";
-import Link from "next/link";
 
 export default function AuthButton({ className = "" }) {
   const { user, isLoading } = useUser();
@@ -12,18 +11,21 @@ export default function AuthButton({ className = "" }) {
 
   if (!user) {
     return (
-      <Link
-        href="/api/auth/login?returnTo=/dashboard"
+      <a
+        href="/api/auth/login?prompt=login&returnTo=/dashboard"
         className={className}
       >
         Login
-      </Link>
+      </a>
     );
   }
 
   return (
-    <Link href="/api/auth/logout?returnTo=/" className={className}>
+    <a
+      href="/api/auth/logout?returnTo=/"
+      className={className}
+    >
       Logout
-    </Link>
+    </a>
   );
 }
