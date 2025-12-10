@@ -36,13 +36,13 @@ export default function DashboardPage() {
             Welcome to your dashboard, {user.nickname || user.name}!
           </p>
 
-          <Link href="/dashboard/hero">
+          <Link href="/hero">
             <button className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500">
               Edit hero section
             </button>
           </Link>
           <div className="p-3"/>
-                    <Link href="/dashboard/analytics">
+                    <Link href="/analytics">
         <button className="rounded-md bg-neutral-800 px-4 py-2 text-sm border border-blue-500/80 font-medium text-neutral-100 hover:bg-neutral-700">
           View analytics
         </button>
