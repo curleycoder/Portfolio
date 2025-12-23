@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { Providers } from "./providers";
 import { Suspense } from "react";
 import AnalyticsTracker from "@/components/Analytics";
+import ChatWidget from "@/components/ChatWidget";
 
 
 const inter = Inter({ subsets: ["latin"] });
@@ -32,6 +33,7 @@ export default function RootLayout({ children }) {
         <Toaster/>
         <main>{children}</main>
         </Providers>
+        <ChatWidget biz="beiraghian"/>
       </body>
     </html>
   );
