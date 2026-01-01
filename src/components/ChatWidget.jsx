@@ -29,6 +29,7 @@ export default function ChatWidget({
   }, []);
 
   const iframeSrc = useMemo(() => {
+    if (!chatUrlBase) return null;
     const base = chatUrlBase.replace(/\/+$/, "");
     return `${base}/?biz=${encodeURIComponent(biz)}&embed=1`;
   }, [chatUrlBase, biz]);

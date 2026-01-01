@@ -36,7 +36,7 @@ export default function RootLayout({ children }) {
         </Providers>
         <ChatWidget
           biz="beiraghian"
-          title="Beiraghian Assistant"
+          title="Dew Assistant"
           subtitle="Projects • Book a Call • Contact"
           avatarSrc="/avatar.png"
         />
