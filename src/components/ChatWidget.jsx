@@ -1,101 +1,124 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
+function titleizeBiz(biz) {
+  const s = String(biz || "")
+    .replace(/[_-]+/g, " ")
+    .trim();
+  if (!s) return "Dew";
+  return s.replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
 export default function ChatWidget({
   biz = "default",
-  chatUrlBase = "https://client-sand-kappa.vercel.app",
+  chatUrlBase = process.env.NEXT_PUBLIC_CHAT_URL_BASE,
+  title,
+  subtitle = "Quick answers • Booking help",
+  avatarSrc,
 }) {
+  if (!chatUrlBase) {
+    console.error("Missing NEXT_PUBLIC_CHAT_URL_BASE");
+  }
   const [open, setOpen] = useState(false);
 
-  const src = `${chatUrlBase}/?biz=${encodeURIComponent(biz)}&embed=1`;
+  useEffect(() => {
+    const onKeyDown = (e) => e.key === "Escape" && setOpen(false);
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
+  const iframeSrc = useMemo(() => {
+    const base = chatUrlBase.replace(/\/+$/, "");
+    return `${base}/?biz=${encodeURIComponent(biz)}&embed=1`;
+  }, [chatUrlBase, biz]);
+
+  const headerTitle = title || titleizeBiz(biz);
 
   return (
     <>
-      {/* Floating button */}
-      <button
-        onClick={() => setOpen(true)}
-        style={{
-          position: "fixed",
-          right: 18,
-          bottom: 18,
-          zIndex: 9999,
-          padding: "12px 14px",
-          borderRadius: 999,
-          border: "1px solid rgba(0,0,0,0.15)",
-          background: "#111",
-          color: "#fff",
-          fontWeight: 700,
-          cursor: "pointer",
-        }}
-        aria-label="Open chat"
+      {/* Panel */}
+      <div
+        className={[
+          "fixed z-[999999] right-4 bottom-28 w-[380px] h-[560px]",
+          "max-w-[calc(100vw-2rem)] max-h-[calc(100vh-8rem)]",
+          "rounded-2xl overflow-hidden border border-black/10",
+          "bg-white/90 backdrop-blur-md shadow-2xl",
+          "origin-bottom-right transition-all duration-150",
+          open
+            ? "scale-100 opacity-100 pointer-events-auto"
+            : "scale-95 opacity-0 pointer-events-none",
+          "sm:right-4",
+          "max-[520px]:left-3 max-[520px]:right-3 max-[520px]:w-auto max-[520px]:h-[70vh]",
+        ].join(" ")}
       >
-        Chat
-      </button>
-
-      {/* Modal */}
-      {open && (
-        <div
-          onClick={() => setOpen(false)}
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 10000,
-            background: "rgba(0,0,0,0.55)",
-            display: "flex",
-            alignItems: "flex-end",
-            justifyContent: "flex-end",
-            padding: 18,
-          }}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              width: 380,
-              height: 560,
-              background: "#0b0b0b",
-              borderRadius: 16,
-              overflow: "hidden",
-              border: "1px solid rgba(255,255,255,0.12)",
-              boxShadow: "0 12px 30px rgba(0,0,0,0.4)",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                padding: "10px 12px",
-                borderBottom: "1px solid rgba(255,255,255,0.12)",
-                background: "#111",
-                color: "#fff",
-                fontWeight: 700,
-              }}
-            >
-              <span>Assistant</span>
-              <button
-                onClick={() => setOpen(false)}
-                style={{
-                  background: "transparent",
-                  color: "#fff",
-                  border: "none",
-                  fontSize: 18,
-                  cursor: "pointer",
-                  padding: 6,
-                }}
-                aria-label="Close chat"
-              >
-                ✕
-              </button>
+        {/* Header */}
+        <div className="h-12 flex items-center justify-between px-4 border-b border-black/5 bg-white">
+          <div className="flex items-center gap-2">
+            <div className="h-7 w-7 rounded-full bg-pink-200/70 grid place-items-center overflow-hidden">
+              {avatarSrc ? (
+                <img
+                  src={avatarSrc}
+                  alt={`${headerTitle} Assistant`}
+                  className="h-7 w-7 rounded-full object-cover"
+                />
+              ) : (
+                <span className="text-[12px] font-bold text-black/80">D</span>
+              )}
             </div>
 
-            <iframe
-              title="AI Chat"
-              src={src}
-              style={{ width: "100%", height: "100%", border: "none" }}
-            />
+            <div className="leading-tight">
+              <div className="text-sm font-semibold text-black/90">
+                {headerTitle}
+              </div>
+              <div className="text-[11px] text-black/50">{subtitle}</div>
+            </div>
           </div>
+
+          <button
+            onClick={() => setOpen(false)}
+            className="h-9 w-9 rounded-xl border border-black/10 bg-white/70 hover:bg-white transition grid place-items-center"
+            aria-label="Close chat"
+            title="Close"
+          >
+            <span className="text-lg leading-none">×</span>
+          </button>
         </div>
+
+        {/* Iframe */}
+        <iframe
+          title={`${headerTitle} Chat`}
+          src={iframeSrc}
+          className="w-full h-[calc(100%-3rem)] border-0"
+        />
+      </div>
+
+      {/* Bubble */}
+      {!open && (
+        <button
+          onClick={() => setOpen(true)}
+          className={[
+            "fixed z-[999998] right-8 bottom-8 h-20 w-20 rounded-full",
+            "grid place-items-center shadow-2xl",
+            "bg-white ring-2 ring-[#eabec5]",
+            "hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(0,0,0,0.22)]",
+            "transition",
+          ].join(" ")}
+          aria-label="Open chat"
+          title="Chat"
+        >
+          {avatarSrc ? (
+            <img
+              src={avatarSrc} // ✅ FIXED
+              alt={`${headerTitle} Assistant`}
+              className="h-16 w-16 rounded-full object-cover"
+            />
+          ) : (
+            <div className="h-16 w-16 rounded-full bg-black grid place-items-center">
+              <span className="text-white font-bold text-xl">D</span>
+            </div>
+          )}
+        </button>
       )}
     </>
   );

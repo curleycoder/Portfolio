@@ -7,7 +7,6 @@ import { Suspense } from "react";
 import AnalyticsTracker from "@/components/Analytics";
 import ChatWidget from "@/components/ChatWidget";
 
-
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
@@ -21,21 +20,27 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={`${inter.className} min-h-screen bg-neutral-950 text-neutral-50`}>
+      <body
+        className={`${inter.className} min-h-screen bg-neutral-950 text-neutral-50`}
+      >
         <Providers>
-        <div className="sticky top-0 z-50">
+          <div className="sticky top-0 z-50">
             <MyNavBar />
-        </div>
-       <Suspense fallback={null}>
-           <AnalyticsTracker />
-        </Suspense>
+          </div>
+          <Suspense fallback={null}>
+            <AnalyticsTracker />
+          </Suspense>
 
-        <Toaster/>
-        <main>{children}</main>
+          <Toaster />
+          <main>{children}</main>
         </Providers>
-        <ChatWidget biz="beiraghian"/>
+        <ChatWidget
+          biz="beiraghian"
+          title="Beiraghian Assistant"
+          subtitle="Projects • Book a Call • Contact"
+          avatarSrc="/avatar.png"
+        />
       </body>
     </html>
   );
 }
-
