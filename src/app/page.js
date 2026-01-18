@@ -13,46 +13,31 @@ const hero = {
     "I’m transitioning from fast-paced, customer-facing work into software development. I enjoy building practical web apps with Next.js, React, Tailwind, and Auth0, focusing on clean UI and simple, reliable flows.",
 };
 
-const skillLevelClass = {
-  beginner:
-    "border-sky-500/40 bg-sky-500/10 text-emerald-200",
-  intermediate:
-    "border-blue-500/50 bg-blue-500/10 text-sky-200",
-  expert:
-    "border-emerald-500/60 bg-emerald-500/10 text-pink-200",
+/* ONE COLOR PER CATEGORY — NO LEVELS */
+const categoryClass = {
+  frontend: "border-cyan-500/50 bg-cyan-500/10 text-cyan-100",
+  backend: "border-blue-500/50 bg-blue-500/10 text-blue-100",
+  mobile: "border-purple-500/50 bg-purple-500/10 text-purple-100",
+  tools: "border-pink-300/50 bg-pink-500/10 text-pink-100",
 };
 
 const skills = {
-  frontend: [
-    { name: "HTML / CSS", level: "expert" },
-    { name: "Tailwind CSS", level: "expert" },
-    { name: "React", level: "expert" },
-    { name: "Next.js (App Router)", level: "intermediate" },
-  ],
-  backend: [
-    { name: "Node.js", level: "intermediate" },
-    { name: "REST APIs", level: "intermediate" },
-    { name: "Neon · PostgreSQL", level: "intermediate" },
-    { name: "Drizzle ORM", level: "beginner" },
-  ],
-  mobile: [
-    { name: "React Native", level: "intermediate" },
-    { name: "Expo", level: "intermediate" },
-    { name: "Expo Go / Xcode", level: "intermediate" },
-  ],
+  frontend: ["HTML / CSS", "Tailwind CSS", "React", "Next.js (App Router)"],
+  backend: ["Node.js", "REST APIs", "Neon · PostgreSQL", "Drizzle ORM"],
+  mobile: ["React Native", "Expo", "Expo Go / Xcode"],
   tools: [
-    { name: "Git & GitHub", level: "expert" },
-    { name: "VS Code", level: "expert" },
-    { name: "Chrome DevTools", level: "intermediate" },
-    { name: "Auth0", level: "beginner" },
-    { name: "Postman", level: "intermediate" },
-    { name: "Jira / Notion", level: "expert" },
+    "Git & GitHub",
+    "VS Code",
+    "Chrome DevTools",
+    "Auth0",
+    "Postman",
+    "Jira / Notion",
   ],
 };
 
 export default function HomePage() {
   return (
-    <main className="relative min-h-screen mb-0 bg-neutral-950 text-neutral-50">
+    <main className="relative min-h-screen bg-neutral-950 text-neutral-50">
       {/* GLOW BACKGROUND */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -left-40 top-10 h-72 w-72 rounded-full bg-blue-500/20 blur-3xl" />
@@ -60,157 +45,95 @@ export default function HomePage() {
         <div className="absolute -bottom-20 left-1/3 h-80 w-80 rounded-full bg-cyan-500/10 blur-3xl" />
       </div>
 
-      {/* CONTENT WRAPPER */}
+      {/* CONTENT */}
       <div className="relative mx-auto flex max-w-6xl flex-col gap-10 px-4 pb-16 pt-8 md:px-6 md:pt-12">
-        {/* TOP ROW: HERO + STACK SIDE BY SIDE */}
+        {/* HERO + STACK */}
         <section className="grid gap-6 md:grid-cols-[minmax(0,1.5fr)_minmax(0,1.1fr)]">
-          {/* HERO CARD (LEFT) */}
-          <div className="group overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-950/80 shadow-[0_0_24px_rgba(59,130,246,0.35)] transition-transform duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_0_40px_rgba(59,130,246,0.7)]">
-            {/* subtle top bar */}
-            <div className="h-[2px] w-full bg-gradient-to-r from-blue-500/70 via-cyan-400/60 to-transparent opacity-80" />
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-[11px] text-neutral-400">
-              <span className="m-4 pt-3 px-3 font-mono uppercase tracking-[0.18em]">
-                CurleyCoder · BCIT · 2025
-              </span>
+          {/* HERO */}
+          <div className="group overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-950/80 shadow-[0_0_24px_rgba(168,85,247,0.32)] transition-transform duration-300">
+            <div className="h-0.5 w-full bg-linear-to-r from-blue-pink/70 via-purple-400/60 to-transparent opacity-80" />
+            <span className="m-4 inline-block font-mono text-[11px] uppercase tracking-[0.18em] text-neutral-400">
+              CurleyCoder · BCIT · 2025
+            </span>
             <MyHero hero={hero} />
-            </div>
           </div>
 
-          {/* STACK CARD (RIGHT) – REAL VISUALIZER NOW */}
-          <div className="group rounded-2xl border border-neutral-800 bg-neutral-950/80 px-4 py-4 shadow-[0_0_24px_rgba(168,85,247,0.32)] transition-transform duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_0_40px_rgba(192,132,252,0.7)]">
-            {/* subtle top bar */}
-            <div className="mb-3 h-[2px] w-full bg-gradient-to-r from-purple-500/80 via-pink-500/70 to-transparent opacity-90" />
+          {/* STACK */}
+          <div className="group rounded-2xl border border-neutral-800 bg-neutral-950/80 px-4 py-4 shadow-[0_0_24px_rgba(168,85,247,0.32)] transition-transform duration-300">
+            <div className="mb-3 h-0.5 w-full bg-linear-to-r from-purple-500/80 via-pink-500/70 to-transparent opacity-90" />
 
-            {/* Top label */}
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-[11px] text-neutral-400">
+            <div className="mb-4">
               <span className="rounded-full border border-purple-500/50 bg-purple-500/10 px-3 py-1 text-[10px] uppercase tracking-[0.18em] text-purple-100">
                 Full-Stack · Web · Mobile
               </span>
             </div>
 
-            {/* LEVEL LEGEND */}
-            <div className="mb-3 flex flex-wrap items-center gap-2 text-[10px] text-neutral-400">
-              <span className="mr-2 font-mono uppercase tracking-[0.18em] text-neutral-500">
-                Levels
-              </span>
-              <span className={`rounded-full px-2 py-0.5 ${skillLevelClass.beginner}`}>
-                Beginner
-              </span>
-              <span className={`rounded-full px-2 py-0.5 ${skillLevelClass.intermediate}`}>
-                Intermediate
-              </span>
-              <span className={`rounded-full px-2 py-0.5 ${skillLevelClass.expert}`}>
-                Expert
-              </span>
-            </div>
-
-            {/* CATEGORIES */}
+            {/* SKILL CATEGORIES */}
             <div className="space-y-4 text-[11px] text-neutral-300">
               {/* FRONTEND */}
-              <div>
-                <div className="mb-1 flex items-center gap-2">
-                  <span className="font-mono uppercase tracking-[0.18em] text-neutral-500">
-                    Frontend
-                  </span>
-                  <span className="h-px flex-1 bg-neutral-800" />
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {skills.frontend.map((skill) => (
-                    <span
-                      key={skill.name}
-                      className={[
-                        "rounded-full px-3 py-1 font-mono transition-transform duration-150 hover:-translate-y-0.5",
-                        skillLevelClass[skill.level],
-                      ].join(" ")}
-                    >
-                      {skill.name}
-                    </span>
-                  ))}
-                </div>
-              </div>
+              <SkillGroup
+                title="Frontend"
+                items={skills.frontend}
+                color={categoryClass.frontend}
+              />
 
               {/* BACKEND */}
-              <div>
-                <div className="mb-1 flex items-center gap-2">
-                  <span className="font-mono uppercase tracking-[0.18em] text-neutral-500">
-                    Backend
-                  </span>
-                  <span className="h-px flex-1 bg-neutral-800" />
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {skills.backend.map((skill) => (
-                    <span
-                      key={skill.name}
-                      className={[
-                        "rounded-full px-3 py-1 font-mono transition-transform duration-150 hover:-translate-y-0.5",
-                        skillLevelClass[skill.level],
-                      ].join(" ")}
-                    >
-                      {skill.name}
-                    </span>
-                  ))}
-                </div>
-              </div>
+              <SkillGroup
+                title="Backend"
+                items={skills.backend}
+                color={categoryClass.backend}
+              />
 
               {/* MOBILE */}
-              <div>
-                <div className="mb-1 flex items-center gap-2">
-                  <span className="font-mono uppercase tracking-[0.18em] text-neutral-500">
-                    Mobile
-                  </span>
-                  <span className="h-px flex-1 bg-neutral-800" />
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {skills.mobile.map((skill) => (
-                    <span
-                      key={skill.name}
-                      className={[
-                        "rounded-full px-3 py-1 font-mono transition-transform duration-150 hover:-translate-y-0.5",
-                        skillLevelClass[skill.level],
-                      ].join(" ")}
-                    >
-                      {skill.name}
-                    </span>
-                  ))}
-                </div>
-              </div>
+              <SkillGroup
+                title="Mobile"
+                items={skills.mobile}
+                color={categoryClass.mobile}
+              />
 
-              {/* DEVOPS / TOOLS */}
-              <div>
-                <div className="mb-1 flex items-center gap-2">
-                  <span className="font-mono uppercase tracking-[0.18em] text-neutral-500">
-                    DevOps &amp; Tools
-                  </span>
-                  <span className="h-px flex-1 bg-neutral-800" />
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {skills.tools.map((skill) => (
-                    <span
-                      key={skill.name}
-                      className={[
-                        "rounded-full px-3 py-1 font-mono transition-transform duration-150 hover:-translate-y-0.5",
-                        skillLevelClass[skill.level],
-                      ].join(" ")}
-                    >
-                      {skill.name}
-                    </span>
-                  ))}
-                </div>
-              </div>
+              {/* TOOLS */}
+              <SkillGroup
+                title="DevOps & Tools"
+                items={skills.tools}
+                color={categoryClass.tools}
+              />
             </div>
           </div>
         </section>
 
-        {/* PROJECT PREVIEW */}
-        <div>
-          <ProjectPreviewCard count={3} />
-        </div>
+        {/* PROJECTS */}
+        <ProjectPreviewCard count={3} />
 
-        {/* GITHUB CALENDAR */}
-        <div>
-          <GitHubCalendar />
-        </div>
+        {/* GITHUB */}
+        <GitHubCalendar />
       </div>
     </main>
+  );
+}
+
+function SkillGroup({ title, items, color }) {
+  return (
+    <div>
+      <div className="mb-1 flex items-center gap-2">
+        <span className="font-mono uppercase tracking-[0.18em] text-neutral-500">
+          {title}
+        </span>
+        <span className="h-px flex-1 bg-neutral-800" />
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {items.map((name) => (
+          <span
+            key={name}
+            className={[
+              "rounded-full border px-3 py-1 font-mono transition-transform duration-150 hover:-translate-y-0.5",
+              color,
+            ].join(" ")}
+          >
+            {name}
+          </span>
+        ))}
+      </div>
+    </div>
   );
 }

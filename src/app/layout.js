@@ -1,13 +1,24 @@
 import MyNavBar from "@/components/MyNavBar";
 import "./globals.css";
-import { Inter } from "next/font/google";
+import { Lato, Source_Code_Pro } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { Providers } from "./providers";
 import { Suspense } from "react";
 import AnalyticsTracker from "@/components/Analytics";
 import ChatWidget from "@/components/ChatWidget";
 
-const inter = Inter({ subsets: ["latin"] });
+const lato = Lato({
+  subsets: ["latin"],
+  weight: ["300", "400", "700"],
+  variable: "--font-lato",
+  display: "swap",
+});
+
+const sourceCodePro = Source_Code_Pro({
+  subsets: ["latin"],
+  variable: "--font-scp",
+  display: "swap",
+});
 
 export const metadata = {
   title: "Shabnam Beiraghian",
@@ -21,7 +32,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body
-        className={`${inter.className} min-h-screen bg-neutral-950 text-neutral-50`}
+        className={`${lato.variable} ${sourceCodePro.variable} min-h-screen bg-neutral-950 text-neutral-50`}
       >
         <Providers>
           <div className="sticky top-0 z-50">
