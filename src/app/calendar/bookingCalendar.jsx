@@ -2,27 +2,32 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-const TIME_SLOTS = [
-  "10:00",
-  "11:00",
-  "13:00",
-  "14:00",
-  "15:00",
-];
+const TIME_SLOTS = ["10:00", "11:00", "13:00", "14:00", "15:00"];
 
-function formatDateISO(d) {
-  return d.toISOString().slice(0, 10);
+// ✅ Local YYYY-MM-DD (prevents UTC date shift bugs)
+function formatDateLocalISO(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }
 
 function makeNext7Days() {
   const days = [];
   const today = new Date();
+  // normalize to noon to avoid DST edge weirdness
+  today.setHours(12, 0, 0, 0);
+
   for (let i = 0; i < 7; i++) {
     const d = new Date(today);
     d.setDate(today.getDate() + i);
     days.push(d);
   }
   return days;
+}
+
+function isValidEmail(v) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v || "").trim());
 }
 
 export default function BookingCalendar() {
@@ -33,36 +38,74 @@ export default function BookingCalendar() {
   const [email, setEmail] = useState("");
   const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState(null); // { type: "error"|"success", text: string }
 
   const days = useMemo(() => makeNext7Days(), []);
 
+  const bookedSet = useMemo(() => {
+    const s = new Set();
+    for (const b of bookings) {
+      if (!b?.date || !b?.timeSlot) continue;
+      s.add(`${b.date}__${b.timeSlot}`);
+    }
+    return s;
+  }, [bookings]);
+
   useEffect(() => {
-    const start = formatDateISO(days[0]);
-    const end = formatDateISO(days[days.length - 1]);
+    let alive = true;
+
+    const start = formatDateLocalISO(days[0]);
+    const end = formatDateLocalISO(days[days.length - 1]);
 
     fetch(`/api/bookings?start=${start}&end=${end}`)
-      .then((res) => res.ok ? res.json() : [])
-      .then((data) => setBookings(Array.isArray(data) ? data : []))
-      .catch(() => setBookings([]));
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => {
+        if (!alive) return;
+        setBookings(Array.isArray(data) ? data : []);
+      })
+      .catch(() => {
+        if (!alive) return;
+        setBookings([]);
+      });
+
+    return () => {
+      alive = false;
+    };
   }, [days]);
 
   function isSlotBooked(dateISO, time) {
-    return bookings.some(
-      (b) => b.date === dateISO && b.timeSlot === time
-    );
+    return bookedSet.has(`${dateISO}__${time}`);
+  }
+
+  function selectDay(dateISO) {
+    setSelectedDate(dateISO);
+    // ✅ prevent mismatched day/time
+    setSelectedTime("");
+    setMessage(null);
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
-    setMessage("");
+    setMessage(null);
+
+    const name = fullName.trim();
+    const mail = email.trim();
+    const memo = note.trim();
 
     if (!selectedDate || !selectedTime) {
-      setMessage("Please select a day and time first.");
+      setMessage({ type: "error", text: "Please select a day and time first." });
       return;
     }
-    if (!fullName || !email) {
-      setMessage("Name and email are required.");
+    if (!name) {
+      setMessage({ type: "error", text: "Full name is required." });
+      return;
+    }
+    if (!mail || !isValidEmail(mail)) {
+      setMessage({ type: "error", text: "Please enter a valid email address." });
+      return;
+    }
+    if (isSlotBooked(selectedDate, selectedTime)) {
+      setMessage({ type: "error", text: "That time is already booked. Please pick another slot." });
       return;
     }
 
@@ -72,27 +115,48 @@ export default function BookingCalendar() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          fullName,
-          email,
-          note,
+          fullName: name,
+          email: mail,
+          note: memo,
           date: selectedDate,
           timeSlot: selectedTime,
         }),
       });
+
+      if (res.status === 409) {
+        setMessage({ type: "error", text: "That slot was just taken. Please choose another time." });
+        // optional: refresh bookings for accuracy
+        const start = formatDateLocalISO(days[0]);
+        const end = formatDateLocalISO(days[days.length - 1]);
+        fetch(`/api/bookings?start=${start}&end=${end}`)
+          .then((r) => (r.ok ? r.json() : []))
+          .then((data) => setBookings(Array.isArray(data) ? data : []))
+          .catch(() => {});
+        return;
+      }
 
       if (!res.ok) {
         const txt = await res.text();
         throw new Error(txt || "Failed to submit booking.");
       }
 
-      setMessage("Request sent! I’ll email you to confirm.");
+      // ✅ dedupe & add
+      setBookings((prev) => {
+        const key = `${selectedDate}__${selectedTime}`;
+        const next = prev.filter((b) => `${b?.date}__${b?.timeSlot}` !== key);
+        next.push({ date: selectedDate, timeSlot: selectedTime });
+        return next;
+      });
+
+      setMessage({ type: "success", text: "Request sent! I’ll email you to confirm." });
+
+      // clear inputs
+      setFullName("");
+      setEmail("");
       setNote("");
-      setBookings((prev) => [
-        ...prev,
-        { date: selectedDate, timeSlot: selectedTime },
-      ]);
+      setSelectedTime("");
     } catch (err) {
-      setMessage(err.message);
+      setMessage({ type: "error", text: err?.message || "Something went wrong." });
     } finally {
       setSubmitting(false);
     }
@@ -104,7 +168,7 @@ export default function BookingCalendar() {
       <div className="overflow-x-auto rounded-2xl border border-neutral-800 bg-neutral-900/70 p-4">
         <div className="grid gap-4 md:grid-cols-7">
           {days.map((date) => {
-            const dateISO = formatDateISO(date);
+            const dateISO = formatDateLocalISO(date);
             const label = date.toLocaleDateString("en-CA", {
               weekday: "short",
               month: "short",
@@ -125,8 +189,8 @@ export default function BookingCalendar() {
               >
                 <button
                   type="button"
-                  onClick={() => setSelectedDate(dateISO)}
-                  className="mb-2 text-left font-semibold text-neutral-100"
+                  onClick={() => selectDay(dateISO)}
+                  className="mb-2 rounded-md px-1 text-left font-semibold text-neutral-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60"
                 >
                   {label}
                 </button>
@@ -134,8 +198,7 @@ export default function BookingCalendar() {
                 <div className="space-y-1">
                   {TIME_SLOTS.map((slot) => {
                     const booked = isSlotBooked(dateISO, slot);
-                    const isActive =
-                      isSelectedDay && selectedTime === slot;
+                    const isActive = isSelectedDay && selectedTime === slot;
 
                     return (
                       <button
@@ -145,17 +208,18 @@ export default function BookingCalendar() {
                         onClick={() => {
                           setSelectedDate(dateISO);
                           setSelectedTime(slot);
+                          setMessage(null);
                         }}
                         className={[
-                          "w-full rounded-md px-2 py-1 text-[11px]",
+                          "w-full rounded-md px-2 py-1 text-[11px] transition-colors",
                           booked
-                            ? "cursor-not-allowed bg-neutral-800 text-neutral-500 line-through"
+                            ? "cursor-not-allowed bg-neutral-800/60 text-neutral-500"
                             : isActive
                             ? "bg-blue-500 text-white"
                             : "bg-neutral-800 text-neutral-200 hover:bg-neutral-700",
                         ].join(" ")}
                       >
-                        {slot} {booked ? "(booked)" : ""}
+                        {slot}
                       </button>
                     );
                   })}
@@ -169,17 +233,13 @@ export default function BookingCalendar() {
       {/* Booking form */}
       <form
         onSubmit={handleSubmit}
-        className="rounded-2xl border border-neutral-800 bg-neutral-900/70 p-4 space-y-4 text-sm"
+        className="space-y-4 rounded-2xl border border-neutral-800 bg-neutral-900/70 p-4 text-sm"
       >
-        <h2 className="text-base font-semibold text-neutral-50">
-          Request this time
-        </h2>
+        <h2 className="text-base font-semibold text-neutral-50">Request this time</h2>
 
         <p className="text-xs text-neutral-400">
           Selected:{" "}
-          {selectedDate && selectedTime
-            ? `${selectedDate} at ${selectedTime}`
-            : "No time selected yet"}
+          {selectedDate && selectedTime ? `${selectedDate} at ${selectedTime}` : "No time selected yet"}
         </p>
 
         <div className="grid gap-3 sm:grid-cols-2">
@@ -188,6 +248,9 @@ export default function BookingCalendar() {
               Full name
             </label>
             <input
+              name="fullName"
+              required
+              autoComplete="name"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               className="w-full rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500/70"
@@ -201,6 +264,9 @@ export default function BookingCalendar() {
             </label>
             <input
               type="email"
+              name="email"
+              required
+              autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500/70"
@@ -214,6 +280,7 @@ export default function BookingCalendar() {
             Notes (optional)
           </label>
           <textarea
+            name="note"
             value={note}
             onChange={(e) => setNote(e.target.value)}
             rows={3}
@@ -223,13 +290,22 @@ export default function BookingCalendar() {
         </div>
 
         {message && (
-          <p className="text-xs text-neutral-300">{message}</p>
+          <p
+            className={[
+              "rounded-md border px-3 py-2 text-xs",
+              message.type === "success"
+                ? "border-green-500/30 bg-green-500/10 text-green-200"
+                : "border-red-500/30 bg-red-500/10 text-red-200",
+            ].join(" ")}
+          >
+            {message.text}
+          </p>
         )}
 
         <button
           type="submit"
           disabled={submitting}
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 disabled:opacity-60"
+          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {submitting ? "Sending..." : "Request booking"}
         </button>

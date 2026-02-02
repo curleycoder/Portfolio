@@ -1,4 +1,3 @@
-import Head from "next/head";
 export const dynamic = "force-dynamic";
 
 export default function ResumePage() {
@@ -6,12 +5,10 @@ export default function ResumePage() {
     <main className="mx-auto max-w-4xl px-4 py-16 space-y-12">
       {/* HEADER */}
       <header className="space-y-4">
-        <h1 className="text-4xl font-bold tracking-tight">
-          Shabnam Beiraghian
-        </h1>
+        <h1 className="text-4xl font-bold tracking-tight">Shabnam Beiraghian</h1>
 
         <p className="text-lg text-neutral-400 dark:text-neutral-300">
-          Full-Stack Web Developer
+          Full Stack Developer
         </p>
 
         <div className="flex flex-wrap gap-3 text-sm text-blue-300 dark:text-neutral-300">
@@ -24,22 +21,23 @@ export default function ResumePage() {
             shabnambeiraghian@gmail.com
           </a>
           <span>•</span>
-          <a
-            href="https://www.linkedin.com/in/shabnam-beiraghian/"
-            target="_blank"
-            rel="noreferrer"
-            className="underline underline-offset-2"
-          >
-            LinkedIn
-          </a>
-          <span>•</span>
+          
           <a
             href="https://github.com/curleycoder"
             target="_blank"
             rel="noreferrer"
             className="underline underline-offset-2"
           >
-            GitHub
+            github.com/curleycoder
+          </a>
+          <span>•</span>
+          <a
+            href="https://www.linkedin.com/in/shabnam-beiraghian/"
+            target="_blank"
+            rel="noreferrer"
+            className="underline underline-offset-2"
+          >
+            linkedin.com/in/shabnam-beiraghian/
           </a>
         </div>
 
@@ -59,27 +57,53 @@ export default function ResumePage() {
         </div>
       </header>
 
-      {/* PROFILE */}
-      <section>
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500">
-          Profile
-        </h2>
-        <p className="mt-2 text-sm leading-relaxed text-neutral-400 dark:text-neutral-100">
-          Full-Stack Web Development student at BCIT with a background in
-          Architecture Engineering and a strong foundation in design thinking,
-          problem-solving, and technical precision. Transitioning into software
-          development by combining an architectural mindset—systems thinking,
-          structured planning, and visual communication—with modern web
-          technologies. Experienced in high-volume customer service and
-          technical product education. Currently volunteering as Social Media
-          Director for the Women in Computing Club at BCIT, managing digital
-          content, campaigns, and community engagement.
-        </p>
-      </section>
-
       <div className="grid gap-10 md:grid-cols-[2fr,1fr]">
-        {/* LEFT: EXPERIENCE + EDUCATION */}
-        <div className="space-y-8">
+        {/* LEFT: PROJECTS + EXPERIENCE + EDUCATION + AWARDS + VOLUNTEER */}
+        <div className="space-y-10">
+          {/* PROJECTS */}
+          <section>
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500">
+              Projects
+            </h2>
+
+            <div className="mt-4 space-y-6">
+              <div>
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <h3 className="text-base font-semibold">
+                    Frontend Developer &amp; Technical Project Manager — Forge — Mobile Application
+                  </h3>
+                  <span className="text-xs text-neutral-500">Sep 2025 – Dec 2025</span>
+                </div>
+                <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-400 dark:text-neutral-100">
+                  <li>
+                    Built a mobile application in an 8-person cross-disciplinary team to help high-school
+                    students explore skilled-trade career pathways.
+                  </li>
+                  <li>
+                    Implemented UI components from UX designs and integrated AI-assisted features in an Agile workflow.
+                  </li>
+                </ul>
+              </div>
+
+              <div>
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <h3 className="text-base font-semibold">
+                    Full Stack Developer &amp; Scrum Master — LendItOut — Web Application
+                  </h3>
+                  <span className="text-xs text-neutral-500">Apr 2025 – May 2025</span>
+                </div>
+                <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-400 dark:text-neutral-100">
+                  <li>
+                    Developed a responsive web application in a 3-person team based on Figma designs.
+                  </li>
+                  <li>
+                    Converted high-fidelity UI/UX mockups into a functional live application.
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
           {/* EXPERIENCE */}
           <section>
             <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500">
@@ -87,95 +111,65 @@ export default function ResumePage() {
             </h2>
 
             <div className="mt-4 space-y-6">
-              {/* Social Media Director */}
               <div>
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
                   <h3 className="text-base font-semibold">
-                    Social Media Director (Volunteer)
+                    Full-Stack Developer — Community of Guardians (Internship)
                   </h3>
-                  <span className="text-xs text-neutral-500">
-                    2025 – Present · Burnaby, BC
-                  </span>
+                  <span className="text-xs text-neutral-500">Jan 2026 – Present</span>
                 </div>
-                <p className="text-sm text-neutral-400 dark:text-neutral-200">
-                  Women in Computing Club · BCIT
-                </p>
                 <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-400 dark:text-neutral-100">
                   <li>
-                    Manage digital content, social campaigns, and event
-                    promotion for the Women in Computing Club.
+                    Developing and maintaining features for a nonprofit social platform aligned with UN Sustainable Development Goals.
                   </li>
                   <li>
-                    Create graphics, announcements, and community posts across
-                    Instagram, Discord, and LinkedIn.
+                    Collaborating with a cross-functional team using Agile practices (Git, Taiga, code reviews).
                   </li>
                   <li>
-                    Support club leadership with event organization, outreach,
-                    and digital communications.
+                    Building responsive front-end components and integrating them with backend APIs.
                   </li>
                 </ul>
               </div>
 
-              {/* Inside Automotive */}
               <div>
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
                   <h3 className="text-base font-semibold">
-                    Inside Automotive Sales Associate
+                    Full-Stack Developer — Beautyshohre Studio
                   </h3>
-                  <span className="text-xs text-neutral-500">
-                    Jul 2022 – Mar 2025 · Vancouver, BC
-                  </span>
+                  <span className="text-xs text-neutral-500">Jun 2025 – Present</span>
                 </div>
-                <p className="text-sm text-neutral-400 dark:text-neutral-200">
-                  Lordco / Inside Automotive
-                </p>
                 <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-400 dark:text-neutral-100">
                   <li>
-                    Ranked #1 in cash sales among seven associates and achieved
-                    the second-highest total charge revenue.
+                    Designed, built, and deployed a production full-stack web application for a real beauty business.
                   </li>
                   <li>
-                    Served 100+ customers per day, recommending compatible
-                    parts and explaining technical details in simple language.
+                    Implemented online booking, scheduling logic, admin dashboard, and client management features.
                   </li>
                   <li>
-                    Guided customers through troubleshooting and part selection
-                    for repairs and upgrades.
+                    Owned the project end-to-end: requirements, architecture, deployment, and post-launch updates.
                   </li>
                   <li>
-                    Coordinated with warehouse and delivery teams to ensure
-                    fast, accurate order fulfillment.
+                    Providing ongoing maintenance, updates, and feature enhancements based on client needs.
                   </li>
                 </ul>
               </div>
 
-              {/* Head Cashier */}
               <div>
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <h3 className="text-base font-semibold">Head Cashier</h3>
-                  <span className="text-xs text-neutral-500">
-                    Nov 2019 – Jul 2022 · Vancouver, BC
-                  </span>
+                  <h3 className="text-base font-semibold">
+                    Customer Operations &amp; Team Lead (Sales &amp; Cash) — Lordco Auto Parts
+                  </h3>
+                  <span className="text-xs text-neutral-500">Nov 2019 – Mar 2025</span>
                 </div>
-                <p className="text-sm text-neutral-400 dark:text-neutral-200">
-                  Retail Store
-                </p>
                 <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-400 dark:text-neutral-100">
                   <li>
-                    Led front-end operations, trained new cashiers, and
-                    maintained zero cash discrepancies.
+                    Assisted ~100 customers daily (phone &amp; in-person), diagnosing needs and recommending correct automotive parts.
                   </li>
                   <li>
-                    Handled complex customer inquiries, returns, and payment
-                    issues with a calm, solution-focused approach.
+                    Led and scheduled a team of 4 cashiers in a high-volume environment.
                   </li>
                   <li>
-                    Improved checkout efficiency by optimizing queues and
-                    troubleshooting POS issues.
-                  </li>
-                  <li>
-                    Earned the ACDelco Sky Trip Award for outstanding sales
-                    performance and customer satisfaction.
+                    Handled high-volume cash and card transactions; reconciled daily balances and prepared deposits.
                   </li>
                 </ul>
               </div>
@@ -192,193 +186,86 @@ export default function ResumePage() {
               <div>
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
                   <h3 className="text-base font-semibold">
-                    Diploma, Full-Stack Web Development
+                    BCIT Downtown | Full-Stack Web Development, Diploma
                   </h3>
-                  <span className="text-xs text-neutral-500">
-                    Sep 2024 – Apr 2026 (In Progress)
-                  </span>
+                  <span className="text-xs text-neutral-500">Sep 2024 – Apr 2026</span>
                 </div>
-                <p className="text-sm text-neutral-400 dark:text-neutral-200">
-                  British Columbia Institute of Technology (BCIT) — Burnaby, BC
-                </p>
               </div>
 
               <div>
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
                   <h3 className="text-base font-semibold">
-                    Bachelor’s Degree, Architecture Engineering
+                    Azad University | Architectural Engineering, Bachelor’s Degree
                   </h3>
-                  <span className="text-xs text-neutral-500">
-                    Sep 2015 – Completed
-                  </span>
+                  <span className="text-xs text-neutral-500">Sep 2014 – Jan 2019</span>
                 </div>
-                <p className="text-sm text-neutral-400 dark:text-neutral-200">
-                  Azad University — Iran
-                </p>
               </div>
+            </div>
+          </section>
+
+          {/* AWARDS */}
+          <section>
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500">
+              Awards
+            </h2>
+
+            <div className="mt-4 text-sm text-neutral-400 dark:text-neutral-100">
+              Pam and Jerry Bastien Bursary; BCIT Special Bursaries{" "}
+              <span className="text-neutral-500">· March 2025</span>
+            </div>
+          </section>
+
+          {/* VOLUNTEER */}
+          <section>
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500">
+              Volunteer Experience
+            </h2>
+
+            <div className="mt-4 text-sm text-neutral-400 dark:text-neutral-100">
+              BCIT Women In Computing (WiC) | Social Media Director{" "}
+              <span className="text-neutral-500">· Sep 2025 – Present</span>
             </div>
           </section>
         </div>
 
-        {/* RIGHT: SKILLS */}
+        {/* RIGHT: TECHNICAL SKILLS */}
         <aside className="space-y-8">
           <section>
             <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500">
-              Key Skills
+              Technical Skills
             </h2>
-            <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-neutral-400 dark:text-neutral-100">
-              <li>
-                Full-Stack Development (JavaScript, React, Next.js, Node.js —
-                in progress)
-              </li>
-              <li>UI/UX fundamentals & design thinking</li>
-              <li>Product education & technical explanation</li>
-              <li>Sales performance & metric-driven communication</li>
-              <li>Content creation & social media management</li>
-              <li>Problem-solving, accuracy, and accountability</li>
-              <li>Team collaboration & leadership</li>
-            </ul>
+
+            <div className="mt-4 space-y-6">
+              <div>
+                <p className="text-xs uppercase tracking-wide text-neutral-500">
+                  Languages &amp; Frameworks
+                </p>
+                <p className="mt-2 text-sm text-neutral-400 dark:text-neutral-100">
+                  HTML5, CSS3, JavaScript, TypeScript, React, Next.js, Node.js, Hono, PHP, .NET, Python, C#
+                </p>
+              </div>
+
+              <div>
+                <p className="text-xs uppercase tracking-wide text-neutral-500">
+                  Databases &amp; Backend
+                </p>
+                <p className="mt-2 text-sm text-neutral-400 dark:text-neutral-100">
+                  MongoDB, MySQL, PostgreSQL, SQL, Prisma
+                </p>
+              </div>
+
+              <div>
+                <p className="text-xs uppercase tracking-wide text-neutral-500">
+                  Tools &amp; Platforms
+                </p>
+                <p className="mt-2 text-sm text-neutral-400 dark:text-neutral-100">
+                  Git, GitHub, VS Code, Vercel, Render, Jira, Trello, Slack, Linux, AWS (S3), CI/CD, Figma,
+                  MySQL WorkBench, RESTful APIs, Authentication (Clerk), Responsive Design, UI/UX Principles,
+                  SEO, E-commerce Concepts, Agile Development, OOP, X-Code
+                </p>
+              </div>
+            </div>
           </section>
-
-          <section>
-  <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500">
-    Technology
-  </h2>
-
-  {/* SMALL STATUS BAR STYLE */}
-  <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-neutral-300">
-
-    {/* TECH BADGES */}
-    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
-      JavaScript
-    </span>
-    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
-      TypeScript
-    </span>
-    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
-      HTML & EJS
-    </span>
-    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
-      CSS & Tailwind
-    </span>
-    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
-      React
-    </span>
-    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
-      React Native
-    </span>
-    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
-      Expo
-    </span>
-    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
-      Next.js
-    </span>
-    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
-      App Router
-    </span>
-    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
-      Auth0
-    </span>
-    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
-      REST APIs
-    </span>
-    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
-      Neon Serverless SQL
-    </span>
-    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
-      PostgreSQL
-    </span>
-    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
-      Drizzle ORM
-    </span>
-    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
-      Node.js
-    </span>
-    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
-      Git & GitHub
-    </span>
-  </div>
-
-</section>
-<section className="mt-6">
-  <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500">
-    Tools
-  </h2>
-
-  <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-neutral-300">
-    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
-      VS Code
-    </span>
-    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
-      GitHub Desktop
-    </span>
-    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
-      Terminal · zsh
-    </span>
-    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
-      Postman
-    </span>
-    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
-      Figma
-    </span>
-    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
-      Chrome DevTools
-    </span>
-    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
-      macOS · Linux
-    </span>
-    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
-      Xcode
-    </span>
-    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
-      Expo Go
-    </span>
-    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
-      Notion
-    </span>
-    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
-      Jira
-    </span>
-    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
-      Cloud deployment (Vercel · Render)
-    </span>
-    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
-      Neon Dashboard
-    </span>
-  </div>
-</section>
-
-{/* CURRENTLY LEARNING */}
-<section className="mt-6">
-  <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500">
-    Currently Learning
-  </h2>
-
-  <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-neutral-300">
-    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
-      Advanced TypeScript
-    </span>
-    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
-      Testing (Jest · React Testing Library)
-    </span>
-    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
-      Accessibility &amp; Performance
-    </span>
-    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
-      CI/CD · GitHub Actions
-    </span>
-    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
-      Design Systems · Component libraries
-    </span>
-    <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
-      Python
-    </span>
-        <span className="rounded-full border border-neutral-700/80 bg-neutral-900/70 px-3 py-1">
-      C#
-    </span>
-  </div>
-</section>
-
         </aside>
       </div>
     </main>

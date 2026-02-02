@@ -449,11 +449,31 @@ export async function ensureBookingRequestsTable() {
       date       date NOT NULL,
       time_slot  text NOT NULL,
       note       text,
-      status     text NOT NULL DEFAULT 'pending', -- pending | confirmed | cancelled
+      status     text NOT NULL DEFAULT 'pending',
       created_at timestamptz NOT NULL DEFAULT now()
     );
   `;
+
+  // Try to add unique index; if duplicates exist, don't crash the app.
+  try {
+    await sql`
+      CREATE UNIQUE INDEX IF NOT EXISTS booking_requests_unique_slot
+      ON booking_requests (date, time_slot);
+    `;
+  } catch (e) {
+    // 23505 = unique_violation (duplicates exist)
+    if (e?.code === "23505") {
+      console.warn(
+        "[booking_requests] Unique index NOT created because duplicates exist. Run dedupe SQL once."
+      );
+    } else {
+      // Unknown error: log it, but don't take down the site
+      console.error("[booking_requests] Failed to create unique index:", e);
+    }
+  }
 }
+
+
 
 function mapBookingRow(row) {
   if (!row) return null;
@@ -510,11 +530,13 @@ export async function fetchBookingsBetween({ startDate, endDate }) {
       created_at
     FROM booking_requests
     WHERE date BETWEEN ${startDate} AND ${endDate}
+      AND status IN ('pending','confirmed')
     ORDER BY date ASC, time_slot ASC;
   `;
 
   return rows.map(mapBookingRow);
 }
+
 // --- ANALYTICS: ROUTE VIEWS ------------------------------------------
 
 export async function ensureRouteViewsTable() {
