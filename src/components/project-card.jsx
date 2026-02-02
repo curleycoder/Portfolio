@@ -47,7 +47,7 @@ export default async function ProjectPreviewCard({ count = 3 }) {
       <div className="grid items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((p) => {
           const keywords = (p.keywords || []).map((k) =>
-            String(k).toLowerCase()
+            String(k).toLowerCase(),
           );
 
           const isMobile =
@@ -57,19 +57,29 @@ export default async function ProjectPreviewCard({ count = 3 }) {
 
           const label = isMobile ? "Mobile App" : "Web App";
 
+          const linkText =
+            p.link?.replace(/^https?:\/\//, "") || "localhost:3000";
+
           return (
             <Card
               key={p.id}
               className="
-                group flex h-full flex-col overflow-hidden
+                group relative flex h-full flex-col overflow-hidden
                 border border-neutral-800 bg-neutral-900/70 text-neutral-50
                 shadow-[0_0_18px_rgba(15,23,42,0.9)]
                 transition-transform transition-shadow duration-300 ease-out
                 hover:-translate-y-2 hover:shadow-[0_0_28px_rgba(59,130,246,0.45)]
               "
             >
-              {/* CLICKABLE AREA → project details */}
-              <Link href={`/projects/${p.id}`} className="block flex-1">
+              {/* ✅ Make the whole card clickable */}
+              <Link
+                href={`/projects/${p.id}`}
+                aria-label={`Open ${p.title}`}
+                className="absolute inset-0 z-0"
+              />
+
+              {/* CONTENT (must be above overlay for hover styles) */}
+              <div className="relative z-10 flex flex-1 flex-col">
                 {/* FRAME AREA */}
                 <div className="flex items-center justify-center px-4 pt-4">
                   {isMobile ? (
@@ -96,8 +106,7 @@ export default async function ProjectPreviewCard({ count = 3 }) {
                         <span className="h-2 w-2 rounded-full bg-amber-400/70" />
                         <span className="h-2 w-2 rounded-full bg-emerald-500/70" />
                         <span className="ml-2 truncate text-[10px] text-neutral-500">
-                          {p.link?.replace(/^https?:\/\//, "") ||
-                            "localhost:3000"}
+                          {linkText}
                         </span>
                       </div>
                       <div className="relative h-50 w-full bg-neutral-900">
@@ -116,7 +125,7 @@ export default async function ProjectPreviewCard({ count = 3 }) {
                   )}
                 </div>
 
-                {/* TEXT INSIDE LINK */}
+                {/* TEXT */}
                 <CardHeader className="space-y-1 pb-1">
                   <CardTitle className="text-base text-neutral-50">
                     {p.title}
@@ -129,18 +138,32 @@ export default async function ProjectPreviewCard({ count = 3 }) {
                 <CardContent className="text-sm text-neutral-200">
                   <p className="mb-2 line-clamp-3">{p.description}</p>
                 </CardContent>
-              </Link>
+              </div>
 
-              {/* BUTTON → live site, NOT wrapped in Link */}
-              <div className="px-4 pb-4 pt-1">
-                <Button
-                  asChild
-                  className="w-full border border-blue-400/50 bg-black shadow-xl shadow-accent-foreground hover:bg-blue-400/70"
-                >
-                  <a href={p.link} target="_blank" rel="noreferrer">
-                    View live project
-                  </a>
-                </Button>
+              {/* ✅ Button row ABOVE overlay, so it’s clickable */}
+              <div className="relative z-10 px-4 pb-4 pt-1">
+                <div className="flex gap-2">
+                  {/* Internal: details page */}
+                  <Button
+                    asChild
+                    className="w-full border border-blue-400/50 bg-black shadow-xl shadow-accent-foreground hover:bg-blue-400/70"
+                  >
+                    <Link href={`/projects/${p.id}`}>View more</Link>
+                  </Button>
+
+                  {/* Optional: external live link */}
+                  {/* {p.link ? (
+                    <Button
+                      asChild
+                      variant="outline"
+                      className="border-neutral-700 text-neutral-200 hover:bg-neutral-800"
+                    >
+                      <a href={p.link} target="_blank" rel="noreferrer">
+                        Live
+                      </a>
+                    </Button>
+                  ) : null} */}
+                </div>
               </div>
             </Card>
           );

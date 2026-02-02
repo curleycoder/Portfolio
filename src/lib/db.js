@@ -22,16 +22,15 @@ function mapProject(row) {
     description: row.description,
     image: row.image,
     link: row.link,
-
-    // ✅ add these two lines
-    githubLink: row.github_link ?? "",
-    demoLink: row.demo_link ?? "",
-
     keywords: row.keywords ?? [],
     images: row.images ?? [],
 
     rationale: row.rationale ?? "",
     highlights: row.highlights ?? [],
+
+    // ✅ ADD THESE (match your DB column names)
+    githubLink: row.github_link ?? "",
+    demoLink: row.demo_link ?? "",
 
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -118,20 +117,24 @@ export async function getProjectById(id) {
 
 export async function insertProject(data) {
   const rows = await sql`
-    INSERT INTO projects (title, description, image, link, github_link, demo_link, keywords, images, rationale, highlights)
-VALUES (
-  ${data.title},
-  ${data.description},
-  ${data.image},
-  ${data.link},
-  ${data.githubLink ?? ""},
-  ${data.demoLink ?? ""},
-  ${JSON.stringify(data.keywords ?? [])},
-  ${JSON.stringify(data.images ?? [])},
-  ${data.rationale ?? ""},
-  ${JSON.stringify(data.highlights ?? [])}
-)
-
+    INSERT INTO projects (
+      title, description, image, link,
+      github_link, demo_link,
+      keywords, images, rationale, highlights
+    )
+    VALUES (
+      ${data.title},
+      ${data.description},
+      ${data.image},
+      ${data.link},
+      ${data.githubLink ?? ""},
+      ${data.demoLink ?? ""},
+      ${JSON.stringify(data.keywords ?? [])},
+      ${JSON.stringify(data.images ?? [])},
+      ${data.rationale ?? ""},
+      ${JSON.stringify(data.highlights ?? [])}
+    )
+    RETURNING *;
   `;
   return mapProject(rows[0]);
 }

@@ -57,15 +57,14 @@ export default function GallerySlider({
     items.length > 1 || (showControlsWhenSingle && items.length === 1);
 
   // Defaults: mobile can be cover; web should be contain to look like a full site screenshot
-const imageFitClass = imgClassName ?? "object-contain bg-neutral-950";
-
+  const imageFitClass = imgClassName ?? "object-contain ";
 
   return (
     <div className={`flex justify-center ${className}`}>
       {isMobile ? (
         // PHONE FRAME
         <div className="relative flex items-center justify-center">
-          <div className="relative h-[320px] w-[150px] overflow-hidden rounded-[1.6rem] border border-neutral-700/80 bg-neutral-900">
+          <div className="relative h-120 w-[210px] overflow-hidden rounded-[1.6rem]">
             {hasImages ? (
               <Image
                 src={src}
@@ -124,12 +123,14 @@ const imageFitClass = imgClassName ?? "object-contain bg-neutral-950";
             </span>
 
             {items.length > 1 && (
-              <span className="text-neutral-500">{i + 1}/{items.length}</span>
+              <span className="text-neutral-500">
+                {i + 1}/{items.length}
+              </span>
             )}
           </div>
 
           {/* KEY FIX: aspect ratio instead of fixed h-64 */}
-          <div className="relative aspect-[16/9] w-full bg-neutral-900">
+          <div className="relative aspect-video w-full bg-neutral-900">
             {hasImages ? (
               <Image
                 src={src}
@@ -163,7 +164,7 @@ const imageFitClass = imgClassName ?? "object-contain bg-neutral-950";
                   disabled={items.length < 2}
                   className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full border border-neutral-700 bg-neutral-950/80 px-3 py-2 text-xs text-neutral-200 hover:bg-neutral-900 disabled:opacity-40"
                 >
-                  →     
+                  →
                 </button>
 
                 {/* bottom counter (optional, helps UX) */}

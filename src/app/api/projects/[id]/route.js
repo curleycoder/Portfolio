@@ -42,6 +42,8 @@ export async function PATCH(req, { params }) {
     const description = formData.get("description")?.toString().trim();
     const image = formData.get("image")?.toString().trim();
     const link = formData.get("link")?.toString().trim();
+    const githubLink = formData.get("githubLink")?.toString().trim() ?? "";
+    const demoLink = formData.get("demoLink")?.toString().trim() ?? "";
 
     // ✅ NEW: rationale + highlights (assignment fields)
     const rationale = formData.get("rationale")?.toString().trim() ?? "";
@@ -62,7 +64,7 @@ export async function PATCH(req, { params }) {
     if (!title || !description || !image || !link) {
       return Response.json(
         { ok: false, error: "Missing required fields" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -89,10 +91,34 @@ export async function PATCH(req, { params }) {
       keywords,
       images,
 
-      // ✅ Save assignment fields
       rationale,
       highlights,
+
+      // ✅ NEW
+      githubLink,
+      demoLink,
     });
+    function isUrl(s) {
+      try {
+        new URL(s);
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    if (githubLink && !isUrl(githubLink)) {
+      return Response.json(
+        { ok: false, error: "Invalid githubLink URL" },
+        { status: 400 },
+      );
+    }
+    if (demoLink && !isUrl(demoLink)) {
+      return Response.json(
+        { ok: false, error: "Invalid demoLink URL" },
+        { status: 400 },
+      );
+    }
 
     await insertAuditLog({
       projectId: id,
@@ -106,7 +132,7 @@ export async function PATCH(req, { params }) {
     console.error("PATCH /api/projects/[id] error:", err);
     return Response.json(
       { ok: false, error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -136,7 +162,7 @@ export async function DELETE(req, { params }) {
     console.error("DELETE /api/projects/[id] error:", err);
     return Response.json(
       { ok: false, error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

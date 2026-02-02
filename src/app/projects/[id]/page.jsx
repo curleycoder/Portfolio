@@ -63,21 +63,21 @@ export default async function ProjectPage({ params }) {
 
   return (
     <main className="min-h-screen bg-neutral-950 text-neutral-50">
-      <div className="mx-auto max-w-4xl space-y-8 px-4 py-12">
+      <div className="mx-auto max-w-4xl space-y-8 py-12">
         <div>
           <Link
             href="/projects"
-            className="text-xs uppercase tracking-[0.18em] text-neutral-400 hover:text-neutral-100"
+            className="text-xs uppercase tracking-[0.18em] px-2 py-2 text-neutral-400 hover:text-neutral-100"
           >
             ← Back to Projects
           </Link>
         </div>
 
-        <Card className="space-y-6 border border-neutral-800 bg-neutral-900/70 p-6 text-neutral-50">
+        <Card className=" border border-neutral-800 bg-neutral-900/70 p-6 text-neutral-50">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h1 className="text-2xl font-semibold">{project.title}</h1>
-              <p className="mt-1 text-xs uppercase tracking-[0.16em] text-neutral-400">
+              <p className=" text-xs uppercase tracking-[0.16em] text-neutral-400">
                 {label}
               </p>
             </div>
@@ -92,6 +92,35 @@ export default async function ProjectPage({ params }) {
             showControlsWhenSingle
             className="w-full"
           />
+          {/* ✅ Skills / Tech Stack (from keywords) */}
+          {(project.keywords || []).length > 0 ? (
+            <section className="space-y-2">
+              <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-neutral-400">
+                Skills / Tech Stack
+              </h2>
+
+              <div className="flex flex-wrap gap-2">
+                {(project.keywords || []).map((k, i) => (
+                  <span
+                    key={`${k}-${i}`}
+                    className="rounded-full border border-neutral-700 bg-neutral-950 px-3 py-1 text-[11px] text-neutral-200"
+                  >
+                    {String(k)}
+                  </span>
+                ))}
+              </div>
+            </section>
+          ) : (
+            <section className="space-y-1">
+              <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-neutral-400">
+                Skills / Tech Stack
+              </h2>
+              <p className="text-sm text-neutral-300">
+                Add keywords (e.g., Next.js, Tailwind, Auth0, Neon) to show the
+                tech stack here.
+              </p>
+            </section>
+          )}
 
           {/* Rationale */}
           <section className="space-y-2">
@@ -103,9 +132,6 @@ export default async function ProjectPage({ params }) {
               <>
                 <p className="text-sm leading-relaxed text-neutral-100">
                   {rationaleText}
-                </p>
-                <p className="text-[11px] text-neutral-500">
-                  Word count: {wc} (target: 100–150)
                 </p>
               </>
             ) : (
