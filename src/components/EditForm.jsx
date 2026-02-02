@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -68,13 +68,10 @@ function dedupe(arr) {
   return out;
 }
 
-const imageSchema = z
-  .string()
-  .min(1)
-  .refine(isLikelyImageSrc, {
-    message:
-      "Must be a URL (https://...) or a local path (/...) or an uploaded image (data:image/...).",
-  });
+const imageSchema = z.string().min(1).refine(isLikelyImageSrc, {
+  message:
+    "Must be a URL (https://...) or a local path (/...) or an uploaded image (data:image/...).",
+});
 
 const optionalImageSchema = z
   .string()
@@ -117,6 +114,117 @@ function fileToDataUrl(file) {
   });
 }
 
+// ✅ Detect if screenshot is mobile/web by aspect ratio
+function useScreenshotKind(src) {
+  const [kind, setKind] = useState("web"); // "mobile" | "web"
+
+  useEffect(() => {
+    const s = String(src || "").trim();
+    if (!s) return;
+
+    let cancelled = false;
+    const img = new window.Image();
+
+    img.onload = () => {
+      if (cancelled) return;
+      const w = img.naturalWidth || 1;
+      const h = img.naturalHeight || 1;
+
+      // Tall => mobile screenshot
+      setKind(h / w > 1.15 ? "mobile" : "web");
+    };
+
+    img.onerror = () => {
+      if (cancelled) return;
+      setKind("web");
+    };
+
+    img.src = s;
+
+    return () => {
+      cancelled = true;
+    };
+  }, [src]);
+
+  return kind;
+}
+
+// ✅ Full image ALWAYS visible inside frame
+export default function HighlightFrame({ src, title, linkText }) {
+  const kind = useScreenshotKind(src);
+  if (!src) return null;
+
+  // MOBILE FRAME (responsive + full image visible)
+  if (kind === "mobile") {
+    return (
+      <div className="mt-2 w-full">
+        {/* This controls how big the phone appears in the highlight card */}
+        <div className="mx-auto w-full max-w-[520px]">
+          <div className="relative aspect-[9/19] w-full overflow-hidden rounded-[2rem] border border-neutral-700/80 bg-neutral-900">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={src}
+              alt={title || "Highlight"}
+              className="absolute inset-0 h-full w-full object-contain bg-neutral-950"
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // WEB FRAME (16:9 browser frame + full image visible)
+  return (
+    <div className="mt-2 w-full overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-950 shadow-lg shadow-black/40">
+      <div className="flex items-center gap-2 border-b border-neutral-800 bg-neutral-950/80 px-3 py-2 text-[10px] text-neutral-400">
+        <span className="flex gap-1">
+          <span className="h-2 w-2 rounded-full bg-red-500/70" />
+          <span className="h-2 w-2 rounded-full bg-amber-400/70" />
+          <span className="h-2 w-2 rounded-full bg-emerald-500/70" />
+        </span>
+        <span className="ml-2 flex-1 truncate text-neutral-500">
+          {linkText || "localhost:3000"}
+        </span>
+      </div>
+
+      <div className="relative aspect-[16/9] w-full bg-neutral-900">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={src}
+          alt={title || "Highlight"}
+          className="absolute inset-0 h-full w-full object-contain bg-neutral-950"
+        />
+      </div>
+    </div>
+  );
+}
+
+
+  return (
+    <div className="mt-2 w-full overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-950 shadow-lg shadow-black/40">
+      <div className="flex items-center gap-2 border-b border-neutral-800 bg-neutral-950/80 px-3 py-2 text-[10px] text-neutral-400">
+        <span className="flex gap-1">
+          <span className="h-2 w-2 rounded-full bg-red-500/70" />
+          <span className="h-2 w-2 rounded-full bg-amber-400/70" />
+          <span className="h-2 w-2 rounded-full bg-emerald-500/70" />
+        </span>
+        <span className="ml-2 flex-1 truncate text-neutral-500">
+          {linkText || "localhost:3000"}
+        </span>
+      </div>
+
+      <div className="relative aspect-[16/9] w-full bg-neutral-900">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={src}
+          alt={title || "Highlight"}
+          className="absolute inset-0 h-full w-full object-contain bg-neutral-950"
+        />
+      </div>
+    </div>
+  );
+}
+
 export default function EditProjectForm({ project }) {
   const router = useRouter();
 
@@ -133,8 +241,6 @@ export default function EditProjectForm({ project }) {
       link: project?.link ?? "",
       keywords: project?.keywords ?? [],
       images: project?.images ?? [],
-
-      // Assignment defaults
       rationale: project?.rationale ?? project?.description ?? "",
       highlights: Array.isArray(project?.highlights) ? project.highlights : [],
     },
@@ -146,12 +252,15 @@ export default function EditProjectForm({ project }) {
   const highlights = form.watch("highlights") || [];
 
   const rationaleValue = form.watch("rationale") || "";
-  const rationaleWC = useMemo(() => wordCount(rationaleValue), [rationaleValue]);
+  const rationaleWC = useMemo(
+    () => wordCount(rationaleValue),
+    [rationaleValue],
+  );
 
   const keywords = form.watch("keywords") || [];
   const linkValue = form.watch("link") || "";
 
-  // ✅ Detect mobile from keywords (same approach as your detail page)
+  // ✅ Detect mobile from keywords
   const isMobile = useMemo(() => {
     const ks = (keywords || []).map((k) => String(k).toLowerCase());
     return (
@@ -163,10 +272,9 @@ export default function EditProjectForm({ project }) {
 
   const linkText = linkValue?.replace(/^https?:\/\//, "") || "localhost:3000";
 
-  // ✅ GallerySlider input: [main, ...gallery] (deduped)
   const heroImages = useMemo(
     () => dedupe([main, ...(gallery || [])]).filter(Boolean),
-    [main, gallery]
+    [main, gallery],
   );
 
   // -------------------------
@@ -199,7 +307,7 @@ export default function EditProjectForm({ project }) {
     const currentMain = String(form.getValues("image") || "").trim();
     const currentGallery = form.getValues("images") || [];
 
-    // Removing main -> promote first gallery image (if any)
+    // Removing main -> promote first gallery image
     if (currentMain === s) {
       const nextGallery = currentGallery.filter((x) => String(x).trim() !== s);
       const promoted = String(nextGallery[0] || "").trim();
@@ -215,7 +323,10 @@ export default function EditProjectForm({ project }) {
         });
       } else {
         form.setValue("image", "", { shouldValidate: true, shouldDirty: true });
-        form.setValue("images", [], { shouldValidate: true, shouldDirty: true });
+        form.setValue("images", [], {
+          shouldValidate: true,
+          shouldDirty: true,
+        });
       }
       return;
     }
@@ -236,7 +347,6 @@ export default function EditProjectForm({ project }) {
       const currentMain = String(form.getValues("image") || "").trim();
       const currentGallery = form.getValues("images") || [];
 
-      // if no main: first becomes main, rest go to gallery
       if (!currentMain) {
         form.setValue("image", dataUrls[0], {
           shouldValidate: true,
@@ -251,7 +361,6 @@ export default function EditProjectForm({ project }) {
           });
         }
       } else {
-        // main exists -> all uploads append to gallery
         form.setValue("images", dedupe([...currentGallery, ...dataUrls]), {
           shouldValidate: true,
           shouldDirty: true,
@@ -274,12 +383,18 @@ export default function EditProjectForm({ project }) {
       ...highlights,
       { title: `Highlight ${nextIndex}`, image: "", caption: "" },
     ];
-    form.setValue("highlights", next, { shouldValidate: true, shouldDirty: true });
+    form.setValue("highlights", next, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
   };
 
   const removeHighlight = (idx) => {
     const next = highlights.filter((_, i) => i !== idx);
-    form.setValue("highlights", next, { shouldValidate: true, shouldDirty: true });
+    form.setValue("highlights", next, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
   };
 
   // -------------------------
@@ -378,15 +493,6 @@ export default function EditProjectForm({ project }) {
               imgClassName="object-contain bg-neutral-950"
             />
           </div>
-
-          <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-neutral-500">
-            <span className="rounded-full border border-neutral-800 bg-neutral-950 px-2 py-0.5">
-              Total images: {heroImages.length}
-            </span>
-            <span className="rounded-full border border-neutral-800 bg-neutral-950 px-2 py-0.5">
-              Mode: {isMobile ? "Mobile frame" : "Web frame"}
-            </span>
-          </div>
         </div>
 
         {/* TITLE */}
@@ -395,7 +501,9 @@ export default function EditProjectForm({ project }) {
           name="title"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-xs text-neutral-300">Project Title</FormLabel>
+              <FormLabel className="text-xs text-neutral-300">
+                Project Title
+              </FormLabel>
               <FormControl>
                 <Input
                   className="border-neutral-700 bg-neutral-950 text-neutral-50"
@@ -414,7 +522,9 @@ export default function EditProjectForm({ project }) {
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-xs text-neutral-300">Short Description</FormLabel>
+              <FormLabel className="text-xs text-neutral-300">
+                Short Description
+              </FormLabel>
               <FormControl>
                 <Input
                   className="border-neutral-700 bg-neutral-950 text-neutral-50"
@@ -489,7 +599,9 @@ export default function EditProjectForm({ project }) {
 
         {/* UPLOADS + IMAGE MANAGER */}
         <FormItem>
-          <FormLabel className="text-xs text-neutral-300">Upload Images</FormLabel>
+          <FormLabel className="text-xs text-neutral-300">
+            Upload Images
+          </FormLabel>
           <FormControl>
             <div className="space-y-3">
               <Input
@@ -500,12 +612,15 @@ export default function EditProjectForm({ project }) {
                 className="border-neutral-700 bg-neutral-950 text-neutral-50 file:mr-3 file:rounded-md file:border-0 file:bg-blue-500/80 file:px-3 file:py-1 file:text-xs file:font-medium file:text-white hover:file:bg-blue-400"
               />
 
-              {fileError ? <p className="text-xs text-red-400">{fileError}</p> : null}
+              {fileError ? (
+                <p className="text-xs text-red-400">{fileError}</p>
+              ) : null}
 
               {heroImages.length > 0 ? (
                 <div className="space-y-2">
                   <span className="text-[11px] text-neutral-500">
-                    Images (main + gallery). Remove any. Removing main promotes the next.
+                    Images (main + gallery). Remove any. Removing main promotes
+                    the next.
                   </span>
 
                   <div className="grid gap-2 sm:grid-cols-2">
@@ -516,7 +631,6 @@ export default function EditProjectForm({ project }) {
                           key={`${src}-${idx}`}
                           className="rounded-xl border border-neutral-800 bg-neutral-950/50 p-2"
                         >
-                          {/* ✅ show full image (no crop) */}
                           <div className="h-32 w-full overflow-hidden rounded-lg border border-neutral-800 bg-neutral-950">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
@@ -575,20 +689,26 @@ export default function EditProjectForm({ project }) {
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-neutral-300">
-                Highlights (Class 05 — required)
+                Highlights 
               </p>
               <p className="text-[11px] text-neutral-500">
                 Add 3–5 highlight blocks. Each should have an image + caption.
               </p>
             </div>
 
-            <Button type="button" onClick={addHighlight} className="border border-blue-500/80">
+            <Button
+              type="button"
+              onClick={addHighlight}
+              className="border border-blue-500/80"
+            >
               Add Highlight
             </Button>
           </div>
 
           {highlights.length === 0 ? (
-            <p className="text-sm text-neutral-400">No highlights yet — add at least 3.</p>
+            <p className="text-sm text-neutral-400">
+              No highlights yet — add at least 3.
+            </p>
           ) : (
             <div className="space-y-4">
               {highlights.map((_, idx) => {
@@ -602,7 +722,9 @@ export default function EditProjectForm({ project }) {
                     className="space-y-3 rounded-2xl border border-neutral-800 bg-neutral-950/50 p-3"
                   >
                     <div className="flex items-center justify-between">
-                      <p className="text-xs font-semibold text-neutral-200">{titleValue}</p>
+                      <p className="text-xs font-semibold text-neutral-200">
+                        {titleValue}
+                      </p>
 
                       <Button
                         type="button"
@@ -620,7 +742,9 @@ export default function EditProjectForm({ project }) {
                       name={`highlights.${idx}.title`}
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-xs text-neutral-300">Title</FormLabel>
+                          <FormLabel className="text-xs text-neutral-300">
+                            Title
+                          </FormLabel>
                           <FormControl>
                             <Input
                               className="border-neutral-700 bg-neutral-950 text-neutral-50"
@@ -633,13 +757,15 @@ export default function EditProjectForm({ project }) {
                       )}
                     />
 
-                    {/* ✅ ONE image field: upload + optional paste */}
+                    {/* ✅ ONE image field: upload + optional paste + framed preview */}
                     <FormField
                       control={form.control}
                       name={`highlights.${idx}.image`}
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-xs text-neutral-300">Highlight Image</FormLabel>
+                          <FormLabel className="text-xs text-neutral-300">
+                            Highlight Image
+                          </FormLabel>
 
                           <FormControl>
                             <Input
@@ -660,15 +786,16 @@ export default function EditProjectForm({ project }) {
                             />
                           </FormControl>
 
+                          {/* ✅ framed preview matches mobile/web based on image ratio */}
                           {field.value ? (
-                            <div className="mt-2 h-28 w-full overflow-hidden rounded-lg border border-neutral-800 bg-neutral-950">
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img
-                                src={field.value}
-                                alt="Highlight preview"
-                                className="h-full w-full object-contain"
-                              />
-                            </div>
+                            <HighlightFrame
+                              src={h.image}
+                              title={h.title}
+                              linkText={
+                                project?.link?.replace(/^https?:\/\//, "") ||
+                                "localhost:3000"
+                              }
+                            />
                           ) : null}
 
                           <FormControl>
@@ -682,6 +809,7 @@ export default function EditProjectForm({ project }) {
 
                           <FormDescription className="text-[11px] text-neutral-500">
                             Upload from desktop or paste a URL/data:image.
+                            Preview auto-picks mobile/web frame.
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
@@ -694,7 +822,9 @@ export default function EditProjectForm({ project }) {
                       name={`highlights.${idx}.caption`}
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-xs text-neutral-300">Caption</FormLabel>
+                          <FormLabel className="text-xs text-neutral-300">
+                            Caption
+                          </FormLabel>
                           <FormControl>
                             <Textarea
                               className="min-h-[80px]"
@@ -719,7 +849,9 @@ export default function EditProjectForm({ project }) {
           name="link"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-xs text-neutral-300">Project Link</FormLabel>
+              <FormLabel className="text-xs text-neutral-300">
+                Project Link
+              </FormLabel>
               <FormControl>
                 <Input
                   className="border-neutral-700 bg-neutral-950 text-neutral-50"
@@ -752,9 +884,12 @@ export default function EditProjectForm({ project }) {
 
             return (
               <FormItem>
-                <FormLabel className="text-xs text-neutral-300">Keywords</FormLabel>
+                <FormLabel className="text-xs text-neutral-300">
+                  Keywords
+                </FormLabel>
                 <FormDescription className="text-[11px] text-neutral-500">
-                  Add “Expo / React Native / Mobile” to show phone frame. Otherwise web frame stays.
+                  Add “Expo / React Native / Mobile” to show phone frame.
+                  Otherwise web frame stays.
                 </FormDescription>
 
                 <div className="mt-1 flex gap-2">
@@ -770,7 +905,11 @@ export default function EditProjectForm({ project }) {
                       }
                     }}
                   />
-                  <Button className="border border-blue-500/80" type="button" onClick={handleAdd}>
+                  <Button
+                    className="border border-blue-500/80"
+                    type="button"
+                    onClick={handleAdd}
+                  >
                     Add
                   </Button>
                 </div>
@@ -801,7 +940,11 @@ export default function EditProjectForm({ project }) {
           }}
         />
 
-        <Button type="submit" disabled={saving} className="mt-2 w-full border border-blue-500/80">
+        <Button
+          type="submit"
+          disabled={saving}
+          className="mt-2 w-full border border-blue-500/80"
+        >
           {saving ? "Saving..." : "Save Changes"}
         </Button>
       </form>

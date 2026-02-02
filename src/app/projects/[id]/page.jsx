@@ -9,6 +9,7 @@ import { auth0 } from "@/lib/auth0";
 import { fetchProjectById } from "@/lib/db";
 import { DeleteButton } from "@/components/DeleteButton";
 import GallerySlider from "@/components/GallerySlider";
+import HighlightFrame from "@/components/HighlightFrame";
 
 function wordCount(s) {
   return String(s || "")
@@ -48,14 +49,17 @@ export default async function ProjectPage({ params }) {
 
   const extraImages = Array.isArray(project.images) ? project.images : [];
   const heroImages = dedupe([project.image, ...extraImages].filter(Boolean));
-  const linkText = project.link?.replace(/^https?:\/\//, "") || "localhost:3000";
+  const linkText =
+    project.link?.replace(/^https?:\/\//, "") || "localhost:3000";
 
   const label = isMobile ? "Mobile App" : "Web App";
 
   const rationaleText = String(project.rationale ?? "").trim();
   const wc = wordCount(rationaleText);
 
-  const highlights = Array.isArray(project.highlights) ? project.highlights : [];
+  const highlights = Array.isArray(project.highlights)
+    ? project.highlights
+    : [];
 
   return (
     <main className="min-h-screen bg-neutral-950 text-neutral-50">
@@ -106,7 +110,8 @@ export default async function ProjectPage({ params }) {
               </>
             ) : (
               <p className="text-sm text-neutral-300">
-                Add a 100–150 word rationale in third person (general-audience tone).
+                Add a 100–150 word rationale in third person (general-audience
+                tone).
               </p>
             )}
           </section>
@@ -128,16 +133,14 @@ export default async function ProjectPage({ params }) {
                       {h.title || `Highlight ${idx + 1}`}
                     </p>
 
-                    <div className="relative aspect-[16/9] overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      {h.image ? (
-                        <img
-                          src={h.image}
-                          alt={h.title || project.title}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : null}
-                    </div>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    {h.image ? (
+                      <HighlightFrame
+                        src={h.image}
+                        title={h.title}
+                        linkText={linkText}
+                      />
+                    ) : null}
 
                     {h.caption ? (
                       <p className="text-xs leading-relaxed text-neutral-300">
@@ -149,7 +152,8 @@ export default async function ProjectPage({ params }) {
               </div>
             ) : (
               <p className="text-sm text-neutral-300">
-                Add 3–5 highlight blocks (each with an image + 1–2 line caption).
+                Add 3–5 highlight blocks (each with an image + 1–2 line
+                caption).
               </p>
             )}
           </section>
@@ -164,6 +168,30 @@ export default async function ProjectPage({ params }) {
               >
                 <a href={project.link} target="_blank" rel="noreferrer">
                   Visit project
+                </a>
+              </Button>
+            )}
+            {project.demoLink && (
+              <Button
+                asChild
+                size="sm"
+                className="text-xs border border-neutral-700"
+              >
+                <a href={project.demoLink} target="_blank" rel="noreferrer">
+                  Live / Prototype
+                </a>
+              </Button>
+            )}
+
+            {project.githubLink && (
+              <Button
+                asChild
+                size="sm"
+                variant="outline"
+                className="text-xs border-neutral-700"
+              >
+                <a href={project.githubLink} target="_blank" rel="noreferrer">
+                  GitHub
                 </a>
               </Button>
             )}

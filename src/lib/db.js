@@ -22,10 +22,14 @@ function mapProject(row) {
     description: row.description,
     image: row.image,
     link: row.link,
+
+    // ✅ add these two lines
+    githubLink: row.github_link ?? "",
+    demoLink: row.demo_link ?? "",
+
     keywords: row.keywords ?? [],
     images: row.images ?? [],
 
-    // ✅ NEW
     rationale: row.rationale ?? "",
     highlights: row.highlights ?? [],
 
@@ -33,7 +37,6 @@ function mapProject(row) {
     updatedAt: row.updated_at,
   };
 }
-
 
 export async function ensureProjectsTable() {
   // Create table if missing (fresh DB)
@@ -59,8 +62,10 @@ export async function ensureProjectsTable() {
   // ✅ Migrate existing table safely
   await sql`ALTER TABLE projects ADD COLUMN IF NOT EXISTS rationale text NOT NULL DEFAULT '';`;
   await sql`ALTER TABLE projects ADD COLUMN IF NOT EXISTS highlights jsonb NOT NULL DEFAULT '[]'::jsonb;`;
+  await sql`ALTER TABLE projects ADD COLUMN IF NOT EXISTS github_link text NOT NULL DEFAULT '';`;
+  await sql`ALTER TABLE projects ADD COLUMN IF NOT EXISTS demo_link text NOT NULL DEFAULT '';
+`;
 }
-
 
 export async function seedProjectsTable(seed) {
   await ensureProjectsTable();
@@ -80,7 +85,6 @@ export async function seedProjectsTable(seed) {
   )
   ON CONFLICT DO NOTHING;
 `;
-
   }
 }
 
@@ -114,22 +118,23 @@ export async function getProjectById(id) {
 
 export async function insertProject(data) {
   const rows = await sql`
-    INSERT INTO projects (title, description, image, link, keywords, images, rationale, highlights)
-    VALUES (
-      ${data.title},
-      ${data.description},
-      ${data.image},
-      ${data.link},
-      ${JSON.stringify(data.keywords ?? [])},
-      ${JSON.stringify(data.images ?? [])},
-      ${data.rationale ?? ""},
-      ${JSON.stringify(data.highlights ?? [])}
-    )
-    RETURNING *;
+    INSERT INTO projects (title, description, image, link, github_link, demo_link, keywords, images, rationale, highlights)
+VALUES (
+  ${data.title},
+  ${data.description},
+  ${data.image},
+  ${data.link},
+  ${data.githubLink ?? ""},
+  ${data.demoLink ?? ""},
+  ${JSON.stringify(data.keywords ?? [])},
+  ${JSON.stringify(data.images ?? [])},
+  ${data.rationale ?? ""},
+  ${JSON.stringify(data.highlights ?? [])}
+)
+
   `;
   return mapProject(rows[0]);
 }
-
 
 export async function updateProject(id, updates) {
   const rows = await sql`
@@ -155,6 +160,9 @@ export async function updateProject(id, updates) {
         ${updates.highlights ? JSON.stringify(updates.highlights) : null},
         highlights
       ),
+      github_link = COALESCE(${updates.githubLink ?? null}, github_link),
+demo_link   = COALESCE(${updates.demoLink ?? null}, demo_link),
+
 
       updated_at = now()
     WHERE id = ${id}
@@ -162,7 +170,6 @@ export async function updateProject(id, updates) {
   `;
   return mapProject(rows[0]);
 }
-
 
 export async function deleteProject(id) {
   await ensureProjectsTable();
@@ -190,7 +197,12 @@ export async function ensureAuditTable() {
   `;
 }
 
-export async function insertAuditLog({ projectId, userEmail, action, payload }) {
+export async function insertAuditLog({
+  projectId,
+  userEmail,
+  action,
+  payload,
+}) {
   await ensureAuditTable();
 
   await sql`
@@ -286,9 +298,7 @@ export async function upsertHero(updates = {}) {
       ? merged.avatar.trim()
       : HERO_PLACEHOLDER_AVATAR;
 
-  const shortDescription = (merged.shortDescription || "")
-    .trim()
-    .slice(0, 120);
+  const shortDescription = (merged.shortDescription || "").trim().slice(0, 120);
   const fullName = (merged.fullName || "").trim();
   const longDescription = (merged.longDescription || "").trim();
 
@@ -373,7 +383,6 @@ function mapBlogPostRow(row) {
   };
 }
 
-
 async function blogSlugExists(slug) {
   const [{ count }] = await sql`
     SELECT count(*)::int AS count
@@ -383,8 +392,13 @@ async function blogSlugExists(slug) {
   return Number(count) > 0;
 }
 
-// 2. Create post 
-export async function insertBlogPost({ title, excerpt = "", content, authorEmail }) {
+// 2. Create post
+export async function insertBlogPost({
+  title,
+  excerpt = "",
+  content,
+  authorEmail,
+}) {
   await ensureBlogPostTable();
 
   if (!title || !content) {
@@ -453,7 +467,7 @@ export async function countBlogPosts() {
   return Number(count) || 0;
 }
 
-// 5. Paginated list 
+// 5. Paginated list
 export async function fetchBlogPostsPage({ limit, offset }) {
   const rows = await sql`
     SELECT
@@ -499,7 +513,7 @@ export async function ensureBookingRequestsTable() {
     // 23505 = unique_violation (duplicates exist)
     if (e?.code === "23505") {
       console.warn(
-        "[booking_requests] Unique index NOT created because duplicates exist. Run dedupe SQL once."
+        "[booking_requests] Unique index NOT created because duplicates exist. Run dedupe SQL once.",
       );
     } else {
       // Unknown error: log it, but don't take down the site
@@ -508,8 +522,6 @@ export async function ensureBookingRequestsTable() {
   }
 }
 
-
-
 function mapBookingRow(row) {
   if (!row) return null;
   return {
@@ -517,7 +529,7 @@ function mapBookingRow(row) {
     fullName: row.full_name,
     email: row.email,
     date: row.date,
-    timeSlot: row.time_slot, 
+    timeSlot: row.time_slot,
     note: row.note || "",
     status: row.status,
     createdAt: row.created_at,
