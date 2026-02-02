@@ -223,7 +223,6 @@ export default function HighlightFrame({ src, title, linkText }) {
       </div>
     </div>
   );
-}
 
 export default function EditProjectForm({ project }) {
   const router = useRouter();
