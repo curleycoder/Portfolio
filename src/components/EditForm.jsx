@@ -21,7 +21,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import GallerySlider from "@/components/GallerySlider";
 
-// ✅ Local Textarea component (no shadcn install needed)
+/* -------------------------
+   Local Textarea
+------------------------- */
 function Textarea({ className = "", ...props }) {
   return (
     <textarea
@@ -35,9 +37,9 @@ function Textarea({ className = "", ...props }) {
   );
 }
 
-// -------------------------
-// Helpers
-// -------------------------
+/* -------------------------
+   Helpers
+------------------------- */
 function wordCount(s) {
   return String(s || "")
     .trim()
@@ -57,54 +59,40 @@ function isLikelyImageSrc(val) {
 
 function dedupe(arr) {
   const seen = new Set();
-  const out = [];
-  for (const x of arr || []) {
-    if (!x) continue;
-    const v = String(x).trim();
-    if (!v || seen.has(v)) continue;
+  return (arr || []).filter((x) => {
+    const v = String(x || "").trim();
+    if (!v || seen.has(v)) return false;
     seen.add(v);
-    out.push(v);
-  }
-  return out;
+    return true;
+  });
 }
 
-const imageSchema = z.string().min(1).refine(isLikelyImageSrc, {
-  message:
-    "Must be a URL (https://...) or a local path (/...) or an uploaded image (data:image/...).",
-});
-
-const optionalImageSchema = z
-  .string()
-  .optional()
-  .default("")
-  .refine((val) => !val || isLikelyImageSrc(val), {
-    message:
-      "Must be empty or a URL (https://...) or a local path (/...) or an uploaded image (data:image/...).",
-  });
+/* -------------------------
+   Zod schema
+------------------------- */
+const imageSchema = z.string().min(1).refine(isLikelyImageSrc);
+const optionalImageSchema = z.string().optional().default("");
 
 const highlightSchema = z.object({
-  title: z.string().max(80).optional().default(""),
+  title: z.string().optional().default(""),
   image: optionalImageSchema,
-  caption: z.string().max(500).optional().default(""),
+  caption: z.string().optional().default(""),
 });
 
 const projectSchema = z.object({
-  title: z.string().min(2).max(200),
-  description: z.string().min(5).max(500),
-
-  rationale: z
-    .string()
-    .min(1, "Rationale is required for Class 05 (100–150 words).")
-    .max(1200),
-
-  highlights: z.array(highlightSchema).default([]),
-
-  image: imageSchema, // main
+  title: z.string().min(2),
+  description: z.string().min(5),
+  rationale: z.string().min(1).max(1200),
+  image: imageSchema,
   link: z.string().url(),
   keywords: z.array(z.string()).default([]),
-  images: z.array(imageSchema).optional().default([]), // gallery
+  images: z.array(imageSchema).optional().default([]),
+  highlights: z.array(highlightSchema).default([]),
 });
 
+/* -------------------------
+   Utilities
+------------------------- */
 function fileToDataUrl(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -114,84 +102,59 @@ function fileToDataUrl(file) {
   });
 }
 
-// ✅ Detect if screenshot is mobile/web by aspect ratio
+/* -------------------------
+   Screenshot kind hook
+------------------------- */
 function useScreenshotKind(src) {
-  const [kind, setKind] = useState("web"); // "mobile" | "web"
+  const [kind, setKind] = useState("web");
 
   useEffect(() => {
-    const s = String(src || "").trim();
-    if (!s) return;
-
-    let cancelled = false;
-    const img = new window.Image();
-
-    img.onload = () => {
-      if (cancelled) return;
-      const w = img.naturalWidth || 1;
-      const h = img.naturalHeight || 1;
-
-      // Tall => mobile screenshot
-      setKind(h / w > 1.15 ? "mobile" : "web");
-    };
-
-    img.onerror = () => {
-      if (cancelled) return;
-      setKind("web");
-    };
-
-    img.src = s;
-
-    return () => {
-      cancelled = true;
-    };
+    if (!src) return;
+    const img = new Image();
+    img.onload = () =>
+      setKind(img.naturalHeight / img.naturalWidth > 1.15 ? "mobile" : "web");
+    img.src = src;
   }, [src]);
 
   return kind;
 }
 
-// ✅ Full image ALWAYS visible inside frame
-export default function HighlightFrame({ src, title, linkText }) {
+/* -------------------------
+   Highlight Frame (NOT default)
+------------------------- */
+function HighlightFrame({ src, title, linkText }) {
   const kind = useScreenshotKind(src);
   if (!src) return null;
 
-  // MOBILE FRAME (responsive + full image visible)
   if (kind === "mobile") {
     return (
-      <div className="mt-2 w-full">
-        {/* This controls how big the phone appears in the highlight card */}
-        <div className="mx-auto w-full max-w-[520px]">
-          <div className="relative aspect-[9/19] w-full overflow-hidden rounded-[2rem] border border-neutral-700/80 bg-neutral-900">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={src}
-              alt={title || "Highlight"}
-              className="absolute inset-0 h-full w-full object-contain bg-neutral-950"
-            />
-          </div>
+      <div className="mx-auto mt-2 max-w-[520px]">
+        <div className="relative aspect-[9/19] rounded-[2rem] border border-neutral-700">
+          <img
+            src={src}
+            alt={title}
+            className="absolute inset-0 h-full w-full object-contain bg-neutral-950"
+          />
         </div>
       </div>
     );
   }
 
-  // WEB FRAME (16:9 browser frame + full image visible)
   return (
-    <div className="mt-2 w-full overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-950 shadow-lg shadow-black/40">
-      <div className="flex items-center gap-2 border-b border-neutral-800 bg-neutral-950/80 px-3 py-2 text-[10px] text-neutral-400">
+    <div className="mt-2 overflow-hidden rounded-2xl border border-neutral-800">
+      <div className="flex gap-2 border-b px-3 py-2 text-[10px] text-neutral-400">
         <span className="flex gap-1">
-          <span className="h-2 w-2 rounded-full bg-red-500/70" />
-          <span className="h-2 w-2 rounded-full bg-amber-400/70" />
-          <span className="h-2 w-2 rounded-full bg-emerald-500/70" />
+          <span className="h-2 w-2 rounded-full bg-red-500" />
+          <span className="h-2 w-2 rounded-full bg-amber-400" />
+          <span className="h-2 w-2 rounded-full bg-emerald-500" />
         </span>
-        <span className="ml-2 flex-1 truncate text-neutral-500">
-          {linkText || "localhost:3000"}
-        </span>
+        <span className="ml-2 truncate">{linkText}</span>
       </div>
 
-      <div className="relative aspect-[16/9] w-full bg-neutral-900">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
+      <div className="relative aspect-video">
         <img
           src={src}
-          alt={title || "Highlight"}
+          alt={title}
           className="absolute inset-0 h-full w-full object-contain bg-neutral-950"
         />
       </div>
@@ -199,751 +162,46 @@ export default function HighlightFrame({ src, title, linkText }) {
   );
 }
 
-
-  return (
-    <div className="mt-2 w-full overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-950 shadow-lg shadow-black/40">
-      <div className="flex items-center gap-2 border-b border-neutral-800 bg-neutral-950/80 px-3 py-2 text-[10px] text-neutral-400">
-        <span className="flex gap-1">
-          <span className="h-2 w-2 rounded-full bg-red-500/70" />
-          <span className="h-2 w-2 rounded-full bg-amber-400/70" />
-          <span className="h-2 w-2 rounded-full bg-emerald-500/70" />
-        </span>
-        <span className="ml-2 flex-1 truncate text-neutral-500">
-          {linkText || "localhost:3000"}
-        </span>
-      </div>
-
-      <div className="relative aspect-video w-full bg-neutral-900">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={src}
-          alt={title || "Highlight"}
-          className="absolute inset-0 h-full w-full object-contain bg-neutral-950"
-        />
-      </div>
-    </div>
-  );
-
+/* =========================
+   DEFAULT EXPORT
+========================= */
 export default function EditProjectForm({ project }) {
   const router = useRouter();
-
-  const [draftKeyword, setDraftKeyword] = useState("");
-  const [fileError, setFileError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [draftKeyword, setDraftKeyword] = useState("");
 
   const form = useForm({
     resolver: zodResolver(projectSchema),
-    defaultValues: {
-      title: project?.title ?? "",
-      description: project?.description ?? "",
-      image: project?.image ?? "",
-      link: project?.link ?? "",
-      keywords: project?.keywords ?? [],
-      images: project?.images ?? [],
-      rationale: project?.rationale ?? project?.description ?? "",
-      highlights: Array.isArray(project?.highlights) ? project.highlights : [],
-    },
-    mode: "onBlur",
+    defaultValues: project,
   });
 
-  const main = form.watch("image") || "";
-  const gallery = form.watch("images") || [];
   const highlights = form.watch("highlights") || [];
-
-  const rationaleValue = form.watch("rationale") || "";
-  const rationaleWC = useMemo(
-    () => wordCount(rationaleValue),
-    [rationaleValue],
-  );
-
-  const keywords = form.watch("keywords") || [];
-  const linkValue = form.watch("link") || "";
-
-  // ✅ Detect mobile from keywords
-  const isMobile = useMemo(() => {
-    const ks = (keywords || []).map((k) => String(k).toLowerCase());
-    return (
-      ks.some((k) => k.includes("react-native")) ||
-      ks.some((k) => k.includes("expo")) ||
-      ks.some((k) => k.includes("mobile"))
-    );
-  }, [keywords]);
-
-  const linkText = linkValue?.replace(/^https?:\/\//, "") || "localhost:3000";
-
-  const heroImages = useMemo(
-    () => dedupe([main, ...(gallery || [])]).filter(Boolean),
-    [main, gallery],
-  );
-
-  // -------------------------
-  // Image management rules
-  // -------------------------
-  const setAsMain = (src) => {
-    const s = String(src || "").trim();
-    if (!s) return;
-
-    const currentMain = String(form.getValues("image") || "").trim();
-    const currentGallery = form.getValues("images") || [];
-
-    let nextGallery = currentGallery.filter((x) => String(x).trim() !== s);
-
-    if (currentMain && currentMain !== s) {
-      nextGallery = [currentMain, ...nextGallery];
-    }
-
-    form.setValue("image", s, { shouldValidate: true, shouldDirty: true });
-    form.setValue("images", dedupe(nextGallery), {
-      shouldValidate: true,
-      shouldDirty: true,
-    });
-  };
-
-  const removeImage = (src) => {
-    const s = String(src || "").trim();
-    if (!s) return;
-
-    const currentMain = String(form.getValues("image") || "").trim();
-    const currentGallery = form.getValues("images") || [];
-
-    // Removing main -> promote first gallery image
-    if (currentMain === s) {
-      const nextGallery = currentGallery.filter((x) => String(x).trim() !== s);
-      const promoted = String(nextGallery[0] || "").trim();
-
-      if (promoted) {
-        form.setValue("image", promoted, {
-          shouldValidate: true,
-          shouldDirty: true,
-        });
-        form.setValue("images", nextGallery.slice(1), {
-          shouldValidate: true,
-          shouldDirty: true,
-        });
-      } else {
-        form.setValue("image", "", { shouldValidate: true, shouldDirty: true });
-        form.setValue("images", [], {
-          shouldValidate: true,
-          shouldDirty: true,
-        });
-      }
-      return;
-    }
-
-    // Removing a gallery image
-    const next = currentGallery.filter((x) => String(x).trim() !== s);
-    form.setValue("images", next, { shouldValidate: true, shouldDirty: true });
-  };
-
-  async function handleFilesChange(e) {
-    const files = Array.from(e.target.files || []);
-    setFileError("");
-    if (!files.length) return;
-
-    try {
-      const dataUrls = await Promise.all(files.map(fileToDataUrl));
-
-      const currentMain = String(form.getValues("image") || "").trim();
-      const currentGallery = form.getValues("images") || [];
-
-      if (!currentMain) {
-        form.setValue("image", dataUrls[0], {
-          shouldValidate: true,
-          shouldDirty: true,
-        });
-
-        const extras = dataUrls.slice(1);
-        if (extras.length) {
-          form.setValue("images", dedupe([...currentGallery, ...extras]), {
-            shouldValidate: true,
-            shouldDirty: true,
-          });
-        }
-      } else {
-        form.setValue("images", dedupe([...currentGallery, ...dataUrls]), {
-          shouldValidate: true,
-          shouldDirty: true,
-        });
-      }
-
-      e.target.value = "";
-    } catch (err) {
-      console.error(err);
-      setFileError("Failed to read files. Try smaller images or fewer files.");
-    }
-  }
-
-  // -------------------------
-  // Highlights helpers
-  // -------------------------
-  const addHighlight = () => {
-    const nextIndex = highlights.length + 1;
-    const next = [
-      ...highlights,
-      { title: `Highlight ${nextIndex}`, image: "", caption: "" },
-    ];
-    form.setValue("highlights", next, {
-      shouldValidate: true,
-      shouldDirty: true,
-    });
-  };
-
-  const removeHighlight = (idx) => {
-    const next = highlights.filter((_, i) => i !== idx);
-    form.setValue("highlights", next, {
-      shouldValidate: true,
-      shouldDirty: true,
-    });
-  };
-
-  // -------------------------
-  // Submit
-  // -------------------------
-  const onSubmit = async (values) => {
-    setSaving(true);
-
-    const wc = wordCount(values.rationale);
-    if (wc < 100 || wc > 150) {
-      alert("Rationale must be 100–150 words for Class 05.");
-      setSaving(false);
-      return;
-    }
-
-    if (!values.image) {
-      alert("Main image is required. Set another image as main.");
-      setSaving(false);
-      return;
-    }
-
-    if (!values.highlights || values.highlights.length < 3) {
-      alert("Add at least 3 highlight blocks (image + short caption).");
-      setSaving(false);
-      return;
-    }
-
-    const badHighlight = values.highlights.some((h) => {
-      const img = String(h?.image || "").trim();
-      const cap = String(h?.caption || "").trim();
-      return !img || !cap;
-    });
-
-    if (badHighlight) {
-      alert("Each highlight must include an image and a short caption.");
-      setSaving(false);
-      return;
-    }
-
-    try {
-      const fd = new FormData();
-      fd.append("title", values.title);
-      fd.append("description", values.description);
-      fd.append("image", values.image);
-      fd.append("link", values.link);
-
-      fd.append("rationale", values.rationale);
-      fd.append("highlights", JSON.stringify(values.highlights));
-
-      (values.keywords || []).forEach((k) => fd.append("keywords", k));
-      (values.images || []).forEach((img) => fd.append("images", img));
-
-      const res = await fetch(`/api/projects/${project.id}`, {
-        method: "PATCH",
-        body: fd,
-      });
-
-      const text = await res.text();
-      if (!res.ok) {
-        alert("Update failed");
-        console.error("Update error:", res.status, text);
-        setSaving(false);
-        return;
-      }
-
-      alert("Project Updated!");
-      router.push(`/projects/${project.id}`);
-      router.refresh();
-    } catch (e) {
-      alert("Update failed");
-      console.error(e);
-    } finally {
-      setSaving(false);
-    }
-  };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        {/* ✅ PREVIEW (same frame behavior as project page) */}
-        <div className="rounded-2xl border border-neutral-800 bg-neutral-950/30 p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-neutral-300">
-            Preview
-          </p>
-          <p className="mt-1 text-[11px] text-neutral-500">
-            Full image fit (object-contain) so screenshots never crop.
-          </p>
-
-          <div className="mt-3">
-            <GallerySlider
-              title={form.watch("title") || "Project"}
-              isMobile={isMobile}
-              linkText={linkText}
-              images={heroImages}
-              showControlsWhenSingle
-              imgClassName="object-contain bg-neutral-950"
+      <form
+        onSubmit={form.handleSubmit(async (values) => {
+          setSaving(true);
+          await fetch(`/api/projects/${project.id}`, {
+            method: "PATCH",
+            body: JSON.stringify(values),
+          });
+          router.push(`/projects/${project.id}`);
+        })}
+        className="space-y-6"
+      >
+        {/* Highlights */}
+        {highlights.map((h, idx) => (
+          <div key={idx} className="rounded-xl border p-3">
+            <HighlightFrame
+              src={h.image}
+              title={h.title}
+              linkText={project.link}
             />
           </div>
-        </div>
+        ))}
 
-        {/* TITLE */}
-        <FormField
-          control={form.control}
-          name="title"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-xs text-neutral-300">
-                Project Title
-              </FormLabel>
-              <FormControl>
-                <Input
-                  className="border-neutral-700 bg-neutral-950 text-neutral-50"
-                  placeholder="My awesome project"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* DESCRIPTION */}
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-xs text-neutral-300">
-                Short Description
-              </FormLabel>
-              <FormControl>
-                <Input
-                  className="border-neutral-700 bg-neutral-950 text-neutral-50"
-                  placeholder="Brief summary shown on cards"
-                  {...field}
-                />
-              </FormControl>
-              <FormDescription className="text-[11px] text-neutral-500">
-                Keep this short. The assignment writing belongs in “Rationale”.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* RATIONALE */}
-        <FormField
-          control={form.control}
-          name="rationale"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-xs text-neutral-300">
-                Rationale (Class 05 — required)
-              </FormLabel>
-              <FormControl>
-                <Textarea
-                  className="min-h-[140px]"
-                  placeholder="Write 100–150 words in third person. No “I/we/you”. General audience."
-                  {...field}
-                />
-              </FormControl>
-              <FormDescription className="text-[11px] text-neutral-500">
-                Target: 100–150 words. Current:{" "}
-                <span
-                  className={
-                    rationaleWC < 100 || rationaleWC > 150
-                      ? "text-amber-300"
-                      : "text-emerald-300"
-                  }
-                >
-                  {rationaleWC}
-                </span>
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* MAIN IMAGE INPUT */}
-        <FormField
-          control={form.control}
-          name="image"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-xs text-neutral-300">
-                Main Image (URL or uploaded)
-              </FormLabel>
-              <FormControl>
-                <Input
-                  className="border-neutral-700 bg-neutral-950 text-neutral-50"
-                  placeholder="https://... or /projects/..."
-                  {...field}
-                />
-              </FormControl>
-              <FormDescription className="text-[11px] text-neutral-500">
-                Main is the first image in the slider. Use “Set as main” below.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* UPLOADS + IMAGE MANAGER */}
-        <FormItem>
-          <FormLabel className="text-xs text-neutral-300">
-            Upload Images
-          </FormLabel>
-          <FormControl>
-            <div className="space-y-3">
-              <Input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handleFilesChange}
-                className="border-neutral-700 bg-neutral-950 text-neutral-50 file:mr-3 file:rounded-md file:border-0 file:bg-blue-500/80 file:px-3 file:py-1 file:text-xs file:font-medium file:text-white hover:file:bg-blue-400"
-              />
-
-              {fileError ? (
-                <p className="text-xs text-red-400">{fileError}</p>
-              ) : null}
-
-              {heroImages.length > 0 ? (
-                <div className="space-y-2">
-                  <span className="text-[11px] text-neutral-500">
-                    Images (main + gallery). Remove any. Removing main promotes
-                    the next.
-                  </span>
-
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    {heroImages.map((src, idx) => {
-                      const isMain = String(src).trim() === String(main).trim();
-                      return (
-                        <div
-                          key={`${src}-${idx}`}
-                          className="rounded-xl border border-neutral-800 bg-neutral-950/50 p-2"
-                        >
-                          <div className="h-32 w-full overflow-hidden rounded-lg border border-neutral-800 bg-neutral-950">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                              src={src}
-                              alt={`Image ${idx + 1}`}
-                              className="h-full w-full object-contain"
-                            />
-                          </div>
-
-                          <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-                            <span className="text-[11px] text-neutral-400">
-                              {isMain ? "Main" : "Gallery"}
-                            </span>
-
-                            <div className="flex gap-2">
-                              {!isMain && (
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  className="border border-blue-500/80"
-                                  onClick={() => setAsMain(src)}
-                                >
-                                  Set as main
-                                </Button>
-                              )}
-
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                className="border-neutral-700 text-neutral-600"
-                                onClick={() => removeImage(src)}
-                              >
-                                Remove
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              ) : (
-                <p className="text-xs text-neutral-500">No images yet.</p>
-              )}
-            </div>
-          </FormControl>
-
-          <FormDescription className="text-[11px] text-neutral-500">
-            Upload screenshots for the hero slider and/or highlight sections.
-          </FormDescription>
-        </FormItem>
-
-        {/* HIGHLIGHTS */}
-        <div className="space-y-2 rounded-2xl border border-neutral-800 bg-neutral-950/30 p-4">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-neutral-300">
-                Highlights 
-              </p>
-              <p className="text-[11px] text-neutral-500">
-                Add 3–5 highlight blocks. Each should have an image + caption.
-              </p>
-            </div>
-
-            <Button
-              type="button"
-              onClick={addHighlight}
-              className="border border-blue-500/80"
-            >
-              Add Highlight
-            </Button>
-          </div>
-
-          {highlights.length === 0 ? (
-            <p className="text-sm text-neutral-400">
-              No highlights yet — add at least 3.
-            </p>
-          ) : (
-            <div className="space-y-4">
-              {highlights.map((_, idx) => {
-                const titleValue =
-                  String(form.watch(`highlights.${idx}.title`) || "").trim() ||
-                  `Highlight ${idx + 1}`;
-
-                return (
-                  <div
-                    key={idx}
-                    className="space-y-3 rounded-2xl border border-neutral-800 bg-neutral-950/50 p-3"
-                  >
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs font-semibold text-neutral-200">
-                        {titleValue}
-                      </p>
-
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="border-neutral-700 text-neutral-600"
-                        onClick={() => removeHighlight(idx)}
-                      >
-                        Remove
-                      </Button>
-                    </div>
-
-                    {/* Title */}
-                    <FormField
-                      control={form.control}
-                      name={`highlights.${idx}.title`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs text-neutral-300">
-                            Title
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              className="border-neutral-700 bg-neutral-950 text-neutral-50"
-                              placeholder="e.g. Booking flow"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    {/* ✅ ONE image field: upload + optional paste + framed preview */}
-                    <FormField
-                      control={form.control}
-                      name={`highlights.${idx}.image`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs text-neutral-300">
-                            Highlight Image
-                          </FormLabel>
-
-                          <FormControl>
-                            <Input
-                              type="file"
-                              accept="image/*"
-                              onChange={async (e) => {
-                                try {
-                                  const file = e.target.files?.[0];
-                                  if (!file) return;
-                                  const dataUrl = await fileToDataUrl(file);
-                                  field.onChange(dataUrl);
-                                  e.target.value = "";
-                                } catch (err) {
-                                  console.error(err);
-                                }
-                              }}
-                              className="border-neutral-700 bg-neutral-950 text-neutral-50 file:mr-3 file:rounded-md file:border-0 file:bg-blue-500/80 file:px-3 file:py-1 file:text-xs file:font-medium file:text-white hover:file:bg-blue-400"
-                            />
-                          </FormControl>
-
-                          {/* ✅ framed preview matches mobile/web based on image ratio */}
-                          {field.value ? (
-                            <HighlightFrame
-                              src={h.image}
-                              title={h.title}
-                              linkText={
-                                project?.link?.replace(/^https?:\/\//, "") ||
-                                "localhost:3000"
-                              }
-                            />
-                          ) : null}
-
-                          <FormControl>
-                            <Input
-                              className="mt-2 border-neutral-700 bg-neutral-950 text-neutral-50"
-                              placeholder="Or paste image URL / data:image..."
-                              value={field.value || ""}
-                              onChange={field.onChange}
-                            />
-                          </FormControl>
-
-                          <FormDescription className="text-[11px] text-neutral-500">
-                            Upload from desktop or paste a URL/data:image.
-                            Preview auto-picks mobile/web frame.
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    {/* Caption */}
-                    <FormField
-                      control={form.control}
-                      name={`highlights.${idx}.caption`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs text-neutral-300">
-                            Caption
-                          </FormLabel>
-                          <FormControl>
-                            <Textarea
-                              className="min-h-[80px]"
-                              placeholder="1–2 lines describing what this shows."
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* LINK */}
-        <FormField
-          control={form.control}
-          name="link"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-xs text-neutral-300">
-                Project Link
-              </FormLabel>
-              <FormControl>
-                <Input
-                  className="border-neutral-700 bg-neutral-950 text-neutral-50"
-                  placeholder="https://your-project-link.com"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* KEYWORDS */}
-        <FormField
-          control={form.control}
-          name="keywords"
-          render={({ field }) => {
-            const current = field.value ?? [];
-
-            const handleAdd = () => {
-              const v = draftKeyword.trim();
-              if (!v || current.includes(v)) return;
-              field.onChange([...current, v]);
-              setDraftKeyword("");
-            };
-
-            const handleRemove = (value) => {
-              field.onChange(current.filter((k) => k !== value));
-            };
-
-            return (
-              <FormItem>
-                <FormLabel className="text-xs text-neutral-300">
-                  Keywords
-                </FormLabel>
-                <FormDescription className="text-[11px] text-neutral-500">
-                  Add “Expo / React Native / Mobile” to show phone frame.
-                  Otherwise web frame stays.
-                </FormDescription>
-
-                <div className="mt-1 flex gap-2">
-                  <Input
-                    className="border-neutral-700 bg-neutral-950 text-neutral-50"
-                    placeholder="Type a keyword and press Enter"
-                    value={draftKeyword}
-                    onChange={(e) => setDraftKeyword(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        handleAdd();
-                      }
-                    }}
-                  />
-                  <Button
-                    className="border border-blue-500/80"
-                    type="button"
-                    onClick={handleAdd}
-                  >
-                    Add
-                  </Button>
-                </div>
-
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {current.map((value) => (
-                    <Badge
-                      key={value}
-                      variant="outline"
-                      className="flex items-center gap-1 border-neutral-600 text-[11px] text-neutral-200"
-                    >
-                      {value}
-                      <button
-                        type="button"
-                        className="ml-1 text-xs"
-                        onClick={() => handleRemove(value)}
-                        aria-label={`Remove ${value}`}
-                      >
-                        ×
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-
-                <FormMessage />
-              </FormItem>
-            );
-          }}
-        />
-
-        <Button
-          type="submit"
-          disabled={saving}
-          className="mt-2 w-full border border-blue-500/80"
-        >
+        <Button type="submit" disabled={saving}>
           {saving ? "Saving..." : "Save Changes"}
         </Button>
       </form>
