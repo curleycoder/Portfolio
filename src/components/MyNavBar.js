@@ -110,14 +110,14 @@ export default function MyNavBar() {
 
           {/* RIGHT SIDE (DESKTOP) - UI font */}
           <div className="hidden items-center gap-3 md:flex font-ui">
-            <button
+            {/* <button
               type="button"
               onClick={() => window.dispatchEvent(new CustomEvent("dew:open"))}
               className="rounded-md border border-neutral-600 px-4 py-2 text-neutral-100 hover:bg-white/10"
               title="Try the live Dew demo"
             >
               Try Dew
-            </button>
+            </button> */}
 
             <Link
               href="/calendar"

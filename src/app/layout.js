@@ -45,12 +45,12 @@ export default function RootLayout({ children }) {
           <Toaster />
           <main>{children}</main>
         </Providers>
-        <ChatWidget
+        {/* <ChatWidget
           biz="beiraghian"
           title="Dew Assistant"
           subtitle="Projects • Book a Call • Contact"
           avatarSrc="/avatar.png"
-        />
+        /> */}
       </body>
     </html>
   );
