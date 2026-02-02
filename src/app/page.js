@@ -24,40 +24,52 @@ const categoryClass = {
   mobile: "border-purple-500/50 bg-purple-500/10 text-purple-100",
   dev: "border-pink-300/50 bg-pink-500/10 text-pink-100",
   tools: "border-yellow-300/50 bg-yellow-500/10 text-yellow-100",
-  del: "border-green-300/50 bg-green-500/10 text-green-100"
+  del: "border-green-300/50 bg-green-500/10 text-green-100",
 };
 
 const skills = {
-  frontend: ["HTML · CSS", "Tailwind CSS", "React", "Next.js · App Router", "Responsive UI", "Accessibility"],
-  backend: ["Node.js","Hono", "REST APIs","Authentication", "Neon · PostgreSQL","MongoDB", "Drizzle ORM", "MySQL",    "Prisma"],
-  mobile: ["React Native", "Expo", "Expo Go", "Xcode"],
-  dev: [
-
-    "CI / CD",
-    "Vercel", "Render",
-
-    "AWS (S3)",
-"Environment Configuration"
+  frontend: [
+    "HTML · CSS",
+    "Tailwind CSS",
+    "React",
+    "Next.js · App Router",
+    "Responsive UI",
+    "Accessibility",
   ],
-  tools: ["Git · GitHub",
+  backend: [
+    "Node.js",
+    "Hono",
+    "REST APIs",
+    "Authentication",
+    "Neon · PostgreSQL",
+    "MongoDB",
+    "Drizzle ORM",
+    "MySQL",
+    "Prisma",
+  ],
+  mobile: ["React Native", "Expo", "Expo Go", "Xcode"],
+  dev: ["CI / CD", "Vercel", "Render", "AWS (S3)", "Environment Configuration"],
+  tools: [
+    "Git · GitHub",
     "VS Code",
     "Chrome DevTools",
     "Postman",
     "Figma",
     "Jira · Trello · Taiga",
-    "Code Reviews"
+    "Code Reviews",
   ],
-  del:[ "Agile · Scrum",
-    "Scrum Master", "Technical Project Management",
+  del: [
+    "Agile · Scrum",
+    "Scrum Master",
+    "Technical Project Management",
     "Sprint Planning",
-    "Feature Delivery"
-  ]
-
+    "Feature Delivery",
+  ],
 };
 
 export default function HomePage() {
   return (
-<main className="relative min-h-screen bg-neutral-950 text-neutral-50 dev-grid">
+    <main className="relative min-h-screen bg-neutral-950 text-neutral-50 dev-grid">
       {/* GLOW BACKGROUND */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -left-40 top-10 h-72 w-72 rounded-full bg-blue-500/20 blur-3xl" />
@@ -78,9 +90,9 @@ export default function HomePage() {
 
               <div className="relative">
                 <div className="h-0.5 w-full bg-linear-to-r from-blue-pink/70 via-purple-400/60 to-transparent opacity-80" />
-                <span className="m-4 inline-block font-mono text-[11px] uppercase tracking-[0.18em] text-neutral-400">
+                {/* <span className="m-4 inline-block font-mono text-[11px] uppercase tracking-[0.18em] text-neutral-400">
                   CurleyCoder · BCIT · 2025
-                </span>
+                </span> */}
 
                 {/* stagger hero content inside */}
                 <Stagger className="px-0" delayChildren={0.08} stagger={0.06}>
@@ -105,12 +117,36 @@ export default function HomePage() {
 
               {/* SKILL CATEGORIES */}
               <div className="space-y-4 text-[11px] text-neutral-300">
-                <SkillGroup title="Frontend" items={skills.frontend} color={categoryClass.frontend} />
-                <SkillGroup title="Backend & Databses" items={skills.backend} color={categoryClass.backend} />
-                <SkillGroup title="Mobile" items={skills.mobile} color={categoryClass.mobile} />
-                <SkillGroup title="DevOps & Deployment" items={skills.dev} color={categoryClass.dev} />
-                <SkillGroup title="Tools & Workflow" items={skills.tools} color={categoryClass.tools} />
-                <SkillGroup title="Leadership & Delivery" items={skills.del} color={categoryClass.del} />
+                <SkillGroup
+                  title="Frontend"
+                  items={skills.frontend}
+                  color={categoryClass.frontend}
+                />
+                <SkillGroup
+                  title="Backend & Databses"
+                  items={skills.backend}
+                  color={categoryClass.backend}
+                />
+                <SkillGroup
+                  title="Mobile"
+                  items={skills.mobile}
+                  color={categoryClass.mobile}
+                />
+                <SkillGroup
+                  title="DevOps & Deployment"
+                  items={skills.dev}
+                  color={categoryClass.dev}
+                />
+                <SkillGroup
+                  title="Tools & Workflow"
+                  items={skills.tools}
+                  color={categoryClass.tools}
+                />
+                <SkillGroup
+                  title="Leadership & Delivery"
+                  items={skills.del}
+                  color={categoryClass.del}
+                />
               </div>
             </div>
           </Reveal>
@@ -119,16 +155,16 @@ export default function HomePage() {
         {/* PROJECTS */}
         <Reveal delay={0.05}>
           {/* <section> */}
-            {/* If ProjectPreviewCard renders cards internally, you’ll get motion there too
+          {/* If ProjectPreviewCard renders cards internally, you’ll get motion there too
                once you wrap its internal list items with Stagger/StaggerItem (recommended). */}
-            <ProjectPreviewCard count={3} />
+          <ProjectPreviewCard count={3} />
           {/* </section> */}
         </Reveal>
 
         {/* GITHUB */}
         <Reveal delay={0.08}>
           {/* <section> */}
-            <GitHubCalendar />
+          <GitHubCalendar />
           {/* </section> */}
         </Reveal>
       </div>
@@ -147,7 +183,11 @@ function SkillGroup({ title, items, color }) {
       </div>
 
       {/* Proper stagger for chips */}
-      <Stagger className="flex flex-wrap gap-2" delayChildren={0.04} stagger={0.04}>
+      <Stagger
+        className="flex flex-wrap gap-2"
+        delayChildren={0.04}
+        stagger={0.04}
+      >
         {items.map((name) => (
           <StaggerItem key={name}>
             <span

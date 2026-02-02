@@ -15,7 +15,9 @@ export default function MyHero({ hero }) {
   };
 
   const item = {
-    hidden: reduce ? { opacity: 0 } : { opacity: 0, y: 14, filter: "blur(6px)" },
+    hidden: reduce
+      ? { opacity: 0 }
+      : { opacity: 0, y: 14, filter: "blur(6px)" },
     show: reduce
       ? { opacity: 1 }
       : {
@@ -34,12 +36,12 @@ export default function MyHero({ hero }) {
       className="relative px-6 pb-6"
     >
       {/* tiny terminal hint */}
-      <motion.div
+      {/* <motion.div
         variants={item}
         className="pt-3 font-mono text-[11px] tracking-[0.16em] text-neutral-500"
       >
         $ whoami
-      </motion.div>
+      </motion.div> */}
 
       {/* 2-column hero: text left, image right */}
       <div className="mt-4 grid gap-8 md:grid-cols-[1.25fr_0.75fr] md:items-stretch">
@@ -53,9 +55,9 @@ export default function MyHero({ hero }) {
           </motion.h1>
 
           <motion.div variants={item} className="mt-4">
-            <div className="font-mono text-[11px] tracking-[0.16em] text-neutral-500">
+            {/* <div className="font-mono text-[11px] tracking-[0.16em] text-neutral-500">
               $ i do
-            </div>
+            </div> */}
 
             <div className="mt-1 text-xl font-semibold md:text-2xl">
               <span className="text-neutral-200">I do </span>
@@ -113,9 +115,9 @@ export default function MyHero({ hero }) {
           </div>
 
           {/* optional caption (dev vibe, low noise) */}
-          <div className="mt-3 font-mono text-[10px] tracking-[0.16em] text-neutral-500">
+          {/* <div className="mt-3 font-mono text-[10px] tracking-[0.16em] text-neutral-500">
             // building → shipping → iterating
-          </div>
+          </div> */}
         </motion.div>
       </div>
     </motion.div>
