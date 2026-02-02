@@ -213,7 +213,7 @@ export default function HighlightFrame({ src, title, linkText }) {
         </span>
       </div>
 
-      <div className="relative aspect-[16/9] w-full bg-neutral-900">
+      <div className="relative aspect-video w-full bg-neutral-900">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={src}
