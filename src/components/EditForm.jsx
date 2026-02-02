@@ -117,7 +117,7 @@ export default function EditProjectForm({ project }) {
       (values.images || []).forEach((img) => fd.append("images", img));
 
       const res = await fetch(`/api/projects/${project.id}`, {
-        method: "PUT", // or PATCH if your API uses PATCH
+        method: "PATCH", 
         body: fd,
       });
 

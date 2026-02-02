@@ -9,9 +9,27 @@ import { Button } from "@/components/ui/button";
 import { auth0 } from "@/lib/auth0";
 import { fetchProjectById } from "@/lib/db";
 import { DeleteButton } from "@/components/DeleteButton";
+import GallerySlider from "@/components/GallerySlider";
 
 function wordCount(s) {
-  return s.trim().split(/\s+/).filter(Boolean).length;
+  return String(s || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean).length;
+}
+
+function dedupe(arr) {
+  const seen = new Set();
+  const out = [];
+  for (const item of arr) {
+    if (!item) continue;
+    const key = String(item).trim();
+    if (!key) continue;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(key);
+  }
+  return out;
 }
 
 export default async function ProjectDetailPage({ params }) {
@@ -28,18 +46,25 @@ export default async function ProjectDetailPage({ params }) {
     keywords.some((k) => k.includes("react-native")) ||
     keywords.some((k) => k.includes("expo")) ||
     keywords.some((k) => k.includes("mobile"));
+const extraImages = Array.isArray(project.images) ? project.images : [];
+const heroImages = [project.image, ...extraImages].filter(Boolean);
+const linkText = project.link?.replace(/^https?:\/\//, "") || "localhost:3000";
+
+
+
   const label = isMobile ? "Mobile App" : "Web App";
 
-  // ✅ Assignment-critical: rationale (falls back to description)
+  // Assignment: rationale (fallback to description)
   const rationaleText = String(project.rationale ?? project.description ?? "").trim();
   const wc = rationaleText ? wordCount(rationaleText) : 0;
 
-  // ✅ Optional highlights (ideal if stored in DB)
+  // Optional: highlight blocks from DB
   const highlights = Array.isArray(project.highlights) ? project.highlights : [];
+
 
   return (
     <main className="min-h-screen bg-neutral-950 text-neutral-50">
-      <div className="mx-auto max-w-4xl px-4 py-12 space-y-8">
+      <div className="mx-auto max-w-4xl space-y-8 px-4 py-12">
         {/* Back link */}
         <div>
           <Link
@@ -50,7 +75,7 @@ export default async function ProjectDetailPage({ params }) {
           </Link>
         </div>
 
-        <Card className="border border-neutral-800 bg-neutral-900/70 text-neutral-50 p-6 space-y-6">
+        <Card className="space-y-6 border border-neutral-800 bg-neutral-900/70 p-6 text-neutral-50">
           {/* Header */}
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -65,14 +90,19 @@ export default async function ProjectDetailPage({ params }) {
           <div className="flex justify-center">
             {isMobile ? (
               <div className="relative flex items-center justify-center">
-                <div className="relative h-[320px] w-[150px] overflow-hidden rounded-[1.6rem] bg-neutral-900 border border-neutral-700/80">
+                <div className="relative h-[320px] w-[150px] overflow-hidden rounded-[1.6rem] border border-neutral-700/80 bg-neutral-900">
+                {/* Hero preview (SLIDER) */}
+
+
                   {project.image ? (
-                    <Image
-                      src={project.image}
-                      alt={project.title}
-                      fill
-                      className="object-cover"
-                    />
+                    <GallerySlider
+  title={project.title}
+  isMobile={isMobile}
+  linkText={linkText}
+  images={heroImages}
+  showControlsWhenSingle
+/>
+
                   ) : (
                     <div className="flex h-full items-center justify-center text-[10px] text-neutral-500">
                       No preview
@@ -99,6 +129,7 @@ export default async function ProjectDetailPage({ params }) {
                       alt={project.title}
                       fill
                       className="object-cover"
+                      unoptimized={String(project.image).startsWith("data:image")}
                     />
                   ) : (
                     <div className="flex h-full items-center justify-center text-[10px] text-neutral-500">
@@ -164,7 +195,7 @@ export default async function ProjectDetailPage({ params }) {
                 {highlights.slice(0, 4).map((h, idx) => (
                   <div
                     key={idx}
-                    className="rounded-2xl border border-neutral-800 bg-neutral-950/40 p-3 space-y-2"
+                    className="space-y-2 rounded-2xl border border-neutral-800 bg-neutral-950/40 p-3"
                   >
                     <p className="text-xs font-semibold text-neutral-100">
                       {h.title ?? `Highlight ${idx + 1}`}
@@ -177,6 +208,7 @@ export default async function ProjectDetailPage({ params }) {
                           alt={h.title ?? project.title}
                           fill
                           className="object-cover"
+                          unoptimized={String(h.image).startsWith("data:image")}
                         />
                       </div>
                     ) : (
@@ -199,7 +231,7 @@ export default async function ProjectDetailPage({ params }) {
           </section>
 
           {/* Links + admin actions */}
-          <div className="pt-6 border-t border-neutral-800 mt-6 flex justify-end gap-3 flex-wrap">
+          <div className="mt-6 flex flex-wrap justify-end gap-3 border-t border-neutral-800 pt-6">
             {project.link && (
               <Button
                 asChild
@@ -244,7 +276,7 @@ export default async function ProjectDetailPage({ params }) {
                   asChild
                   size="sm"
                   variant="outline"
-                  className="text-xs border-neutral-700 text-neutral-800 hover:bg-pink-400"
+                  className="text-xs border-neutral-700 text-neutral-900 hover:bg-neutral-300"
                 >
                   <Link href={`/projects/${project.id}/edit`}>Edit</Link>
                 </Button>
