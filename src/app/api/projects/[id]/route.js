@@ -11,6 +11,15 @@ function isAdmin(user) {
   return adminEmails.includes(user.email.toLowerCase());
 }
 
+function safeJsonParse(value, fallback) {
+  try {
+    if (!value) return fallback;
+    return JSON.parse(value);
+  } catch {
+    return fallback;
+  }
+}
+
 export async function PATCH(req, { params }) {
   try {
     const session = await auth0.getSession();
@@ -22,7 +31,6 @@ export async function PATCH(req, { params }) {
 
     const { id } = params;
 
-    // Ensure project exists
     const existing = await fetchProjectById(id);
     if (!existing) {
       return Response.json({ ok: false, error: "Not found" }, { status: 404 });
@@ -35,6 +43,11 @@ export async function PATCH(req, { params }) {
     const image = formData.get("image")?.toString().trim();
     const link = formData.get("link")?.toString().trim();
 
+    // ✅ NEW: rationale + highlights (assignment fields)
+    const rationale = formData.get("rationale")?.toString().trim() ?? "";
+    const highlightsRaw = formData.get("highlights")?.toString() ?? "[]";
+    const highlights = safeJsonParse(highlightsRaw, []);
+
     const keywords = formData
       .getAll("keywords")
       .map((k) => k.toString().trim())
@@ -45,6 +58,7 @@ export async function PATCH(req, { params }) {
       .map((v) => v.toString().trim())
       .filter(Boolean);
 
+    // Required fields for your app
     if (!title || !description || !image || !link) {
       return Response.json(
         { ok: false, error: "Missing required fields" },
@@ -52,7 +66,21 @@ export async function PATCH(req, { params }) {
       );
     }
 
-    // ⛔️ Replace updateProject with the real function name from your db
+    // ✅ Optional stricter validation for assignment:
+    // - You can leave this OUT if you don’t want server-side enforcement.
+    // if (!rationale) {
+    //   return Response.json(
+    //     { ok: false, error: "Rationale is required" },
+    //     { status: 400 }
+    //   );
+    // }
+    // if (!Array.isArray(highlights)) {
+    //   return Response.json(
+    //     { ok: false, error: "Highlights must be an array" },
+    //     { status: 400 }
+    //   );
+    // }
+
     const updated = await updateProject(id, {
       title,
       description,
@@ -60,6 +88,10 @@ export async function PATCH(req, { params }) {
       link,
       keywords,
       images,
+
+      // ✅ Save assignment fields
+      rationale,
+      highlights,
     });
 
     await insertAuditLog({
@@ -90,7 +122,6 @@ export async function DELETE(req, { params }) {
 
     const { id } = params;
 
-    // ⛔️ Replace deleteProject with the real function name from your db
     await deleteProject(id);
 
     await insertAuditLog({

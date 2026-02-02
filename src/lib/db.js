@@ -24,12 +24,19 @@ function mapProject(row) {
     link: row.link,
     keywords: row.keywords ?? [],
     images: row.images ?? [],
+
+    // ✅ NEW
+    rationale: row.rationale ?? "",
+    highlights: row.highlights ?? [],
+
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
 }
 
+
 export async function ensureProjectsTable() {
+  // Create table if missing (fresh DB)
   await sql`
     CREATE TABLE IF NOT EXISTS projects (
       id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -39,30 +46,47 @@ export async function ensureProjectsTable() {
       link text NOT NULL,
       keywords jsonb NOT NULL DEFAULT '[]'::jsonb,
       images jsonb NOT NULL DEFAULT '[]'::jsonb,
+
+      -- ✅ Assignment fields
+      rationale text NOT NULL DEFAULT '',
+      highlights jsonb NOT NULL DEFAULT '[]'::jsonb,
+
       created_at timestamptz NOT NULL DEFAULT now(),
       updated_at timestamptz NOT NULL DEFAULT now()
     );
   `;
+
+  // ✅ Migrate existing table safely
+  await sql`ALTER TABLE projects ADD COLUMN IF NOT EXISTS rationale text NOT NULL DEFAULT '';`;
+  await sql`ALTER TABLE projects ADD COLUMN IF NOT EXISTS highlights jsonb NOT NULL DEFAULT '[]'::jsonb;`;
 }
 
+
 export async function seedProjectsTable(seed) {
+  await ensureProjectsTable();
+
   for (const item of seed) {
     await sql`
-      INSERT INTO projects (title, description, image, link, keywords, images)
-      VALUES (
-        ${item.title},
-        ${item.description},
-        ${item.image},
-        ${item.link},
-        ${JSON.stringify(item.keywords ?? [])},
-        ${JSON.stringify(item.images ?? [])}
-      )
-      ON CONFLICT DO NOTHING;
-    `;
+  INSERT INTO projects (title, description, image, link, keywords, images, rationale, highlights)
+  VALUES (
+    ${item.title},
+    ${item.description},
+    ${item.image},
+    ${item.link},
+    ${JSON.stringify(item.keywords ?? [])},
+    ${JSON.stringify(item.images ?? [])},
+    ${item.rationale ?? ""},
+    ${JSON.stringify(item.highlights ?? [])}
+  )
+  ON CONFLICT DO NOTHING;
+`;
+
   }
 }
 
 export async function fetchProjects({ limit = 20, offset = 0 } = {}) {
+  await ensureProjectsTable();
+
   const rows = await sql`
     SELECT *
     FROM projects
@@ -73,6 +97,8 @@ export async function fetchProjects({ limit = 20, offset = 0 } = {}) {
 }
 
 export async function fetchProjectById(id) {
+  await ensureProjectsTable();
+
   const rows = await sql`
     SELECT *
     FROM projects
@@ -83,30 +109,27 @@ export async function fetchProjectById(id) {
 }
 
 export async function getProjectById(id) {
-  const rows = await sql`
-    SELECT *
-    FROM projects
-    WHERE id = ${id}
-    LIMIT 1;
-  `;
-  return mapProject(rows[0]);
+  return fetchProjectById(id);
 }
 
 export async function insertProject(data) {
   const rows = await sql`
-    INSERT INTO projects (title, description, image, link, keywords, images)
+    INSERT INTO projects (title, description, image, link, keywords, images, rationale, highlights)
     VALUES (
       ${data.title},
       ${data.description},
       ${data.image},
       ${data.link},
       ${JSON.stringify(data.keywords ?? [])},
-      ${JSON.stringify(data.images ?? [])}
+      ${JSON.stringify(data.images ?? [])},
+      ${data.rationale ?? ""},
+      ${JSON.stringify(data.highlights ?? [])}
     )
     RETURNING *;
   `;
   return mapProject(rows[0]);
 }
+
 
 export async function updateProject(id, updates) {
   const rows = await sql`
@@ -116,6 +139,7 @@ export async function updateProject(id, updates) {
       description = COALESCE(${updates.description}, description),
       image = COALESCE(${updates.image}, image),
       link = COALESCE(${updates.link}, link),
+
       keywords = COALESCE(
         ${updates.keywords ? JSON.stringify(updates.keywords) : null},
         keywords
@@ -124,6 +148,14 @@ export async function updateProject(id, updates) {
         ${updates.images ? JSON.stringify(updates.images) : null},
         images
       ),
+
+      -- ✅ NEW
+      rationale = COALESCE(${updates.rationale ?? null}, rationale),
+      highlights = COALESCE(
+        ${updates.highlights ? JSON.stringify(updates.highlights) : null},
+        highlights
+      ),
+
       updated_at = now()
     WHERE id = ${id}
     RETURNING *;
@@ -131,7 +163,10 @@ export async function updateProject(id, updates) {
   return mapProject(rows[0]);
 }
 
+
 export async function deleteProject(id) {
+  await ensureProjectsTable();
+
   const rows = await sql`
     DELETE FROM projects
     WHERE id = ${id}

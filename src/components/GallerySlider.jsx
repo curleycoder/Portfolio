@@ -25,9 +25,15 @@ export default function GallerySlider({
   isMobile,
   linkText,
   images = [],
+  showControlsWhenSingle = false,
+  className = "",
+  imgClassName,
 }) {
   const items = useMemo(() => dedupe(images), [images]);
   const [i, setI] = useState(0);
+
+  const hasImages = items.length > 0;
+  const src = items[i];
 
   const prev = () => setI((p) => (p - 1 + items.length) % items.length);
   const next = () => setI((p) => (p + 1) % items.length);
@@ -47,11 +53,15 @@ export default function GallerySlider({
     if (i >= items.length) setI(0);
   }, [items.length, i]);
 
-  const src = items[i];
-  const hasImages = items.length > 0;
+  const showControls =
+    items.length > 1 || (showControlsWhenSingle && items.length === 1);
+
+  // Defaults: mobile can be cover; web should be contain to look like a full site screenshot
+  const imageFitClass =
+  imgClassName ?? "object-contain bg-neutral-950";
 
   return (
-    <div className="flex justify-center">
+    <div className={`flex justify-center ${className}`}>
       {isMobile ? (
         // PHONE FRAME
         <div className="relative flex items-center justify-center">
@@ -61,7 +71,7 @@ export default function GallerySlider({
                 src={src}
                 alt={title}
                 fill
-                className="object-cover"
+                className={imageFitClass}
                 unoptimized={isDataUrl(src)}
               />
             ) : (
@@ -71,13 +81,14 @@ export default function GallerySlider({
             )}
 
             {/* Controls */}
-            {items.length > 1 && (
+            {showControls && (
               <>
                 <button
                   type="button"
                   onClick={prev}
                   aria-label="Previous"
-                  className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full border border-neutral-700 bg-neutral-950/80 px-2 py-1 text-xs text-neutral-200 hover:bg-neutral-900"
+                  disabled={items.length < 2}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full border border-neutral-700 bg-neutral-950/80 px-2 py-1 text-xs text-neutral-200 hover:bg-neutral-900 disabled:opacity-40"
                 >
                   ←
                 </button>
@@ -85,13 +96,14 @@ export default function GallerySlider({
                   type="button"
                   onClick={next}
                   aria-label="Next"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full border border-neutral-700 bg-neutral-950/80 px-2 py-1 text-xs text-neutral-200 hover:bg-neutral-900"
+                  disabled={items.length < 2}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full border border-neutral-700 bg-neutral-950/80 px-2 py-1 text-xs text-neutral-200 hover:bg-neutral-900 disabled:opacity-40"
                 >
                   →
                 </button>
 
                 <div className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full border border-neutral-700 bg-neutral-950/70 px-2 py-0.5 text-[10px] text-neutral-200">
-                  {i + 1}/{items.length}
+                  {items.length ? `${i + 1}/${items.length}` : "0/0"}
                 </div>
               </>
             )}
@@ -99,31 +111,31 @@ export default function GallerySlider({
         </div>
       ) : (
         // WEB BROWSER FRAME
-        <div className="relative w-full max-w-2xl overflow-hidden rounded-xl border border-neutral-700 bg-neutral-950">
-          <div className="flex items-center gap-2 px-3 py-2 text-[10px] text-neutral-400">
+        <div className="relative w-full overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-950 shadow-lg shadow-black/40">
+          <div className="flex items-center gap-2 border-b border-neutral-800 bg-neutral-950/80 px-3 py-2 text-[10px] text-neutral-400">
             <span className="flex gap-1">
               <span className="h-2 w-2 rounded-full bg-red-500/70" />
               <span className="h-2 w-2 rounded-full bg-amber-400/70" />
               <span className="h-2 w-2 rounded-full bg-emerald-500/70" />
             </span>
-            <span className="ml-2 truncate text-neutral-500">
+
+            <span className="ml-2 flex-1 truncate text-neutral-500">
               {linkText || "localhost:3000"}
             </span>
 
             {items.length > 1 && (
-              <span className="ml-auto text-neutral-500">
-                {i + 1}/{items.length}
-              </span>
+              <span className="text-neutral-500">{i + 1}/{items.length}</span>
             )}
           </div>
 
-          <div className="relative h-64 w-full bg-neutral-900">
+          {/* KEY FIX: aspect ratio instead of fixed h-64 */}
+          <div className="relative aspect-[16/9] w-full bg-neutral-900">
             {hasImages ? (
               <Image
                 src={src}
                 alt={title}
                 fill
-                className="object-cover"
+                className={imageFitClass}
                 unoptimized={isDataUrl(src)}
               />
             ) : (
@@ -133,13 +145,14 @@ export default function GallerySlider({
             )}
 
             {/* Controls */}
-            {items.length > 1 && (
+            {showControls && (
               <>
                 <button
                   type="button"
                   onClick={prev}
                   aria-label="Previous"
-                  className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full border border-neutral-700 bg-neutral-950/80 px-3 py-2 text-xs text-neutral-200 hover:bg-neutral-900"
+                  disabled={items.length < 2}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full border border-neutral-700 bg-neutral-950/80 px-3 py-2 text-xs text-neutral-200 hover:bg-neutral-900 disabled:opacity-40"
                 >
                   ←
                 </button>
@@ -147,10 +160,18 @@ export default function GallerySlider({
                   type="button"
                   onClick={next}
                   aria-label="Next"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full border border-neutral-700 bg-neutral-950/80 px-3 py-2 text-xs text-neutral-200 hover:bg-neutral-900"
+                  disabled={items.length < 2}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full border border-neutral-700 bg-neutral-950/80 px-3 py-2 text-xs text-neutral-200 hover:bg-neutral-900 disabled:opacity-40"
                 >
-                  →
+                  →     
                 </button>
+
+                {/* bottom counter (optional, helps UX) */}
+                {items.length > 1 && (
+                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full border border-neutral-700 bg-neutral-950/70 px-2 py-0.5 text-[10px] text-neutral-200">
+                    {i + 1}/{items.length}
+                  </div>
+                )}
               </>
             )}
           </div>
