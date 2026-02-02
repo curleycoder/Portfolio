@@ -10,24 +10,32 @@ import { auth0 } from "@/lib/auth0";
 import { fetchProjectById } from "@/lib/db";
 import { DeleteButton } from "@/components/DeleteButton";
 
+function wordCount(s) {
+  return s.trim().split(/\s+/).filter(Boolean).length;
+}
+
 export default async function ProjectDetailPage({ params }) {
   const { id } = params;
 
   const session = await auth0.getSession();
   const isLoggedIn = !!session?.user;
 
-  
   const project = await fetchProjectById(id);
   if (!project) notFound();
 
-  const keywords = (project.keywords || []).map((k) =>
-    String(k).toLowerCase()
-  );
+  const keywords = (project.keywords || []).map((k) => String(k).toLowerCase());
   const isMobile =
     keywords.some((k) => k.includes("react-native")) ||
     keywords.some((k) => k.includes("expo")) ||
     keywords.some((k) => k.includes("mobile"));
   const label = isMobile ? "Mobile App" : "Web App";
+
+  // ✅ Assignment-critical: rationale (falls back to description)
+  const rationaleText = String(project.rationale ?? project.description ?? "").trim();
+  const wc = rationaleText ? wordCount(rationaleText) : 0;
+
+  // ✅ Optional highlights (ideal if stored in DB)
+  const highlights = Array.isArray(project.highlights) ? project.highlights : [];
 
   return (
     <main className="min-h-screen bg-neutral-950 text-neutral-50">
@@ -53,7 +61,7 @@ export default async function ProjectDetailPage({ params }) {
             </div>
           </div>
 
-          {/* Image / preview */}
+          {/* Hero preview */}
           <div className="flex justify-center">
             {isMobile ? (
               <div className="relative flex items-center justify-center">
@@ -81,8 +89,7 @@ export default async function ProjectDetailPage({ params }) {
                     <span className="h-2 w-2 rounded-full bg-emerald-500/70" />
                   </span>
                   <span className="ml-2 truncate text-neutral-500">
-                    {project.link?.replace(/^https?:\/\//, "") ||
-                      "localhost:3000"}
+                    {project.link?.replace(/^https?:\/\//, "") || "localhost:3000"}
                   </span>
                 </div>
                 <div className="relative h-64 w-full bg-neutral-900">
@@ -103,73 +110,149 @@ export default async function ProjectDetailPage({ params }) {
             )}
           </div>
 
-          {/* Description */}
-          <div className="space-y-4">
-            <div>
-              <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-neutral-400">
-                Description
-              </h2>
-              <p className="mt-2 text-sm leading-relaxed text-neutral-100">
-                {project.description}
+          {/* ✅ Rationale (assignment-critical) */}
+          <section className="space-y-2">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-neutral-400">
+              Rationale
+            </h2>
+
+            {rationaleText ? (
+              <>
+                <p className="text-sm leading-relaxed text-neutral-100">
+                  {rationaleText}
+                </p>
+
+                {/* Optional helper for you; remove before final submit if you want */}
+                <p className="text-[11px] text-neutral-500">
+                  Word count: {wc} (target: 100–150)
+                </p>
+              </>
+            ) : (
+              <p className="text-sm text-neutral-300">
+                Add a 100–150 word rationale in third person (general-audience tone).
               </p>
-            </div>
+            )}
+          </section>
 
-            {project.keywords?.length ? (
-              <div>
-                <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-neutral-400">
-                  Keywords
-                </h3>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {project.keywords.map((k) => (
-                    <span
-                      key={k}
-                      className="rounded-full bg-neutral-800 px-2 py-0.5 text-[10px] uppercase tracking-[0.14em] text-neutral-300"
-                    >
-                      {k}
-                    </span>
-                  ))}
-                </div>
+          {/* Keywords */}
+          {project.keywords?.length ? (
+            <section className="space-y-2">
+              <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-neutral-400">
+                Keywords
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {project.keywords.map((k) => (
+                  <span
+                    key={k}
+                    className="rounded-full bg-neutral-800 px-2 py-0.5 text-[10px] uppercase tracking-[0.14em] text-neutral-300"
+                  >
+                    {k}
+                  </span>
+                ))}
               </div>
-            ) : null}
+            </section>
+          ) : null}
+
+          {/* ✅ Highlights (assignment-critical) */}
+          <section className="space-y-3">
+            <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-neutral-400">
+              Highlights
+            </h3>
+
+            {highlights.length > 0 ? (
+              <div className="grid gap-4 sm:grid-cols-2">
+                {highlights.slice(0, 4).map((h, idx) => (
+                  <div
+                    key={idx}
+                    className="rounded-2xl border border-neutral-800 bg-neutral-950/40 p-3 space-y-2"
+                  >
+                    <p className="text-xs font-semibold text-neutral-100">
+                      {h.title ?? `Highlight ${idx + 1}`}
+                    </p>
+
+                    {h.image ? (
+                      <div className="relative aspect-[16/9] overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900">
+                        <Image
+                          src={h.image}
+                          alt={h.title ?? project.title}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="aspect-[16/9] rounded-xl border border-neutral-800 bg-neutral-900/40" />
+                    )}
+
+                    {h.caption ? (
+                      <p className="text-xs leading-relaxed text-neutral-300">
+                        {h.caption}
+                      </p>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-neutral-300">
+                Add 3–5 highlight blocks (each with an image + 1–2 line caption).
+              </p>
+            )}
+          </section>
+
+          {/* Links + admin actions */}
+          <div className="pt-6 border-t border-neutral-800 mt-6 flex justify-end gap-3 flex-wrap">
+            {project.link && (
+              <Button
+                asChild
+                size="sm"
+                className="border border-blue-500/80 bg-blue-500/80 text-xs hover:bg-blue-400"
+              >
+                <a href={project.link} target="_blank" rel="noreferrer">
+                  Visit project
+                </a>
+              </Button>
+            )}
+
+            {project.github && (
+              <Button
+                asChild
+                size="sm"
+                variant="outline"
+                className="text-xs border-neutral-700 text-neutral-100 hover:bg-neutral-900"
+              >
+                <a href={project.github} target="_blank" rel="noreferrer">
+                  GitHub
+                </a>
+              </Button>
+            )}
+
+            {project.prototype && (
+              <Button
+                asChild
+                size="sm"
+                variant="outline"
+                className="text-xs border-neutral-700 text-neutral-100 hover:bg-neutral-900"
+              >
+                <a href={project.prototype} target="_blank" rel="noreferrer">
+                  Prototype
+                </a>
+              </Button>
+            )}
+
+            {isLoggedIn && (
+              <>
+                <Button
+                  asChild
+                  size="sm"
+                  variant="outline"
+                  className="text-xs border-neutral-700 text-neutral-800 hover:bg-pink-400"
+                >
+                  <Link href={`/projects/${project.id}/edit`}>Edit</Link>
+                </Button>
+
+                <DeleteButton id={project.id} size="sm" className="text-xs" />
+              </>
+            )}
           </div>
-
-          {/* Live link */}
-{/* ACTION ROW */}
-<div className="pt-6 border-t border-neutral-800 mt-6 flex justify-end gap-3 flex-wrap">
-  {/* Visit project */}
-  {project.link && (
-    <Button
-      asChild
-      size="sm"
-      className="border border-blue-500/80 bg-blue-500/80 text-xs hover:bg-blue-400"
-    >
-      <Link href={project.link} target="_blank" rel="noreferrer">
-        Visit project
-      </Link>
-    </Button>
-  )}
-
-  {/* Edit and delete only if logged in */}
-  {isLoggedIn && (
-    <>
-      <Button
-        asChild
-        size="sm"
-        variant="outline"
-        className="text-xs border-neutral-600 text-black"
-      >
-        <Link href={`/projects/${project.id}/edit`}>Edit</Link>
-      </Button>
-
-      <DeleteButton
-        id={project.id}
-        size="sm"
-        className="text-xs"
-      />
-    </>
-  )}
-</div>
-
         </Card>
       </div>
     </main>

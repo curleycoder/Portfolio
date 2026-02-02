@@ -1,33 +1,28 @@
 import { NextResponse } from "next/server";
-import {
-  ensureProjectsTable,
-  seedProjectsTable,
-  fetchProjects,
-} from "@/lib/db";
-import { PROJECT_SEED } from "@/lib/project-seed";
+import { requireAdminOr401 } from "@/lib/admin";
+import { createProject } from "@/lib/db"; // you implement
+import { ensureProjectsTable } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(req) {
-  try {
-    await ensureProjectsTable();
-    await seedProjectsTable(PROJECT_SEED);
+export async function POST(req) {
+  const admin = await requireAdminOr401();
+  if (!admin.isAdmin) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
-    const searchParams = req.nextUrl.searchParams;
-    const pageParam = searchParams.get("page");
-    const page = pageParam ? Number(pageParam) || 1 : 1;
+  await ensureProjectsTable();
 
-    const limit = 6;
-    const offset = (page - 1) * limit;
+  const body = await req.json();
 
-    const projects = await fetchProjects({ limit, offset });
-
-    return NextResponse.json({ projects, page });
-  } catch (err) {
-    console.error("GET /api/projects error:", err);
+  // Minimal validation (tighten as needed)
+  if (!body?.title || !body?.description) {
     return NextResponse.json(
-      { message: "Internal server error" },
-      { status: 500 }
+      { error: "Missing required fields: title, description" },
+      { status: 400 }
     );
   }
+
+  const created = await createProject(body);
+  return NextResponse.json({ project: created }, { status: 201 });
 }
