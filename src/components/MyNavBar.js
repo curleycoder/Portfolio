@@ -89,9 +89,9 @@ export default function MyNavBar() {
                 </NavigationMenuList>
               </NavigationMenu>
 
-              <Link href="/blog" className={navItem}>
+              {/* <Link href="/blog" className={navItem}>
                 Blog
-              </Link>
+              </Link> */}
             </div>
           </div>
 

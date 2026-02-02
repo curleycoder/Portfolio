@@ -58,7 +58,7 @@ function isLikelyImageSrc(val) {
 function dedupe(arr) {
   const seen = new Set();
   const out = [];
-  for (const x of arr) {
+  for (const x of arr || []) {
     if (!x) continue;
     const v = String(x).trim();
     if (!v || seen.has(v)) continue;
@@ -88,7 +88,7 @@ const optionalImageSchema = z
 const highlightSchema = z.object({
   title: z.string().max(80).optional().default(""),
   image: optionalImageSchema,
-  caption: z.string().max(220).optional().default(""),
+  caption: z.string().max(500).optional().default(""),
 });
 
 const projectSchema = z.object({
@@ -117,7 +117,6 @@ function fileToDataUrl(file) {
   });
 }
 
-
 export default function EditProjectForm({ project }) {
   const router = useRouter();
 
@@ -145,6 +144,7 @@ export default function EditProjectForm({ project }) {
   const main = form.watch("image") || "";
   const gallery = form.watch("images") || [];
   const highlights = form.watch("highlights") || [];
+
   const rationaleValue = form.watch("rationale") || "";
   const rationaleWC = useMemo(() => wordCount(rationaleValue), [rationaleValue]);
 
@@ -161,8 +161,7 @@ export default function EditProjectForm({ project }) {
     );
   }, [keywords]);
 
-  const linkText =
-    linkValue?.replace(/^https?:\/\//, "") || "localhost:3000";
+  const linkText = linkValue?.replace(/^https?:\/\//, "") || "localhost:3000";
 
   // ✅ GallerySlider input: [main, ...gallery] (deduped)
   const heroImages = useMemo(
@@ -180,10 +179,8 @@ export default function EditProjectForm({ project }) {
     const currentMain = String(form.getValues("image") || "").trim();
     const currentGallery = form.getValues("images") || [];
 
-    // remove chosen src from gallery (if exists)
     let nextGallery = currentGallery.filter((x) => String(x).trim() !== s);
 
-    // move old main into gallery (if different)
     if (currentMain && currentMain !== s) {
       nextGallery = [currentMain, ...nextGallery];
     }
@@ -217,7 +214,6 @@ export default function EditProjectForm({ project }) {
           shouldDirty: true,
         });
       } else {
-        // No images left (this will fail schema if you submit, which is fine)
         form.setValue("image", "", { shouldValidate: true, shouldDirty: true });
         form.setValue("images", [], { shouldValidate: true, shouldDirty: true });
       }
@@ -273,14 +269,13 @@ export default function EditProjectForm({ project }) {
   // Highlights helpers
   // -------------------------
   const addHighlight = () => {
-  const nextIndex = highlights.length + 1;
-  const next = [
-    ...highlights,
-    { title: `Highlight ${nextIndex}`, image: "", caption: "" },
-  ];
-  form.setValue("highlights", next, { shouldValidate: true });
-};
-
+    const nextIndex = highlights.length + 1;
+    const next = [
+      ...highlights,
+      { title: `Highlight ${nextIndex}`, image: "", caption: "" },
+    ];
+    form.setValue("highlights", next, { shouldValidate: true, shouldDirty: true });
+  };
 
   const removeHighlight = (idx) => {
     const next = highlights.filter((_, i) => i !== idx);
@@ -293,7 +288,6 @@ export default function EditProjectForm({ project }) {
   const onSubmit = async (values) => {
     setSaving(true);
 
-    // Assignment guardrails
     const wc = wordCount(values.rationale);
     if (wc < 100 || wc > 150) {
       alert("Rationale must be 100–150 words for Class 05.");
@@ -302,7 +296,7 @@ export default function EditProjectForm({ project }) {
     }
 
     if (!values.image) {
-      alert("Main image is required. Remove less or set another image as main.");
+      alert("Main image is required. Set another image as main.");
       setSaving(false);
       return;
     }
@@ -365,13 +359,13 @@ export default function EditProjectForm({ project }) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        {/* ✅ PREVIEW: matches GallerySlider (web browser frame) */}
+        {/* ✅ PREVIEW (same frame behavior as project page) */}
         <div className="rounded-2xl border border-neutral-800 bg-neutral-950/30 p-4">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-neutral-300">
             Preview
           </p>
           <p className="mt-1 text-[11px] text-neutral-500">
-            Uses the same GallerySlider as your project page. Web projects use object-contain for full screenshots.
+            Full image fit (object-contain) so screenshots never crop.
           </p>
 
           <div className="mt-3">
@@ -381,13 +375,11 @@ export default function EditProjectForm({ project }) {
               linkText={linkText}
               images={heroImages}
               showControlsWhenSingle
+              imgClassName="object-contain bg-neutral-950"
             />
           </div>
 
           <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-neutral-500">
-            <span className="rounded-full border border-neutral-800 bg-neutral-950 px-2 py-0.5">
-              Main: {main ? (main.startsWith("data:image") ? "data:image..." : "set") : "none"}
-            </span>
             <span className="rounded-full border border-neutral-800 bg-neutral-950 px-2 py-0.5">
               Total images: {heroImages.length}
             </span>
@@ -488,7 +480,7 @@ export default function EditProjectForm({ project }) {
                 />
               </FormControl>
               <FormDescription className="text-[11px] text-neutral-500">
-                Main is the FIRST image in the slider. Use “Set as main” below to control it.
+                Main is the first image in the slider. Use “Set as main” below.
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -510,11 +502,10 @@ export default function EditProjectForm({ project }) {
 
               {fileError ? <p className="text-xs text-red-400">{fileError}</p> : null}
 
-              {/* ✅ Unified list = main + gallery (so you can manage everything consistently) */}
               {heroImages.length > 0 ? (
                 <div className="space-y-2">
                   <span className="text-[11px] text-neutral-500">
-                    Images (main + gallery). Remove any. If you remove main, the next image becomes main.
+                    Images (main + gallery). Remove any. Removing main promotes the next.
                   </span>
 
                   <div className="grid gap-2 sm:grid-cols-2">
@@ -525,12 +516,15 @@ export default function EditProjectForm({ project }) {
                           key={`${src}-${idx}`}
                           className="rounded-xl border border-neutral-800 bg-neutral-950/50 p-2"
                         >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={src}
-                            alt={`Image ${idx + 1}`}
-                            className="h-28 w-full rounded-lg border border-neutral-800 object-cover"
-                          />
+                          {/* ✅ show full image (no crop) */}
+                          <div className="h-32 w-full overflow-hidden rounded-lg border border-neutral-800 bg-neutral-950">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={src}
+                              alt={`Image ${idx + 1}`}
+                              className="h-full w-full object-contain"
+                            />
+                          </div>
 
                           <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
                             <span className="text-[11px] text-neutral-400">
@@ -584,7 +578,7 @@ export default function EditProjectForm({ project }) {
                 Highlights (Class 05 — required)
               </p>
               <p className="text-[11px] text-neutral-500">
-                Add 3–5 highlight blocks. Each should have an image + 1–2 line caption.
+                Add 3–5 highlight blocks. Each should have an image + caption.
               </p>
             </div>
 
@@ -597,126 +591,124 @@ export default function EditProjectForm({ project }) {
             <p className="text-sm text-neutral-400">No highlights yet — add at least 3.</p>
           ) : (
             <div className="space-y-4">
-              {highlights.map((_, idx) => (
-                <div
-                  key={idx}
-                  className="space-y-3 rounded-2xl border border-neutral-800 bg-neutral-950/50 p-3"
-                >
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs font-semibold text-neutral-200">
-  {String(form.getValues(`highlights.${idx}.title`) || "").trim() || `Highlight ${idx + 1}`}
-</p>
+              {highlights.map((_, idx) => {
+                const titleValue =
+                  String(form.watch(`highlights.${idx}.title`) || "").trim() ||
+                  `Highlight ${idx + 1}`;
 
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="border-neutral-700 text-neutral-600"
-                      onClick={() => removeHighlight(idx)}
-                    >
-                      Remove
-                    </Button>
+                return (
+                  <div
+                    key={idx}
+                    className="space-y-3 rounded-2xl border border-neutral-800 bg-neutral-950/50 p-3"
+                  >
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-semibold text-neutral-200">{titleValue}</p>
+
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="border-neutral-700 text-neutral-600"
+                        onClick={() => removeHighlight(idx)}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+
+                    {/* Title */}
+                    <FormField
+                      control={form.control}
+                      name={`highlights.${idx}.title`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs text-neutral-300">Title</FormLabel>
+                          <FormControl>
+                            <Input
+                              className="border-neutral-700 bg-neutral-950 text-neutral-50"
+                              placeholder="e.g. Booking flow"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* ✅ ONE image field: upload + optional paste */}
+                    <FormField
+                      control={form.control}
+                      name={`highlights.${idx}.image`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs text-neutral-300">Highlight Image</FormLabel>
+
+                          <FormControl>
+                            <Input
+                              type="file"
+                              accept="image/*"
+                              onChange={async (e) => {
+                                try {
+                                  const file = e.target.files?.[0];
+                                  if (!file) return;
+                                  const dataUrl = await fileToDataUrl(file);
+                                  field.onChange(dataUrl);
+                                  e.target.value = "";
+                                } catch (err) {
+                                  console.error(err);
+                                }
+                              }}
+                              className="border-neutral-700 bg-neutral-950 text-neutral-50 file:mr-3 file:rounded-md file:border-0 file:bg-blue-500/80 file:px-3 file:py-1 file:text-xs file:font-medium file:text-white hover:file:bg-blue-400"
+                            />
+                          </FormControl>
+
+                          {field.value ? (
+                            <div className="mt-2 h-28 w-full overflow-hidden rounded-lg border border-neutral-800 bg-neutral-950">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={field.value}
+                                alt="Highlight preview"
+                                className="h-full w-full object-contain"
+                              />
+                            </div>
+                          ) : null}
+
+                          <FormControl>
+                            <Input
+                              className="mt-2 border-neutral-700 bg-neutral-950 text-neutral-50"
+                              placeholder="Or paste image URL / data:image..."
+                              value={field.value || ""}
+                              onChange={field.onChange}
+                            />
+                          </FormControl>
+
+                          <FormDescription className="text-[11px] text-neutral-500">
+                            Upload from desktop or paste a URL/data:image.
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* Caption */}
+                    <FormField
+                      control={form.control}
+                      name={`highlights.${idx}.caption`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs text-neutral-300">Caption</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              className="min-h-[80px]"
+                              placeholder="1–2 lines describing what this shows."
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
-
-                  <FormField
-  control={form.control}
-  name={`highlights.${idx}.image`}
-  render={({ field }) => (
-    <FormItem>
-      <FormLabel className="text-xs text-neutral-300">
-        Highlight Image
-      </FormLabel>
-
-      {/* Upload */}
-      <FormControl>
-        <Input
-          type="file"
-          accept="image/*"
-          onChange={async (e) => {
-            const file = e.target.files?.[0];
-            if (!file) return;
-            const dataUrl = await fileToDataUrl(file);
-            field.onChange(dataUrl);
-            e.target.value = "";
-          }}
-          className="border-neutral-700 bg-neutral-950 text-neutral-50 file:mr-3 file:rounded-md file:border-0 file:bg-blue-500/80 file:px-3 file:py-1 file:text-xs file:font-medium file:text-white hover:file:bg-blue-400"
-        />
-      </FormControl>
-
-      {/* Preview */}
-      {field.value && (
-        <div className="mt-2">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={field.value}
-            alt="Highlight preview"
-            className="h-24 w-auto rounded-md border border-neutral-700 object-cover"
-          />
-        </div>
-      )}
-
-      {/* Optional manual input */}
-      <FormControl>
-        <Input
-          className="mt-2 border-neutral-700 bg-neutral-950 text-neutral-50"
-          placeholder="Or paste image URL / data:image..."
-          value={field.value || ""}
-          onChange={field.onChange}
-        />
-      </FormControl>
-
-      <FormDescription className="text-[11px] text-neutral-500">
-        Upload an image from your computer or paste a URL.
-      </FormDescription>
-
-      <FormMessage />
-    </FormItem>
-  )}
-/>
-
-
-                  <FormField
-  control={form.control}
-  name={`highlights.${idx}.image`}
-  render={({ field }) => (
-    <FormItem>
-      <FormLabel className="text-xs text-neutral-300">
-        Image (URL or data:image)
-      </FormLabel>
-      <FormControl>
-        <Input
-          className="border-neutral-700 bg-neutral-950 text-neutral-50"
-          placeholder="Paste an image URL or data:image..."
-          {...field}
-        />
-      </FormControl>
-      <FormDescription className="text-[11px] text-neutral-500">
-        Use one of your uploaded gallery images (copy the src) or paste a URL.
-      </FormDescription>
-      <FormMessage />
-    </FormItem>
-  )}
-/>
-
-
-                  <FormField
-                    control={form.control}
-                    name={`highlights.${idx}.caption`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs text-neutral-300">Caption</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            className="min-h-[80px]"
-                            placeholder="1–2 lines describing what this shows (general audience)."
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -809,11 +801,7 @@ export default function EditProjectForm({ project }) {
           }}
         />
 
-        <Button
-          type="submit"
-          disabled={saving}
-          className="mt-2 w-full border border-blue-500/80"
-        >
+        <Button type="submit" disabled={saving} className="mt-2 w-full border border-blue-500/80">
           {saving ? "Saving..." : "Save Changes"}
         </Button>
       </form>

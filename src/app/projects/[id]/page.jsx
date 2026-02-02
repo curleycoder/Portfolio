@@ -174,7 +174,7 @@ export default async function ProjectPage({ params }) {
                   asChild
                   size="sm"
                   variant="outline"
-                  className="text-xs border-neutral-700 text-neutral-800 hover:bg-neutral-900"
+                  className="text-xs border-neutral-700 text-neutral-800 hover:bg-neutral-300"
                 >
                   <Link href={`/projects/${project.id}/edit`}>Edit</Link>
                 </Button>

@@ -57,8 +57,8 @@ export default function GallerySlider({
     items.length > 1 || (showControlsWhenSingle && items.length === 1);
 
   // Defaults: mobile can be cover; web should be contain to look like a full site screenshot
-  const imageFitClass =
-  imgClassName ?? "object-contain bg-neutral-950";
+const imageFitClass = imgClassName ?? "object-contain bg-neutral-950";
+
 
   return (
     <div className={`flex justify-center ${className}`}>
