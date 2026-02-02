@@ -1,17 +1,14 @@
-"use client";
-
 import Link from "next/link";
 import Image from "next/image";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { motion } from "framer-motion";
 
-const item = {
-  hidden: { opacity: 0, y: 8 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.25 } },
-};
+import { fetchProjects } from "@/lib/db";
 
-export default function ProjectPreviewCardClient({ projects = [], count = 3 }) {
+export default async function ProjectPreviewCard({ count = 3 }) {
+  const projects = await fetchProjects({ limit: count, offset: 0 });
+
   if (!projects || projects.length === 0) {
     return (
       <section className="space-y-4">
@@ -21,7 +18,6 @@ export default function ProjectPreviewCardClient({ projects = [], count = 3 }) {
           </h2>
           <span className="text-xs text-neutral-500">No projects yet</span>
         </div>
-
         <div className="grid gap-4 md:grid-cols-3">
           {[0, 1, 2].map((i) => (
             <Card
@@ -60,6 +56,7 @@ export default function ProjectPreviewCardClient({ projects = [], count = 3 }) {
             keywords.some((k) => k.includes("mobile"));
 
           const label = isMobile ? "Mobile App" : "Web App";
+
           const linkText =
             p.link?.replace(/^https?:\/\//, "") || "localhost:3000";
 
@@ -74,17 +71,19 @@ export default function ProjectPreviewCardClient({ projects = [], count = 3 }) {
                 hover:-translate-y-2 hover:shadow-[0_0_28px_rgba(59,130,246,0.45)]
               "
             >
-              {/* whole card clickable */}
+              {/* ✅ Make the whole card clickable */}
               <Link
                 href={`/projects/${p.id}`}
                 aria-label={`Open ${p.title}`}
                 className="absolute inset-0 z-0"
               />
 
+              {/* CONTENT (must be above overlay for hover styles) */}
               <div className="relative z-10 flex flex-1 flex-col">
-                {/* frame */}
+                {/* FRAME AREA */}
                 <div className="flex items-center justify-center px-4 pt-4">
                   {isMobile ? (
+                    // PHONE FRAME
                     <div className="relative flex items-center justify-center">
                       <div className="relative h-[260px] w-[120px] overflow-hidden rounded-[1.4rem] bg-neutral-900">
                         {p.image ? (
@@ -100,7 +99,8 @@ export default function ProjectPreviewCardClient({ projects = [], count = 3 }) {
                       </div>
                     </div>
                   ) : (
-                    <div className="relative mb-4 mt-3 w-full max-w-md overflow-hidden rounded-xl border border-neutral-700 bg-neutral-950">
+                    // WEB BROWSER FRAME
+                    <div className="relative mt-3 mb-4 w-full max-w-md overflow-hidden rounded-xl border border-neutral-700 bg-neutral-950">
                       <div className="flex items-center gap-2 border-b border-neutral-800 bg-neutral-900 px-3 py-2 text-[10px] text-neutral-400">
                         <span className="h-2 w-2 rounded-full bg-red-500/70" />
                         <span className="h-2 w-2 rounded-full bg-amber-400/70" />
@@ -109,7 +109,6 @@ export default function ProjectPreviewCardClient({ projects = [], count = 3 }) {
                           {linkText}
                         </span>
                       </div>
-
                       <div className="relative h-50 w-full bg-neutral-900">
                         {p.image ? (
                           <Image
@@ -126,7 +125,7 @@ export default function ProjectPreviewCardClient({ projects = [], count = 3 }) {
                   )}
                 </div>
 
-                {/* text */}
+                {/* TEXT */}
                 <CardHeader className="space-y-1 pb-1">
                   <CardTitle className="text-base text-neutral-50">
                     {p.title}
@@ -141,21 +140,38 @@ export default function ProjectPreviewCardClient({ projects = [], count = 3 }) {
                 </CardContent>
               </div>
 
-              {/* motion button row */}
+              {/* ✅ Button row ABOVE overlay, so it’s clickable */}
               <div className="relative z-10 px-4 pb-4 pt-1">
-                <motion.div
-                  variants={item}
-                  initial="hidden"
-                  animate="show"
-                  className="mt-7"
-                >
-                  <Link
-                    href={`/projects/${p.id}`}
-                    className="inline-flex items-center gap-2 rounded-xl bg-purple-500/15 px-5 py-2.5 text-sm font-semibold text-purple-100 ring-1 ring-purple-500/25 transition hover:bg-purple-500/22 hover:ring-purple-500/40"
+                <div className="flex gap-2">
+                  {/* Internal: details page */}
+                  <Button
+                    asChild
+                    className="w-full border border-blue-400/50 bg-black shadow-xl shadow-accent-foreground hover:bg-blue-400/70"
                   >
-                    View More <span className="opacity-70">→</span>
-                  </Link>
-                </motion.div>
+                    <Link href={`/projects/${p.id}`}>View more</Link>
+                  </Button>
+                  {/* <motion.div variants={item} className="mt-7">
+                    <a
+                      href={`/projects/${p.id}`}
+                      className="inline-flex items-center gap-2 rounded-xl bg-purple-500/15 px-5 py-2.5 text-sm font-semibold text-purple-100 ring-1 ring-purple-500/25 transition hover:bg-purple-500/22 hover:ring-purple-500/40"
+                    >
+                      View Projects <span className="opacity-70">→</span>
+                    </a>
+                  </motion.div> */}
+
+                  {/* Optional: external live link */}
+                  {/* {p.link ? (
+                    <Button
+                      asChild
+                      variant="outline"
+                      className="border-neutral-700 text-neutral-200 hover:bg-neutral-800"
+                    >
+                      <a href={p.link} target="_blank" rel="noreferrer">
+                        Live
+                      </a>
+                    </Button>
+                  ) : null} */}
+                </div>
               </div>
             </Card>
           );
