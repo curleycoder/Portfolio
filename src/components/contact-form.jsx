@@ -73,7 +73,7 @@ export default function ContactForm() {
               <FormControl>
                 <Input
                   placeholder="Your name"
-                  className="h-10 rounded-lg border-neutral-700 bg-neutral-900/60 text-sm text-neutral-100 placeholder:text-neutral-500 focus-visible:ring-1 focus-visible:ring-blue-500"
+                  className="h-10 rounded-lg border-neutral-700 bg-neutral-900/60 text-sm text-neutral-100 placeholder:text-neutral-500 focus-visible:ring-1 focus-visible:ring-purple-500"
                   {...field}
                 />
               </FormControl>
@@ -94,7 +94,7 @@ export default function ContactForm() {
               <FormControl>
                 <Input
                   placeholder="you@example.com"
-                  className="h-10 rounded-lg border-neutral-700 bg-neutral-900/60 text-sm text-neutral-100 placeholder:text-neutral-500 focus-visible:ring-1 focus-visible:ring-blue-500"
+                  className="h-10 rounded-lg border-neutral-700 bg-neutral-900/60 text-sm text-neutral-100 placeholder:text-neutral-500 focus-visible:ring-1 focus-visible:ring-purple-500"
                   {...field}
                 />
               </FormControl>
@@ -117,7 +117,7 @@ export default function ContactForm() {
                   {...field}
                   rows={5}
                   placeholder="Write your message..."
-                  className="flex min-h-[120px] w-full rounded-lg border border-neutral-700 bg-neutral-900/60 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex min-h-[120px] w-full rounded-lg border border-neutral-700 bg-neutral-900/60 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-purple-500/70 disabled:cursor-not-allowed disabled:opacity-50"
                 />
               </FormControl>
               <FormMessage className="text-xs" />
@@ -127,7 +127,7 @@ export default function ContactForm() {
 
         <Button
           type="submit"
-          className="mt-2 w-full rounded-lg border border-blue-500/80 bg-blue-500/80 text-sm font-medium hover:bg-blue-400"
+          className="mt-2 w-full rounded-lg border border-purple-600/80 bg-purple-500/40 text-sm font-medium hover:bg-purple-500/30"
         >
           Send message
         </Button>
