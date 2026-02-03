@@ -183,14 +183,14 @@ export default function BookingCalendar() {
                 className={[
                   "flex flex-col rounded-xl border px-3 py-2 text-xs",
                   isSelectedDay
-                    ? "border-blue-500/80 bg-blue-500/10"
+                    ? "border-purple-500/40 bg-purple-500/10"
                     : "border-neutral-700 bg-neutral-900",
                 ].join(" ")}
               >
                 <button
                   type="button"
                   onClick={() => selectDay(dateISO)}
-                  className="mb-2 rounded-md px-1 text-left font-semibold text-neutral-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60"
+                  className="mb-2 rounded-md px-1 text-left font-semibold text-neutral-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/60"
                 >
                   {label}
                 </button>
@@ -215,7 +215,7 @@ export default function BookingCalendar() {
                           booked
                             ? "cursor-not-allowed bg-neutral-800/60 text-neutral-500"
                             : isActive
-                            ? "bg-blue-500 text-white"
+                            ? "bg-purple-500/50 text-white"
                             : "bg-neutral-800 text-neutral-200 hover:bg-neutral-700",
                         ].join(" ")}
                       >
@@ -253,7 +253,7 @@ export default function BookingCalendar() {
               autoComplete="name"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="w-full rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500/70"
+              className="w-full rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-purple-500/40"
               placeholder="Your name"
             />
           </div>
@@ -269,7 +269,7 @@ export default function BookingCalendar() {
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500/70"
+              className="w-full rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-purple-500/40"
               placeholder="you@example.com"
             />
           </div>
@@ -284,7 +284,7 @@ export default function BookingCalendar() {
             value={note}
             onChange={(e) => setNote(e.target.value)}
             rows={3}
-            className="w-full rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500/70"
+            className="w-full rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-purple-500/40"
             placeholder="Anything you’d like me to know before the call."
           />
         </div>
@@ -305,7 +305,7 @@ export default function BookingCalendar() {
         <button
           type="submit"
           disabled={submitting}
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-md bg-purple-600/40 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-purple-500 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {submitting ? "Sending..." : "Request booking"}
         </button>

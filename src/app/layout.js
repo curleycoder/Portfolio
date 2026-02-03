@@ -5,7 +5,8 @@ import { Toaster } from "@/components/ui/sonner";
 import { Providers } from "./providers";
 import { Suspense } from "react";
 import AnalyticsTracker from "@/components/Analytics";
-import ChatWidget from "@/components/ChatWidget";
+// import ChatWidget from "@/components/ChatWidget";
+import Footer from "@/components/footer";
 
 const lato = Lato({
   subsets: ["latin"],
@@ -51,6 +52,7 @@ export default function RootLayout({ children }) {
           subtitle="Projects • Book a Call • Contact"
           avatarSrc="/avatar.png"
         /> */}
+        <Footer/>
       </body>
     </html>
   );

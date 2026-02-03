@@ -32,31 +32,37 @@ export default function GitHubCalendar() {
   }, []);
 
   return (
-    <section className="relative rounded-3xl bg-gradient-to-r from-cyan-500/40 via-blue-500/20 to-purple-500/40 p-[1px] shadow-[0_0_40px_rgba(34,211,238,0.35)]">
+    <section className="relative  p-[1px]">
       {/* Inner dark card */}
-      <div className="rounded-3xl border border-neutral-900 bg-neutral-950/95 p-4 md:p-5">
+      <div className=" bg-transparent p-4 md:p-5">
         {/* HEADER / STATUS BAR */}
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-[10px] sm:text-[11px] text-neutral-400">
           <div className="flex items-center gap-2">
-            <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-cyan-500/15 text-xs text-cyan-300">
+            {/* <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-purple-500/15 text-xs text-purple-300">
               ⬛
-            </span>
+            </span> */}
             <div className="flex flex-col">
-              <span className="uppercase tracking-[0.2em]">
+              {/* <span className="uppercase tracking-[0.2em]">
                 GitHub Activity
-              </span>
-              <span className="text-[9px] sm:text-[10px] text-neutral-500">
+              </span> */}
+              <div className="text-[11px] uppercase pt-6 tracking-[0.22em] text-neutral-400">
+            Recent contribution heatmap
+          </div>
+              <h2 className="text-lg font-semibold pt-2 tracking-tight text-neutral-100">
+            GitHub Activity
+          </h2>
+              {/* <span className="text-[9px] sm:text-[10px] text-neutral-500">
                 Recent contribution heatmap
-              </span>
+              </span> */}
             </div>
           </div>
 
           <button
             type="button"
             className="
-              inline-flex items-center gap-1 rounded-full border border-neutral-700/80
+              inline-flex items-center gap-1 rounded-full 
               bg-neutral-900/80 px-3 py-1 text-[10px] sm:text-[11px] text-neutral-200
-              transition-colors duration-200 hover:border-cyan-500/70 hover:bg-neutral-900
+              transition-colors duration-200 hover:border-purple-500/70 hover:bg-neutral-900
             "
           >
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />

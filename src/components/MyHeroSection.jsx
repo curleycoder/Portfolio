@@ -59,9 +59,9 @@ export default function MyHero({ hero }) {
               $ i do
             </div> */}
 
-            <div className="mt-1 text-xl font-semibold md:text-2xl">
+            <div className="mt-5 text-xl font-semibold md:text-2xl">
               <span className="text-neutral-200">I do </span>
-              <span className="text-[#BB0FAE]">
+              <span className="text-pink-500/60">
                 <TypeAnimation
                   sequence={[
                     "Full-Stack Development",
@@ -87,28 +87,28 @@ export default function MyHero({ hero }) {
 
           <motion.div variants={item} className="mt-7">
             <a
-              href="/projects"
-              className="inline-flex items-center gap-2 rounded-xl bg-purple-500/15 px-5 py-2.5 text-sm font-semibold text-purple-100 ring-1 ring-purple-500/25 transition hover:bg-purple-500/22 hover:ring-purple-500/40"
+              href="/calendar"
+              className="inline-flex items-center gap-2 rounded-xl bg-purple-500/25 px-7 py-4 text-lg font-semibold text-purple-100 ring-1 ring-purple-500/25 transition hover:bg-purple-500/22 hover:ring-purple-500/40"
             >
-              View Projects <span className="opacity-70">→</span>
+              Book a Call <span className="opacity-70">→</span>
             </a>
           </motion.div>
         </div>
 
         {/* RIGHT: image (full height of its column) */}
         <motion.div variants={item} className="relative">
-          <div className="relative min-h-[360px] overflow-hidden rounded-2xl border border-neutral-800">
+          <div className="relative min-h-[460px] overflow-hidden rounded-2xl border border-purple-500/10">
             <Image
               src={hero.avatar}
               alt=""
               fill
               priority
-              sizes="(min-width: 768px) 40vw, 100vw"
+              sizes="(min-width: 800px) 40vw, 100vw"
               className="object-cover object-center"
             />
 
             {/* darken + focus text side */}
-            <div className="absolute inset-0 bg-gradient-to-l from-neutral-950/20 via-neutral-950/55 to-neutral-950" />
+            <div className="absolute inset-0 bg-linear-to-l from-neutral-950/20 via-neutral-950/50 to-neutral-950" />
 
             {/* subtle grid texture */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.035)_1px,transparent_0)] bg-[length:24px_24px]" />
