@@ -50,25 +50,19 @@ function FlowStep({ step, idx }) {
             <video
               className="h-full w-full object-cover"
               src={src}
-              muted
               controls
               playsInline
+              preload="metadata"
             />
           ) : (
             // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={src}
-              alt={`step-${idx + 1}`}
-              className="h-full w-full object-cover"
-            />
+            <img src={src} alt={`step-${idx + 1}`} className="h-full w-full object-cover" />
           )}
         </div>
 
         {caption ? (
           <div className="border-t border-neutral-800 px-4 py-3">
-            <p className="text-sm text-neutral-300 whitespace-pre-line">
-              {caption}
-            </p>
+            <p className="text-sm text-neutral-300 whitespace-pre-line">{caption}</p>
           </div>
         ) : null}
       </div>
@@ -100,10 +94,9 @@ export default async function ProjectPage({ params }) {
     .map((v) => String(v).toLowerCase())
     .join(" ");
 
-  const isMobile =
-    /react\s*native|expo|expo\s*go|\brn\b|android|ios|mobile/.test(blob);
+  const isMobile = /react\s*native|expo|expo\s*go|\brn\b|android|ios|mobile/.test(blob);
 
-  const linkText = project.link?.replace(/^https?:\/\//, "");
+  const linkText = project.link?.replace(/^https?:\/\//, "") || "case study";
   const label = isMobile ? "mobile" : "web";
 
   return (
@@ -122,15 +115,14 @@ export default async function ProjectPage({ params }) {
           <Card className="relative overflow-hidden rounded-2xl border-neutral-800/90 bg-neutral-950/60">
             <div className="pointer-events-none absolute left-0 top-0 h-[2px] w-full bg-purple-800/25" />
 
-            <div className="space-y-8 px-6 py-6 sm:px-8 sm:py-8">
+            <div className="space-y-10 px-6 py-6 sm:px-8 sm:py-8">
               {/* HEADER */}
-              <header className="space-y-3">
+              <header className="space-y-4">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="space-y-2">
                     <div className="text-[11px] uppercase tracking-[0.22em] text-neutral-400">
-                      Project
+                      case study
                     </div>
-
                     <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-neutral-100">
                       {title}
                     </h1>
@@ -144,28 +136,28 @@ export default async function ProjectPage({ params }) {
 
                   <div className="flex items-center gap-2 rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-[11px] text-neutral-300">
                     <span className="font-mono text-neutral-500">$</span>
-                    <span className="font-mono uppercase tracking-[0.18em]">
-                      {label}
-                    </span>
+                    <span className="font-mono uppercase tracking-[0.18em]">{label}</span>
                     <span className="text-neutral-700">•</span>
                     <span className="font-mono truncate max-w-[220px] text-neutral-500">
                       {linkText}
                     </span>
                   </div>
                 </div>
+              </header>
 
-                {/* ✅ STACK ABOVE IMAGE */}
-                <div className="space-y-2">
-                  <div className="text-[11px] uppercase tracking-[0.22em] text-neutral-400">
+              {/* TECH STACK (ABOVE HERO) */}
+              <RevealIn delay={0.08}>
+                <section className="space-y-3">
+                  <h2 className="text-xs font-semibold uppercase tracking-[0.22em] text-neutral-400">
                     tech stack
-                  </div>
+                  </h2>
 
                   {keywords.length ? (
                     <div className="flex flex-wrap gap-2">
                       {keywords.map((k, i) => (
                         <span
                           key={`${k}-${i}`}
-                          className="rounded-full border border-neutral-800 bg-neutral-950 px-2.5 py-1 font-mono text-[10px] text-neutral-200"
+                          className="rounded-full border border-neutral-800 bg-neutral-950 px-2.5 py-1 font-mono text-[10px] text-neutral-300"
                         >
                           {String(k)}
                         </span>
@@ -176,11 +168,11 @@ export default async function ProjectPage({ params }) {
                       Add keywords (Expo, Hono, Drizzle, Neon, Clerk, GenAI…).
                     </p>
                   )}
-                </div>
-              </header>
+                </section>
+              </RevealIn>
 
               {/* HERO */}
-              <RevealIn delay={0.08}>
+              <RevealIn delay={0.1}>
                 <div className="rounded-2xl bg-neutral-950/40 overflow-hidden border border-neutral-800/70">
                   <GallerySlider
                     title={title}
@@ -193,58 +185,31 @@ export default async function ProjectPage({ params }) {
                 </div>
               </RevealIn>
 
-              {/* ✅ BUTTONS UNDER THE IMAGES */}
-              <RevealIn delay={0.10}>
+              {/* BUTTONS UNDER HERO (requested) */}
+              <RevealIn delay={0.12}>
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex flex-wrap gap-2">
                     {project.link ? (
-                      <Button
-                        asChild
-                        size="lg"
-                        className="bg-purple-600/40 text-neutral-100 hover:bg-purple-500/25"
-                      >
-                        <a href={project.link} target="_blank" rel="noreferrer">
-                          Visit
-                        </a>
+                      <Button asChild size="lg" className="bg-purple-600/40 text-neutral-100 hover:bg-purple-500/25">
+                        <a href={project.link} target="_blank" rel="noreferrer">Visit</a>
                       </Button>
                     ) : null}
 
                     {project.githubLink ? (
-                      <Button
-                        asChild
-                        size="sm"
-                        variant="outline"
-                        className="border-neutral-800 bg-transparent text-neutral-200 hover:bg-neutral-900"
-                      >
-                        <a href={project.githubLink} target="_blank" rel="noreferrer">
-                          GitHub
-                        </a>
+                      <Button asChild size="sm" variant="outline" className="border-neutral-800 bg-transparent text-neutral-200 hover:bg-neutral-900">
+                        <a href={project.githubLink} target="_blank" rel="noreferrer">GitHub</a>
                       </Button>
                     ) : null}
 
                     {project.demoLink ? (
-                      <Button
-                        asChild
-                        size="sm"
-                        variant="outline"
-                        className="border-neutral-800 bg-transparent text-neutral-200 hover:bg-neutral-900"
-                      >
-                        <a href={project.demoLink} target="_blank" rel="noreferrer">
-                          Demo
-                        </a>
+                      <Button asChild size="sm" variant="outline" className="border-neutral-800 bg-transparent text-neutral-200 hover:bg-neutral-900">
+                        <a href={project.demoLink} target="_blank" rel="noreferrer">Demo</a>
                       </Button>
                     ) : null}
 
                     {project.figmaLink ? (
-                      <Button
-                        asChild
-                        size="sm"
-                        variant="outline"
-                        className="border-neutral-800 bg-transparent text-neutral-200 hover:bg-neutral-900"
-                      >
-                        <a href={project.figmaLink} target="_blank" rel="noreferrer">
-                          Figma
-                        </a>
+                      <Button asChild size="sm" variant="outline" className="border-neutral-800 bg-transparent text-neutral-200 hover:bg-neutral-900">
+                        <a href={project.figmaLink} target="_blank" rel="noreferrer">Figma</a>
                       </Button>
                     ) : null}
                   </div>
@@ -254,7 +219,7 @@ export default async function ProjectPage({ params }) {
               </RevealIn>
 
               {/* WHAT IT DOES */}
-              <RevealIn delay={0.12}>
+              <RevealIn delay={0.14}>
                 <section className="space-y-3">
                   <h2 className="text-xs font-semibold uppercase tracking-[0.22em] text-neutral-400">
                     what it does
@@ -262,7 +227,7 @@ export default async function ProjectPage({ params }) {
 
                   {whatItDoesLines.length ? (
                     <ul className="text-sm leading-relaxed text-neutral-200 list-disc space-y-1 pl-5">
-                      {whatItDoesLines.slice(0, 6).map((line, idx) => (
+                      {whatItDoesLines.slice(0, 7).map((line, idx) => (
                         <li key={idx}>{line}</li>
                       ))}
                     </ul>
@@ -274,9 +239,9 @@ export default async function ProjectPage({ params }) {
                 </section>
               </RevealIn>
 
-              {/* FLOW (image + mp4) */}
+              {/* FLOW */}
               {media.length ? (
-                <RevealIn delay={0.14}>
+                <RevealIn delay={0.16}>
                   <section className="space-y-4">
                     <h2 className="text-xs font-semibold uppercase tracking-[0.22em] text-neutral-400">
                       how it works
@@ -292,42 +257,34 @@ export default async function ProjectPage({ params }) {
               ) : null}
 
               {/* RATIONALE */}
-              <RevealIn delay={0.16}>
+              <RevealIn delay={0.18}>
                 <section className="space-y-3">
                   <h2 className="text-xs font-semibold uppercase tracking-[0.22em] text-neutral-400">
                     rationale
                   </h2>
 
-                  {project.rationale ? (
-                    <p className="text-sm leading-relaxed text-neutral-200 whitespace-pre-line">
-                      {String(project.rationale)}
-                    </p>
-                  ) : (
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      {[
-                        ["Problem", project.rationaleProblem],
-                        ["Challenge", project.rationaleChallenge],
-                        ["Solution", project.rationaleSolution],
-                      ].map(([label, text]) => (
-                        <div
-                          key={label}
-                          className="rounded-2xl border border-neutral-800/80 bg-neutral-950/40 p-4"
-                        >
-                          <p className="text-xs font-mono text-neutral-400">
-                            {label}
-                          </p>
-                          <p className="mt-1 text-sm text-neutral-200 whitespace-pre-line">
-                            {String(text || "").trim() || "—"}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    {[
+                      ["Context", project.rationaleProblem],
+                      ["Requirements", project.rationaleChallenge],
+                      ["Outcome", project.rationaleSolution],
+                    ].map(([lab, txt]) => (
+                      <div
+                        key={lab}
+                        className="rounded-2xl border border-neutral-800/80 bg-neutral-950/40 p-4"
+                      >
+                        <p className="text-xs font-mono text-neutral-400">{lab}</p>
+                        <p className="mt-2 text-sm text-neutral-200 whitespace-pre-line">
+                          {String(txt || "").trim() || "—"}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
                 </section>
               </RevealIn>
 
               {/* HIGHLIGHTS */}
-              <RevealIn delay={0.18}>
+              <RevealIn delay={0.2}>
                 <section className="space-y-3">
                   <h3 className="text-xs font-semibold uppercase tracking-[0.22em] text-neutral-400">
                     highlights
@@ -336,10 +293,7 @@ export default async function ProjectPage({ params }) {
                   {highlights.length ? (
                     <div className="grid gap-4 sm:grid-cols-2">
                       {highlights.slice(0, 6).map((h, idx) => (
-                        <div
-                          key={idx}
-                          className="rounded-2xl border border-neutral-800/80 bg-neutral-950/40 p-4"
-                        >
+                        <div key={idx} className="rounded-2xl border border-neutral-800/80 bg-neutral-950/40 p-4">
                           <p className="text-xs font-semibold text-neutral-100">
                             {h?.title || `Highlight ${idx + 1}`}
                           </p>
