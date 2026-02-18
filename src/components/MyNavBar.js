@@ -109,7 +109,7 @@ export default function MyNavBar() {
 
             
 
-            {/* <AuthButton /> */}
+            <AuthButton />
           </div>
 
           {/* MOBILE */}

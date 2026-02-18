@@ -1,19 +1,16 @@
 import { redirect } from "next/navigation";
-import { auth0 } from "@/lib/auth0";
+import { getSession } from "@auth0/nextjs-auth0";
 
-export const dynamic = "force-dynamic";
+const ADMIN_EMAILS = ["shabnambeiraghian@gmail.com"].map((e) => e.toLowerCase());
 
 export default async function DashboardLayout({ children }) {
-  const session = await auth0.getSession();
+  const session = await getSession();
   const user = session?.user;
 
-  if (!user) {
-    redirect("/api/auth/login?returnTo=/dashboard");
-  }
+  if (!user) redirect("/api/auth/login?returnTo=/dashboard");
 
-  return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-100">
-      {children}
-    </div>
-  );
+  const email = (user.email || "").toLowerCase();
+  if (!ADMIN_EMAILS.includes(email)) redirect("/");
+
+  return <>{children}</>;
 }

@@ -67,7 +67,7 @@ export default function ProjectsGrid({ initialProjects }) {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by title, description, or tech…"
-            className="w-full rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500/70 sm:max-w-md"
+            className="w-full rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-purple-500/70 sm:max-w-md"
           />
         </div>
 
@@ -83,7 +83,7 @@ export default function ProjectsGrid({ initialProjects }) {
               className={[
                 "rounded-full border px-3 py-1 text-xs uppercase tracking-[0.14em]",
                 activeTag === "all"
-                  ? "border-blue-500/80 bg-blue-500/20 text-blue-100"
+                  ? "border-purple-500/80 bg-purple-500/20 text-purple-100"
                   : "border-neutral-700 bg-neutral-900 text-neutral-300 hover:border-neutral-500",
               ].join(" ")}
             >
@@ -101,7 +101,7 @@ export default function ProjectsGrid({ initialProjects }) {
                 className={[
                   "rounded-full border px-3 py-1 text-xs uppercase tracking-[0.14em]",
                   activeTag.toLowerCase() === tag.toLowerCase()
-                    ? "border-blue-500/80 bg-blue-500/20 text-blue-100"
+                    ? "border-purple-500/80 bg-purple-500/20 text-purple-100"
                     : "border-neutral-700 bg-neutral-900 text-neutral-300 hover:border-neutral-500",
                 ].join(" ")}
               >
@@ -145,9 +145,9 @@ export default function ProjectsGrid({ initialProjects }) {
                 className="
                   flex h-full flex-col overflow-hidden
                   border border-neutral-800 bg-neutral-900/70 text-neutral-50
-                  shadow-[0_0_18px_rgba(15,23,42,0.9)]
+                
                   transition-transform transition-shadow duration-200 ease-out
-                  group-hover:-translate-y-2 group-hover:shadow-[0_0_28px_rgba(59,130,246,0.45)]
+                  group-hover:-translate-y-2 group-hover:shadow-purple-400
                 "
               >
                 {/* Frame area */}
@@ -238,9 +238,9 @@ export default function ProjectsGrid({ initialProjects }) {
                     <Button
                       type="button"
                       size="sm"
-                      className="pointer-events-none border border-blue-500/80 text-xs"
+                      className="pointer-events-none border bg-purple-500/30 border-purple-500/80 text-xs"
                     >
-                      View details
+                      View More
                     </Button>
                   </div>
                 </div>

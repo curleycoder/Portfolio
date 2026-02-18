@@ -1,78 +1,47 @@
-import { insertProject, insertAuditLog } from "@/lib/db";
-import { auth0 } from "@/lib/auth0";
+"use client";
 
-const adminEmails =
-  process.env.ADMIN_EMAILS?.split(",").map((e) => e.trim().toLowerCase()) ?? [];
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 
-function isAdmin(user) {
-  if (!user?.email) return false;
-  return adminEmails.includes(user.email.toLowerCase());
-}
+export function DeleteButton({ id, size = "sm", className = "" }) {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
-export async function POST(req) {
-  try {
-    const session = await auth0.getSession();
-    const user = session?.user;
+  const handleDelete = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
 
-    if (!user || !isAdmin(user)) {
-      return Response.json(
-        { ok: false, error: "Forbidden" },
-        { status: 403 }
-      );
+    if (loading) return;
+
+    const ok = window.confirm("Are you sure you want to delete this project?");
+    if (!ok) return;
+
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/projects/${id}`, { method: "DELETE" });
+
+      if (!res.ok) {
+        alert("Failed to delete project");
+        return;
+      }
+
+      router.push("/projects");
+      router.refresh();
+    } finally {
+      setLoading(false);
     }
+  };
 
-    const formData = await req.formData();
-
-    const title = formData.get("title")?.toString().trim();
-    const description = formData.get("description")?.toString().trim();
-    const image = formData.get("image")?.toString().trim();
-    const link = formData.get("link")?.toString().trim();
-
-    const keywords = formData
-      .getAll("keywords")
-      .map((k) => k.toString().trim())
-      .filter(Boolean);
-
-    const images = formData
-      .getAll("images")
-      .map((v) => v.toString().trim())
-      .filter(Boolean); 
-
-    if (!title || !description || !image || !link) {
-      return Response.json(
-        { ok: false, error: "Missing required fields" },
-        { status: 400 }
-      );
-    }
-
-    const project = await insertProject({
-      title,
-      description,
-      image,
-      link,
-      keywords,
-      images,
-    });
-
-    await insertAuditLog({
-      projectId: project.id,
-      userEmail: user.email ?? "unknown",
-      action: "create",
-      payload: project,
-    });
-
-    return Response.json({ ok: true, project }, { status: 201 });
-  } catch (err) {
-    console.error("POST /api/projects/new error:", err);
-    if (err.message === "Unauthorized") {
-      return Response.json(
-        { ok: false, error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
-    return Response.json(
-      { ok: false, error: "Invalid payload" },
-      { status: 400 }
-    );
-  }
+  return (
+    <Button
+      variant="destructive"
+      size={size}
+      className={className}
+      onClick={handleDelete}
+      disabled={loading}
+    >
+      {loading ? "Deleting…" : "Delete"}
+    </Button>
+  );
 }

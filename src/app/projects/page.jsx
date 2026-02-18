@@ -1,4 +1,7 @@
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
+
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -31,7 +34,7 @@ export default async function ProjectsPage() {
           {isLoggedIn && (
             <Button
               asChild
-              className="border border-blue-400/50 bg-blue-500/80 text-xs shadow-lg shadow-blue-900/50 hover:bg-blue-400"
+              className="border border-purple-400/50 bg-purple-500/80 text-xs shadow-lg shadow-purple-900/50 hover:bg-purple-400"
             >
               <Link href="/projects/new">+ Add Project</Link>
             </Button>

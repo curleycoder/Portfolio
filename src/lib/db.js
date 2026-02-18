@@ -1,36 +1,58 @@
 import { neon } from "@neondatabase/serverless";
+import { unstable_noStore as noStore } from "next/cache";
 
-export const HERO_PLACEHOLDER_AVATAR =
-  "data:image/gif;base64,R0lGODlhAQABAAAAACw=";
+export const sql = neon(process.env.NEON_DB_URL);
 
-export const defaultHeroContent = {
-  avatar: HERO_PLACEHOLDER_AVATAR,
-  fullName: "...",
-  shortDescription: "...",
-  longDescription: "...",
-};
+// Tell Neon’s internal fetch not to cache
+sql.fetchOptions = { cache: "no-store" };
 
-const sql = neon(process.env.NEON_DB_URL);
+// One-time init per server instance
+let projectsInitPromise = null;
+let auditInitPromise = null;
 
-// ---------- PROJECTS ----------
+function asArray(v) {
+  if (Array.isArray(v)) return v;
+  if (typeof v === "string") {
+    try {
+      const parsed = JSON.parse(v);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
 
+// ---- mapper MUST be above usage
 function mapProject(row) {
   if (!row) return null;
   return {
     id: row.id,
     title: row.title,
+    shortDescription: row.short_description ?? "",
     description: row.description,
     image: row.image,
-    link: row.link,
-    keywords: row.keywords ?? [],
-    images: row.images ?? [],
+    link: row.link ?? "",
 
+    keywords: asArray(row.keywords),
+    images: asArray(row.images),
+
+    // ✅ NEW
+    media: asArray(row.media),
+
+    whyTitle: row.why_title ?? "",
+    why: row.why ?? "",
+
+    rationaleProblem: row.rationale_problem ?? "",
+    rationaleChallenge: row.rationale_challenge ?? "",
+    rationaleSolution: row.rationale_solution ?? "",
     rationale: row.rationale ?? "",
-    highlights: row.highlights ?? [],
 
-    // ✅ ADD THESE (match your DB column names)
+    highlights: asArray(row.highlights),
+
     githubLink: row.github_link ?? "",
     demoLink: row.demo_link ?? "",
+    figmaLink: row.figma_link ?? "",
 
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -38,56 +60,45 @@ function mapProject(row) {
 }
 
 export async function ensureProjectsTable() {
-  // Create table if missing (fresh DB)
-  await sql`
-    CREATE TABLE IF NOT EXISTS projects (
-      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-      title text NOT NULL,
-      description text NOT NULL,
-      image text NOT NULL,
-      link text NOT NULL,
-      keywords jsonb NOT NULL DEFAULT '[]'::jsonb,
-      images jsonb NOT NULL DEFAULT '[]'::jsonb,
+  if (projectsInitPromise) return projectsInitPromise;
 
-      -- ✅ Assignment fields
-      rationale text NOT NULL DEFAULT '',
-      highlights jsonb NOT NULL DEFAULT '[]'::jsonb,
-
-      created_at timestamptz NOT NULL DEFAULT now(),
-      updated_at timestamptz NOT NULL DEFAULT now()
-    );
-  `;
-
-  // ✅ Migrate existing table safely
-  await sql`ALTER TABLE projects ADD COLUMN IF NOT EXISTS rationale text NOT NULL DEFAULT '';`;
-  await sql`ALTER TABLE projects ADD COLUMN IF NOT EXISTS highlights jsonb NOT NULL DEFAULT '[]'::jsonb;`;
-  await sql`ALTER TABLE projects ADD COLUMN IF NOT EXISTS github_link text NOT NULL DEFAULT '';`;
-  await sql`ALTER TABLE projects ADD COLUMN IF NOT EXISTS demo_link text NOT NULL DEFAULT '';
-`;
-}
-
-export async function seedProjectsTable(seed) {
-  await ensureProjectsTable();
-
-  for (const item of seed) {
+  projectsInitPromise = (async () => {
     await sql`
-  INSERT INTO projects (title, description, image, link, keywords, images, rationale, highlights)
-  VALUES (
-    ${item.title},
-    ${item.description},
-    ${item.image},
-    ${item.link},
-    ${JSON.stringify(item.keywords ?? [])},
-    ${JSON.stringify(item.images ?? [])},
-    ${item.rationale ?? ""},
-    ${JSON.stringify(item.highlights ?? [])}
-  )
-  ON CONFLICT DO NOTHING;
-`;
-  }
+      CREATE TABLE IF NOT EXISTS projects (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        title text NOT NULL,
+        short_description text NOT NULL DEFAULT '',
+        description text NOT NULL,
+        image text NOT NULL,
+        link text NOT NULL DEFAULT '',
+        github_link text NOT NULL DEFAULT '',
+        demo_link text NOT NULL DEFAULT '',
+        figma_link text NOT NULL DEFAULT '',
+        keywords jsonb NOT NULL DEFAULT '[]'::jsonb,
+        images jsonb NOT NULL DEFAULT '[]'::jsonb,
+
+        -- ✅ NEW
+        media jsonb NOT NULL DEFAULT '[]'::jsonb,
+
+        why_title text NOT NULL DEFAULT '',
+        why text NOT NULL DEFAULT '',
+        rationale_problem text NOT NULL DEFAULT '',
+        rationale_challenge text NOT NULL DEFAULT '',
+        rationale_solution text NOT NULL DEFAULT '',
+        rationale text NOT NULL DEFAULT '',
+        highlights jsonb NOT NULL DEFAULT '[]'::jsonb,
+        created_at timestamptz NOT NULL DEFAULT now(),
+        updated_at timestamptz NOT NULL DEFAULT now()
+      );
+    `;
+  })();
+
+  return projectsInitPromise;
 }
 
+// ---------- PROJECTS (READ) ----------
 export async function fetchProjects({ limit = 20, offset = 0 } = {}) {
+  noStore(); // ✅ prevent Next RSC caching
   await ensureProjectsTable();
 
   const rows = await sql`
@@ -100,6 +111,7 @@ export async function fetchProjects({ limit = 20, offset = 0 } = {}) {
 }
 
 export async function fetchProjectById(id) {
+  noStore(); // ✅ prevent Next RSC caching
   await ensureProjectsTable();
 
   const rows = await sql`
@@ -115,24 +127,45 @@ export async function getProjectById(id) {
   return fetchProjectById(id);
 }
 
+// ---------- PROJECTS (WRITE) ----------
 export async function insertProject(data) {
+  await ensureProjectsTable();
+
   const rows = await sql`
     INSERT INTO projects (
-      title, description, image, link,
-      github_link, demo_link,
-      keywords, images, rationale, highlights
+      title, short_description, description, image, link,
+      github_link, demo_link, figma_link,
+      keywords, images, media,
+      why_title, why,
+      rationale_problem, rationale_challenge, rationale_solution, rationale,
+      highlights
     )
     VALUES (
       ${data.title},
+      ${data.shortDescription ?? ""},
       ${data.description},
       ${data.image},
-      ${data.link},
+      ${data.link ?? ""},
+
       ${data.githubLink ?? ""},
       ${data.demoLink ?? ""},
-      ${JSON.stringify(data.keywords ?? [])},
-      ${JSON.stringify(data.images ?? [])},
+      ${data.figmaLink ?? ""},
+
+      ${JSON.stringify(data.keywords ?? [])}::jsonb,
+      ${JSON.stringify(data.images ?? [])}::jsonb,
+
+      -- ✅ NEW
+      ${JSON.stringify(data.media ?? [])}::jsonb,
+
+      ${data.whyTitle ?? ""},
+      ${data.why ?? ""},
+
+      ${data.rationaleProblem ?? ""},
+      ${data.rationaleChallenge ?? ""},
+      ${data.rationaleSolution ?? ""},
       ${data.rationale ?? ""},
-      ${JSON.stringify(data.highlights ?? [])}
+
+      ${JSON.stringify(data.highlights ?? [])}::jsonb
     )
     RETURNING *;
   `;
@@ -140,32 +173,49 @@ export async function insertProject(data) {
 }
 
 export async function updateProject(id, updates) {
+  await ensureProjectsTable();
+
   const rows = await sql`
     UPDATE projects
     SET
-      title = COALESCE(${updates.title}, title),
-      description = COALESCE(${updates.description}, description),
-      image = COALESCE(${updates.image}, image),
-      link = COALESCE(${updates.link}, link),
+      title = COALESCE(${updates.title ?? null}, title),
+      short_description = COALESCE(${updates.shortDescription ?? null}, short_description),
+      description = COALESCE(${updates.description ?? null}, description),
+      image = COALESCE(${updates.image ?? null}, image),
+      link = COALESCE(${updates.link ?? null}, link),
 
       keywords = COALESCE(
-        ${updates.keywords ? JSON.stringify(updates.keywords) : null},
+        ${updates.keywords !== undefined ? JSON.stringify(updates.keywords) : null}::jsonb,
         keywords
       ),
+
       images = COALESCE(
-        ${updates.images ? JSON.stringify(updates.images) : null},
+        ${updates.images !== undefined ? JSON.stringify(updates.images) : null}::jsonb,
         images
       ),
 
       -- ✅ NEW
+      media = COALESCE(
+        ${updates.media !== undefined ? JSON.stringify(updates.media) : null}::jsonb,
+        media
+      ),
+
+      why_title = COALESCE(${updates.whyTitle ?? null}, why_title),
+      why = COALESCE(${updates.why ?? null}, why),
+
+      rationale_problem = COALESCE(${updates.rationaleProblem ?? null}, rationale_problem),
+      rationale_challenge = COALESCE(${updates.rationaleChallenge ?? null}, rationale_challenge),
+      rationale_solution = COALESCE(${updates.rationaleSolution ?? null}, rationale_solution),
       rationale = COALESCE(${updates.rationale ?? null}, rationale),
+
       highlights = COALESCE(
-        ${updates.highlights ? JSON.stringify(updates.highlights) : null},
+        ${updates.highlights !== undefined ? JSON.stringify(updates.highlights) : null}::jsonb,
         highlights
       ),
-      github_link = COALESCE(${updates.githubLink ?? null}, github_link),
-demo_link   = COALESCE(${updates.demoLink ?? null}, demo_link),
 
+      github_link = COALESCE(${updates.githubLink ?? null}, github_link),
+      demo_link = COALESCE(${updates.demoLink ?? null}, demo_link),
+      figma_link = COALESCE(${updates.figmaLink ?? null}, figma_link),
 
       updated_at = now()
     WHERE id = ${id}
@@ -185,27 +235,28 @@ export async function deleteProject(id) {
   return mapProject(rows[0]);
 }
 
-// ---------- AUDIT LOGS ----------
 
+// ---------- AUDIT LOGS ----------
 export async function ensureAuditTable() {
-  await sql`
-    CREATE TABLE IF NOT EXISTS project_audit_logs (
-      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-      project_id uuid NOT NULL,
-      user_email text NOT NULL,
-      action text NOT NULL,
-      payload jsonb NOT NULL,
-      created_at timestamptz NOT NULL DEFAULT now()
-    );
-  `;
+  if (auditInitPromise) return auditInitPromise;
+
+  auditInitPromise = (async () => {
+    await sql`
+      CREATE TABLE IF NOT EXISTS project_audit_logs (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        project_id uuid NOT NULL,
+        user_email text NOT NULL,
+        action text NOT NULL,
+        payload jsonb NOT NULL,
+        created_at timestamptz NOT NULL DEFAULT now()
+      );
+    `;
+  })();
+
+  return auditInitPromise;
 }
 
-export async function insertAuditLog({
-  projectId,
-  userEmail,
-  action,
-  payload,
-}) {
+export async function insertAuditLog({ projectId, userEmail, action, payload }) {
   await ensureAuditTable();
 
   await sql`

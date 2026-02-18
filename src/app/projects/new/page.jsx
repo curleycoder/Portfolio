@@ -4,6 +4,8 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+
 
 import {
   Form,
@@ -46,6 +48,8 @@ export default function NewProjectPage() {
   const [draftKeyword, setDraftKeyword] = useState("");
   const [fileError, setFileError] = useState("");
   const [preview, setPreview] = useState(null);
+  const router = useRouter();
+
 
   const form = useForm({
     resolver: zodResolver(newProjectSchema),
@@ -93,7 +97,8 @@ export default function NewProjectPage() {
     }
   }
 
-  function onSubmit(values) {
+async function onSubmit(values) {
+  try {
     const formData = new FormData();
     formData.append("title", values.title);
     formData.append("description", values.description);
@@ -103,21 +108,28 @@ export default function NewProjectPage() {
     (values.keywords || []).forEach((k) => formData.append("keywords", k));
     (values.images || []).forEach((img) => formData.append("images", img));
 
-    fetch("/api/projects/new", {
+    const res = await fetch("/api/projects/new", {
       method: "POST",
       body: formData,
-    })
-      .then(async (r) => {
-        if (!r.ok) throw new Error("Failed");
-        const data = await r.json();
-        alert("Project Saved!");
-        console.log("Server response:", data);
-      })
-      .catch((e) => {
-        alert("Submit failed");
-        console.error(e);
-      });
+    });
+
+    const payload = await res.json();
+
+    if (!res.ok) {
+      alert(payload?.error || "Create failed");
+      return;
+    }
+
+    // ✅ THIS is what was missing
+    router.push("/projects");
+    router.refresh();
+  } catch (err) {
+    console.error(err);
+    alert("Submit failed");
   }
+}
+
+
 
   return (
     <main className="min-h-screen bg-neutral-950 text-neutral-50">
@@ -368,6 +380,7 @@ export default function NewProjectPage() {
               >
                 Save project
               </Button>
+              
             </form>
           </Form>
         </div>
