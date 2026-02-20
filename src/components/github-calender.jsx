@@ -12,11 +12,9 @@ export default function GitHubCalendar() {
     import("github-calendar")
       .then((module) => {
         if (!isMounted) return;
-        const GitHubCalendar = module.default;
+        const GitHubCalendarLib = module.default;
 
-        GitHubCalendar(".calendar", "curleycoder", {
-          responsive: true,
-        });
+        GitHubCalendarLib(".calendar", "curleycoder", { responsive: true });
 
         setTimeout(() => {
           if (isMounted) setLoaded(true);
@@ -32,81 +30,61 @@ export default function GitHubCalendar() {
   }, []);
 
   return (
-    <section className="relative  p-[1px]">
-      {/* Inner dark card */}
-      <div className=" bg-transparent p-4 md:p-5">
-        {/* HEADER / STATUS BAR */}
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-[10px] sm:text-[11px] text-neutral-400">
-          <div className="flex items-center gap-2">
-            {/* <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-purple-500/15 text-xs text-purple-300">
-              ⬛
-            </span> */}
-            <div className="flex flex-col">
-              {/* <span className="uppercase tracking-[0.2em]">
-                GitHub Activity
-              </span> */}
-              <div className="text-[11px] uppercase pt-6 tracking-[0.22em] text-neutral-400">
+    <section className="relative">
+      {/* header */}
+      <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
+        <div className="space-y-1">
+          <div className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
             Recent contribution heatmap
           </div>
-              <h2 className="text-lg font-semibold pt-2 tracking-tight text-neutral-100">
+          <h2 className="text-lg font-semibold tracking-tight text-foreground">
             GitHub Activity
           </h2>
-              {/* <span className="text-[9px] sm:text-[10px] text-neutral-500">
-                Recent contribution heatmap
-              </span> */}
+        </div>
+
+        <a
+          href="https://github.com/curleycoder"
+          target="_blank"
+          rel="noreferrer"
+          className="
+            inline-flex items-center gap-2 rounded-full
+            border border-border bg-card/30 px-3 py-1.5
+            text-[11px] text-muted-foreground
+            transition hover:bg-accent/60 hover:text-foreground
+            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
+            focus-visible:ring-offset-2 focus-visible:ring-offset-background
+            no-underline
+          "
+        >
+          <span className="h-1.5 w-1.5 rounded-full bg-primary/80" />
+          <span>@curleycoder</span>
+        </a>
+      </div>
+
+      {/* calendar wrapper */}
+      <div className="relative overflow-x-auto rounded-2xl border border-border bg-background/20 p-3 backdrop-blur">
+        {!loaded && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-background/65 backdrop-blur-sm">
+            <div className="flex gap-1">
+              {Array.from({ length: 12 }).map((_, i) => (
+                <span
+                  key={i}
+                  className="h-3 w-3 animate-pulse rounded-[4px] bg-border"
+                  style={{ animationDelay: `${i * 40}ms` }}
+                />
+              ))}
             </div>
+            <p className="text-[11px] text-muted-foreground">Loading commits…</p>
           </div>
+        )}
 
-          <button
-            type="button"
-            className="
-              inline-flex items-center gap-1 rounded-full 
-              bg-neutral-900/80 px-3 py-1 text-[10px] sm:text-[11px] text-neutral-200
-              transition-colors duration-200 hover:border-purple-500/70 hover:bg-neutral-900
-            "
-          >
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-            <span>@curleycoder</span>
-          </button>
-        </div>
+        <div className="calendar w-full" />
+      </div>
 
-        {/* CALENDAR WRAPPER */}
-        <div className="relative mt-1 overflow-x-auto p-3 text-[10px] sm:text-xs text-neutral-300">
-          {/* Loading overlay / skeleton */}
-          {!loaded && (
-            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-neutral-900/90 backdrop-blur-sm">
-              <div className="flex gap-1">
-                {Array.from({ length: 12 }).map((_, i) => (
-                  <span
-                    key={i}
-                    className="h-3 w-3 animate-pulse rounded-[4px] bg-neutral-700/80"
-                    style={{ animationDelay: `${i * 40}ms` }}
-                  />
-                ))}
-              </div>
-              <p className="text-[11px] text-neutral-400">
-                Loading your commits…
-              </p>
-            </div>
-          )}
-
-          {/* GitHub Calendar target */}
-          <div className="calendar w-full" />
-        </div>
-
-        {/* FOOTER LEGEND */}
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[9px] sm:text-[10px] text-neutral-500">
-          <span>Built with github-calendar · dark themed</span>
-          <div className="flex items-center gap-1">
-            <span className="mr-1">Less</span>
-            <span className="h-3 w-3 rounded-[4px] bg-neutral-800" />
-            <span className="h-3 w-3 rounded-[4px] bg-green-900" />
-            <span className="h-3 w-3 rounded-[4px] bg-green-700" />
-            <span className="h-3 w-3 rounded-[4px] bg-green-500" />
-            <span className="h-3 w-3 rounded-[4px] bg-green-300" />
-            <span className="ml-1">More</span>
-          </div>
-        </div>
+      {/* footer note */}
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[10px] text-muted-foreground">
+        <span>Built with github-calendar</span>
+        <span className="font-mono">theme: tokenized</span>
       </div>
     </section>
   );

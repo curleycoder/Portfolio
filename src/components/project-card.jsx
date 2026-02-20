@@ -1,201 +1,139 @@
 import Link from "next/link";
-import Image from "next/image";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { fetchProjects } from "@/lib/db";
+import HighlightFrame from "@/components/HighlightFrame";
 
-export default async function ProjectPreviewCard({ count = 3 }) {
+function isMobileProject(p) {
+  const blob = [
+    p?.title,
+    p?.shortDescription,
+    p?.description,
+    ...(p?.keywords ?? []),
+    p?.link,
+  ]
+    .filter(Boolean)
+    .map((v) => String(v).toLowerCase())
+    .join(" ");
+
+  return /react\s*native|expo|expo\s*go|\brn\b|android|ios|mobile/.test(blob);
+}
+
+function WorkTile({ p, index }) {
+  const mobile = isMobileProject(p);
+  const year = p?.year || "2025"; // optional if you don’t have it
+  const subtitle = p?.shortDescription || p?.description || "";
+  const frameMode = mobile ? "mobile" : "web";
+
+  // stagger like hen-ry: left down, right up, repeat
+  const offsetClass =
+    index % 2 === 0
+      ? "lg:translate-y-10"
+      : "lg:-translate-y-6";
+
+  return (
+    <Link
+      href={`/projects/${p.id}`}
+      className={[
+        "group block no-underline",
+        "rounded-3xl",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+      ].join(" ")}
+      aria-label={`Open ${p.title}`}
+    >
+      <div
+        className={[
+          "relative rounded-3xl border border-border/50",
+          "bg-card/35 backdrop-blur-xl",
+          "shadow-[0_18px_60px_-40px_rgba(0,0,0,0.55)]",
+          "transition-transform duration-300",
+          "group-hover:scale-[1.01]",
+          offsetClass,
+        ].join(" ")}
+      >
+        {/* outer “ghost frame” like hen-ry */}
+        <div className="pointer-events-none absolute inset-4 rounded-3xl border border-border/30" />
+
+        {/* inner content */}
+        <div className="p-5 sm:p-7">
+          {/* Frame (mobile or web) */}
+          <div className="rounded-3xl overflow-hidden bg-background/20">
+            <HighlightFrame
+              src={p.image}
+              title={p.title}
+              linkText={(p?.link || "").replace(/^https?:\/\//, "") || "case study"}
+              forceMode={frameMode}
+            />
+          </div>
+
+          {/* Text below */}
+          <div className="mt-6">
+            <div className="flex items-center gap-3">
+              <h3 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">
+                {p.title}
+              </h3>
+
+              {/* year pill */}
+              <span className="ml-auto rounded-full border border-border/60 bg-background/30 px-3 py-1 text-xs text-muted-foreground">
+                {year}
+              </span>
+            </div>
+
+            {subtitle ? (
+              <p className="mt-2 max-w-xl text-sm text-muted-foreground">
+                {subtitle}
+              </p>
+            ) : null}
+
+            <div className="mt-4 inline-flex items-center gap-2 text-xs text-muted-foreground">
+              <span className="uppercase tracking-[0.18em]">View</span>
+              <span className="opacity-70 group-hover:opacity-100">→</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+export default async function ProjectPreviewCard({ count = 2 }) {
   const projects = await fetchProjects({ limit: count, offset: 0 });
-
-  if (!projects || projects.length === 0) {
-    return (
-      <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold tracking-tight text-neutral-100">
-            Projects
-          </h2>
-          <span className="text-xs text-neutral-500">No projects yet</span>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-3">
-          {[0, 1, 2].map((i) => (
-            <Card
-              key={i}
-              className="border-neutral-800/80 bg-neutral-950/60 backdrop-blur"
-            >
-              <CardHeader>
-                <Skeleton className="h-4 w-28" />
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Skeleton className="h-36 w-full" />
-                <Skeleton className="h-4 w-4/5" />
-                <Skeleton className="h-4 w-3/5" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </section>
-    );
-  }
+  if (!projects || projects.length === 0) return null;
 
   const items = projects.slice(0, count);
 
   return (
-    <section className="space-y-4">
-      {/* Header */}
-      <div className="flex items-end justify-between px-4 gap-4">
+    <section className="space-y-8">
+      {/* Header row */}
+      <div className="flex items-end justify-between gap-6">
         <div className="space-y-1">
-          <div className="text-[11px] pt-6 uppercase tracking-[0.22em] text-neutral-400">
-            Shipped work
+          <div className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
+            Work
           </div>
-          <h2 className="text-lg font-semibold tracking-tight text-neutral-100">
-            Projects
+          <h2 className="text-lg font-semibold tracking-tight text-foreground">
+            Selected Projects
           </h2>
         </div>
 
         <Link
           href="/projects"
-          className="text-xs text-neutral-400 underline-offset-4 hover:text-neutral-200 hover:underline"
+          className="
+            inline-flex items-center rounded-xl px-3 py-2 text-xs
+            text-muted-foreground transition
+            border border-border/60 bg-card/30
+            hover:bg-accent/60 hover:text-foreground
+            focus-visible:outline-none
+            focus-visible:ring-2 focus-visible:ring-ring
+            focus-visible:ring-offset-2 focus-visible:ring-offset-background
+          "
         >
-          View all
+          View all →
         </Link>
       </div>
 
-      <div className="grid items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {items.map((p) => {
-          /* 🔥 Robust mobile detection */
-          const textBlob = [
-            p.title,
-            p.description,
-            ...(p.keywords || []),
-            p.link,
-          ]
-            .filter(Boolean)
-            .map((v) => String(v).toLowerCase())
-            .join(" ");
-
-          const isMobile =
-            /react\s*native|expo|expo\s*go|\brn\b|android|ios|mobile/.test(
-              textBlob
-            );
-
-          const label = isMobile ? "Mobile" : "Web";
-          const linkText = p.link?.replace(/^https?:\/\//, "") || "";
-
-          return (
-            <Card
-              key={p.id}
-              className="
-                group relative flex h-full flex-col overflow-hidden
-                rounded-2xl border border-neutral-800/80
-                bg-neutral-950/60 backdrop-blur
-                shadow-[0_10px_30px_rgba(0,0,0,0.45)]
-                transition-all duration-300
-                hover:-translate-y-1 hover:border-neutral-700
-              "
-            >
-              {/* whole card clickable */}
-              <Link
-                href={`/projects/${p.id}`}
-                aria-label={`Open ${p.title}`}
-                className="absolute inset-0 z-0"
-              />
-
-              <div className="relative z-10 flex flex-1 flex-col p-4">
-                {/* IMAGE FRAME */}
-                <div className="relative overflow-hidden rounded-xl border border-neutral-900 bg-neutral-950">
-                  {/* Mobile vs Web frame */}
-                  {isMobile ? (
-                    <div className="flex justify-center py-3">
-                      <div className="relative w-[150px] overflow-hidden rounded-[1.6rem] border border-neutral-800 bg-neutral-950 shadow-lg">
-                        <div className="relative aspect-[9/18] w-full">
-                          {p.image ? (
-                            <Image
-                              src={p.image}
-                              alt={p.title}
-                              fill
-                              className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-                            />
-                          ) : (
-                            <Skeleton className="h-full w-full" />
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="relative aspect-[16/10] w-full">
-                      {p.image ? (
-                        <Image
-                          src={p.image}
-                          alt={p.title}
-                          fill
-                          className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-                        />
-                      ) : (
-                        <Skeleton className="h-full w-full" />
-                      )}
-                    </div>
-                  )}
-
-                  {/* Metadata strip */}
-                  <div className="flex items-center justify-between border-t border-neutral-900 px-3 py-2 text-[11px] text-neutral-400">
-                    <span className="uppercase tracking-[0.22em]">{label}</span>
-                    <span className="truncate text-neutral-500">
-                      {linkText || "Case study"}
-                    </span>
-                  </div>
-                </div>
-
-                {/* TEXT */}
-                <CardHeader className="px-0 pb-2 pt-4">
-                  <CardTitle className="text-base text-neutral-100">
-                    {p.title}
-                  </CardTitle>
-                </CardHeader>
-
-                <CardContent className="flex-1 px-0 pt-0 text-sm text-neutral-300">
-                  <p className="line-clamp-3">{p.description}</p>
-
-                  {p.keywords?.length ? (
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {(p.keywords || []).slice(0, 3).map((k) => (
-                        <span
-                          key={k}
-                          className="rounded-full border border-neutral-800 bg-neutral-950 px-2.5 py-1 font-mono text-[10px] text-neutral-300"
-                        >
-                          {k}
-                        </span>
-                      ))}
-                    </div>
-                  ) : null}
-                </CardContent>
-
-                {/* ACTIONS */}
-                <div className="mt-4 flex gap-2">
-                  <Button
-                    asChild
-                    className="w-full bg-purple-600/40 text-neutral-200 hover:bg-purple-500/20"
-                  >
-                    <Link href={`/projects/${p.id}`}>View Detail</Link>
-                  </Button>
-
-                  {/* {p.link ? (
-                    <Button
-                      asChild
-                      variant="outline"
-                      className="w-full border-neutral-800 bg-transparent text-neutral-200 hover:bg-neutral-900"
-                    >
-                      <a href={p.link} target="_blank" rel="noreferrer">
-                        Live
-                      </a>
-                    </Button>
-                  ) : null} */}
-                </div>
-              </div>
-            </Card>
-          );
-        })}
+      {/* Hen-ry style layout */}
+      <div className="grid gap-8 lg:grid-cols-2 lg:gap-10">
+        {items.map((p, idx) => (
+          <WorkTile key={p.id} p={p} index={idx} />
+        ))}
       </div>
     </section>
   );

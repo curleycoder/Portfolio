@@ -29,39 +29,25 @@ export default function MyHero({ hero }) {
   };
 
   return (
-    <motion.div
-      variants={container}
-      initial="hidden"
-      animate="show"
-      className="relative px-6 pb-6"
-    >
-      {/* tiny terminal hint */}
-      {/* <motion.div
-        variants={item}
-        className="pt-3 font-mono text-[11px] tracking-[0.16em] text-neutral-500"
-      >
-        $ whoami
-      </motion.div> */}
-
-      {/* 2-column hero: text left, image right */}
-      <div className="mt-4 grid gap-8 md:grid-cols-[1.25fr_0.75fr] md:items-stretch">
-        {/* LEFT: text */}
+    <motion.div variants={container} initial="hidden" animate="show" className="relative pb-3">
+      <div className="grid gap-6 md:grid-cols-[1.10fr_0.90fr] md:items-stretch">
+        {/* LEFT */}
         <div className="min-w-0 flex flex-col justify-center">
+          <motion.div variants={item} className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
+            Portfolio
+          </motion.div>
+
           <motion.h1
             variants={item}
-            className="text-4xl font-extrabold tracking-tight md:text-5xl"
+            className="mt-2 font-heading text-4xl sm:text-5xl leading-[1.02] tracking-[-0.02em]"
           >
             {hero.fullName}
           </motion.h1>
 
           <motion.div variants={item} className="mt-4">
-            {/* <div className="font-mono text-[11px] tracking-[0.16em] text-neutral-500">
-              $ i do
-            </div> */}
-
-            <div className="mt-5 text-xl font-semibold md:text-2xl">
-              <span className="text-neutral-200">I do </span>
-              <span className="text-pink-500/60">
+            <div className="text-base sm:text-lg">
+              <span className="text-muted-foreground">I do </span>
+              <span className="font-semibold text-foreground">
                 <TypeAnimation
                   sequence={[
                     "Full-Stack Development",
@@ -81,23 +67,53 @@ export default function MyHero({ hero }) {
             </div>
           </motion.div>
 
-          <motion.p variants={item} className="mt-5 max-w-xl text-neutral-300">
+          <motion.p variants={item} className="mt-5 max-w-xl text-sm sm:text-base text-muted-foreground">
             {hero.shortDescription}
           </motion.p>
 
-          <motion.div variants={item} className="mt-7">
+          <motion.div variants={item} className="mt-7 flex flex-wrap gap-2">
             <a
               href="/calendar"
-              className="inline-flex items-center gap-2 rounded-xl bg-purple-500/25 px-7 py-4 text-lg font-semibold text-purple-100 ring-1 ring-purple-500/25 transition hover:bg-purple-500/22 hover:ring-purple-500/40"
+              className="
+                inline-flex items-center gap-2 rounded-xl
+                bg-primary text-primary-foreground
+                border border-border
+                px-5 py-3 text-sm font-semibold
+                transition hover:opacity-90
+                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
+                focus-visible:ring-offset-2 focus-visible:ring-offset-background
+                no-underline
+              "
             >
               Book a Call <span className="opacity-70">→</span>
+            </a>
+
+            <a
+              href="/projects"
+              className="
+                inline-flex items-center gap-2 rounded-xl
+                border border-border bg-card/30 text-foreground
+                px-5 py-3 text-sm font-semibold
+                transition hover:bg-accent/60
+                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
+                focus-visible:ring-offset-2 focus-visible:ring-offset-background
+                no-underline
+              "
+            >
+              View Projects
             </a>
           </motion.div>
         </div>
 
-        {/* RIGHT: image (full height of its column) */}
+        {/* RIGHT */}
         <motion.div variants={item} className="relative">
-          <div className="relative min-h-[460px] overflow-hidden rounded-2xl border border-purple-500/10">
+          <div
+            className="
+              relative min-h-[460px] overflow-hidden rounded-2xl
+              border border-border bg-card/70 backdrop-blur
+              shadow-[0_10px_30px_-18px_rgba(0,0,0,0.35)]
+            "
+          >
             <Image
               src={hero.avatar}
               alt=""
@@ -107,17 +123,12 @@ export default function MyHero({ hero }) {
               className="object-cover object-center"
             />
 
-            {/* darken + focus text side */}
-            <div className="absolute inset-0 bg-linear-to-l from-neutral-950/20 via-neutral-950/50 to-neutral-950" />
+            {/* soften image for readability across themes */}
+            <div className="absolute inset-0 bg-gradient-to-l from-background/15 via-background/35 to-background/80" />
 
             {/* subtle grid texture */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.035)_1px,transparent_0)] bg-[length:24px_24px]" />
+            <div className="absolute inset-0 opacity-60 bg-[radial-gradient(circle_at_1px_1px,color-mix(in_oklab,var(--foreground)_6%,transparent)_1px,transparent_0)] bg-[length:24px_24px]" />
           </div>
-
-          {/* optional caption (dev vibe, low noise) */}
-          {/* <div className="mt-3 font-mono text-[10px] tracking-[0.16em] text-neutral-500">
-            // building → shipping → iterating
-          </div> */}
         </motion.div>
       </div>
     </motion.div>

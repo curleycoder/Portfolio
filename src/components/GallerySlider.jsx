@@ -10,7 +10,7 @@ function isDataUrl(src) {
 function dedupe(arr) {
   const seen = new Set();
   const out = [];
-  for (const x of arr) {
+  for (const x of arr || []) {
     if (!x) continue;
     const v = String(x).trim();
     if (!v || seen.has(v)) continue;
@@ -56,15 +56,32 @@ export default function GallerySlider({
   const showControls =
     items.length > 1 || (showControlsWhenSingle && items.length === 1);
 
-  // Defaults: mobile can be cover; web should be contain to look like a full site screenshot
-  const imageFitClass = imgClassName ?? "object-contain ";
+const imageFitClass = imgClassName ?? (isMobile ? "object-cover" : "object-contain");
+  const ctrlBtn =
+    "rounded-xl border border-border bg-background/55 backdrop-blur px-3 py-2 text-xs " +
+    "text-foreground shadow-sm transition hover:bg-accent/60 " +
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " +
+    "disabled:opacity-40";
+
+  const counterPill =
+    "rounded-full border border-border bg-background/55 backdrop-blur px-2 py-0.5 " +
+    "text-[10px] text-foreground/90";
 
   return (
-    <div className={`flex justify-center ${className}`}>
+    <div className={["flex justify-center", className].join(" ")}>
       {isMobile ? (
         // PHONE FRAME
         <div className="relative flex items-center justify-center">
-          <div className="relative h-120 w-[210px] overflow-hidden rounded-[1.6rem]">
+          <div
+            className="
+              relative h-120 w-[210px] overflow-hidden rounded-[1.6rem]
+              border border-border bg-card/60 backdrop-blur
+              shadow-[0_10px_30px_-18px_rgba(0,0,0,0.35)]
+            "
+          >
+            {/* subtle top highlight */}
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-foreground/20 to-transparent opacity-70" />
+
             {hasImages ? (
               <Image
                 src={src}
@@ -74,7 +91,7 @@ export default function GallerySlider({
                 unoptimized={isDataUrl(src)}
               />
             ) : (
-              <div className="flex h-full items-center justify-center text-[10px] text-neutral-500">
+              <div className="flex h-full items-center justify-center text-[10px] text-muted-foreground">
                 No preview
               </div>
             )}
@@ -87,21 +104,22 @@ export default function GallerySlider({
                   onClick={prev}
                   aria-label="Previous"
                   disabled={items.length < 2}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full border border-neutral-700 bg-neutral-950/80 px-2 py-1 text-xs text-neutral-200 hover:bg-neutral-900 disabled:opacity-40"
+                  className={["absolute left-2 top-1/2 -translate-y-1/2", ctrlBtn].join(" ")}
                 >
                   ←
                 </button>
+
                 <button
                   type="button"
                   onClick={next}
                   aria-label="Next"
                   disabled={items.length < 2}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full border border-neutral-700 bg-neutral-950/80 px-2 py-1 text-xs text-neutral-200 hover:bg-neutral-900 disabled:opacity-40"
+                  className={["absolute right-2 top-1/2 -translate-y-1/2", ctrlBtn].join(" ")}
                 >
                   →
                 </button>
 
-                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full border border-neutral-700 bg-neutral-950/70 px-2 py-0.5 text-[10px] text-neutral-200">
+                <div className={["absolute bottom-2 left-1/2 -translate-x-1/2", counterPill].join(" ")}>
                   {items.length ? `${i + 1}/${items.length}` : "0/0"}
                 </div>
               </>
@@ -110,27 +128,34 @@ export default function GallerySlider({
         </div>
       ) : (
         // WEB BROWSER FRAME
-        <div className="relative w-full overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-950 shadow-lg shadow-black/40">
-          <div className="flex items-center gap-2 border-b border-neutral-800 bg-neutral-950/80 px-3 py-2 text-[10px] text-neutral-400">
+        <div
+          className="
+            relative w-full overflow-hidden rounded-2xl
+            border border-border bg-card/60 backdrop-blur
+            shadow-[0_10px_30px_-18px_rgba(0,0,0,0.35)]
+          "
+        >
+          <div className="flex items-center gap-2 border-b border-border bg-background/35 px-3 py-2 text-[10px]">
             <span className="flex gap-1">
+              {/* keep these as “browser chrome” accents */}
               <span className="h-2 w-2 rounded-full bg-red-500/70" />
               <span className="h-2 w-2 rounded-full bg-amber-400/70" />
               <span className="h-2 w-2 rounded-full bg-emerald-500/70" />
             </span>
 
-            <span className="ml-2 flex-1 truncate text-neutral-500">
+            <span className="ml-2 flex-1 truncate text-muted-foreground">
               {linkText || "localhost:3000"}
             </span>
 
             {items.length > 1 && (
-              <span className="text-neutral-500">
+              <span className="text-muted-foreground">
                 {i + 1}/{items.length}
               </span>
             )}
           </div>
 
-          {/* KEY FIX: aspect ratio instead of fixed h-64 */}
-          <div className="relative aspect-video w-full bg-neutral-900">
+          {/* aspect-video keeps it consistent */}
+          <div className="relative aspect-video w-full bg-background/25">
             {hasImages ? (
               <Image
                 src={src}
@@ -140,7 +165,7 @@ export default function GallerySlider({
                 unoptimized={isDataUrl(src)}
               />
             ) : (
-              <div className="flex h-full items-center justify-center text-[10px] text-neutral-500">
+              <div className="flex h-full items-center justify-center text-[10px] text-muted-foreground">
                 No preview
               </div>
             )}
@@ -153,23 +178,23 @@ export default function GallerySlider({
                   onClick={prev}
                   aria-label="Previous"
                   disabled={items.length < 2}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full border border-neutral-700 bg-neutral-950/80 px-3 py-2 text-xs text-neutral-200 hover:bg-neutral-900 disabled:opacity-40"
+                  className={["absolute left-3 top-1/2 -translate-y-1/2", ctrlBtn].join(" ")}
                 >
                   ←
                 </button>
+
                 <button
                   type="button"
                   onClick={next}
                   aria-label="Next"
                   disabled={items.length < 2}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full border border-neutral-700 bg-neutral-950/80 px-3 py-2 text-xs text-neutral-200 hover:bg-neutral-900 disabled:opacity-40"
+                  className={["absolute right-3 top-1/2 -translate-y-1/2", ctrlBtn].join(" ")}
                 >
                   →
                 </button>
 
-                {/* bottom counter (optional, helps UX) */}
                 {items.length > 1 && (
-                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full border border-neutral-700 bg-neutral-950/70 px-2 py-0.5 text-[10px] text-neutral-200">
+                  <div className={["absolute bottom-3 left-1/2 -translate-x-1/2", counterPill].join(" ")}>
                     {i + 1}/{items.length}
                   </div>
                 )}

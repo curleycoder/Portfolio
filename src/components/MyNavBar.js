@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import AuthButton from "@/components/AuthButton";
+import ThemeToggle from "./ThemeToggle";
 
 import {
   NavigationMenu,
@@ -15,9 +16,18 @@ import {
 } from "@/components/ui/navigation-menu";
 
 const navItem =
-  "inline-flex items-center rounded-md px-3 py-2 text-sm text-neutral-200 transition-colors " +
-  "hover:bg-purple-500/40 hover:text-white " +
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60";
+  "inline-flex items-center rounded-xl px-3 py-2 text-sm " +
+  "text-muted-foreground transition-colors " +
+  "border border-border/60 bg-card/30 " +
+  "hover:bg-accent/60 hover:text-foreground " +
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 " +
+  "focus-visible:ring-offset-background";
+
+const primaryCta =
+  "inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold " +
+  "text-primary-foreground transition hover:opacity-90 " +
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 " +
+  "focus-visible:ring-offset-background";
 
 export default function MyNavBar() {
   const [open, setOpen] = useState(false);
@@ -31,48 +41,39 @@ export default function MyNavBar() {
   }, []);
 
   return (
-    <nav className="sticky top-0 z-40 border-b border-neutral-800 bg-black/90 backdrop-blur shadow-xl shadow-purple-500/20">
-      <div className="mx-auto max-w-6xl px-4 md:px-6">
-        {/* TOP BAR */}
-        <div className="flex items-center justify-between py-3 font-ui">
-          {/* LEFT */}
-          <div className="flex items-center gap-8">
-            {/* BRAND */}
-            <Link href="/" className="group flex items-center">
-              <span className="relative inline-flex items-center justify-center rounded-full transition-transform duration-200 group-hover:rotate-6">
-                <span className="pointer-events-none absolute inset-0 rounded-full opacity-0 blur-md transition-opacity duration-200 group-hover:opacity-100 bg-purple-500/30" />
-                <Image
-                  src="/butterfly.png"
-                  alt="Brand logo"
-                  width={48}
-                  height={48}
-                  priority
-                  className="relative"
-                />
-              </span>
-            </Link>
+    <nav className="relative">
+      <div className="flex items-center justify-between py-3">
+        {/* LEFT */}
+        <div className="flex items-center gap-6">
+          <Link href="/" className="group flex items-center" aria-label="Home">
+            <span className="relative inline-flex items-center justify-center rounded-full transition-transform duration-200 group-hover:rotate-6">
+              <Image
+                src="/butterfly.png"
+                alt="Brand logo"
+                width={44}
+                height={44}
+                priority
+                className="relative"
+              />
+            </span>
+          </Link>
 
-            {/* DESKTOP NAV */}
-            <div className="hidden items-center gap-2 md:flex">
-              <Link href="/" className={navItem}>
-                Home
-              </Link>
+          {/* DESKTOP NAV */}
+          <div className="hidden items-center gap-2 md:flex">
+            <Link href="/" className={navItem}>Home</Link>
+            <Link href="/projects" className={navItem}>Projects</Link>
 
-              <Link href="/projects" className={navItem}>
-                Projects
-              </Link>
+            <NavigationMenu>
+              <NavigationMenuList>
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger
+                    className={`${navItem} data-[state=open]:bg-accent/60 data-[state=open]:text-foreground`}
+                  >
+                    Resume
+                  </NavigationMenuTrigger>
 
-              {/* RESUME DROPDOWN */}
-              <NavigationMenu>
-                <NavigationMenuList>
-                  <NavigationMenuItem>
-                    <NavigationMenuTrigger
-                      className={`${navItem} bg-transparent data-[state=open]:bg-purple/50 data-[state=open]:text-black`}
-                    >
-                      Resume
-                    </NavigationMenuTrigger>
-
-                    <NavigationMenuContent className="mt-2 rounded-md border border-purple-800 bg-purple/95 p-2 shadow-lg backdrop-blur">
+                  <NavigationMenuContent className="rounded-xl bg-card/85 text-foreground backdrop-blur-lg border border-border shadow-[0_10px_30px_-18px_rgba(0,0,0,0.45)]">
+                    <div className="flex flex-col gap-2 p-2">
                       <NavigationMenuLink asChild>
                         <Link href="/resume" className={navItem}>
                           Online
@@ -84,120 +85,69 @@ export default function MyNavBar() {
                           PDF
                         </Link>
                       </NavigationMenuLink>
-                    </NavigationMenuContent>
-                  </NavigationMenuItem>
-                </NavigationMenuList>
-              </NavigationMenu>
-              <Link href="/contact" className={navItem}>
-              Contact
-            </Link>
+                    </div>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+              </NavigationMenuList>
+            </NavigationMenu>
 
-              {/* <Link href="/blog" className={navItem}>
-                Blog
-              </Link> */}
-            </div>
-          </div>
-
-          {/* RIGHT DESKTOP */}
-          <div className="hidden items-center gap-2 md:flex">
-            {/* <Link
-              href="/calendar"
-              className="inline-flex items-center gap-2 rounded-lg bg-purple-500/40 px-4 py-2 text-sm font-semibold text-purple-100 ring-1 ring-purple-500/25 transition hover:bg-purple-500/22 hover:ring-purple-500/22"
-            >
-              Book a Call
-            </Link> */}
-
-            
-
-            <AuthButton />
-          </div>
-
-          {/* MOBILE */}
-          <div className="flex items-center gap-3 md:hidden">
-            <Link
-              href="/calendar"
-              className="inline-flex items-center gap-2 rounded-xl bg-purple-500/40 px-5 py-2.5 text-sm font-semibold text-purple-100 ring-1 ring-purple-500/25 transition hover:bg-purple-500/22 hover:ring-purple-500/22"
-            >
-              Book a Call
-            </Link>
-
-            <button
-              type="button"
-              onClick={() => setOpen((v) => !v)}
-              className="inline-flex items-center justify-center rounded-md p-2 text-neutral-200 hover:bg-white/10"
-              aria-label="Toggle menu"
-            >
-              <svg
-                className="h-6 w-6"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d={
-                    open
-                      ? "M6 18L18 6M6 6l12 12"
-                      : "M4 6h16M4 12h16M4 18h16"
-                  }
-                />
-              </svg>
-            </button>
+            <Link href="/contact" className={navItem}>Contact</Link>
           </div>
         </div>
 
-        {/* MOBILE MENU */}
-        {open && (
-          <div className="border-t border-neutral-800 bg-black md:hidden animate-in fade-in duration-200">
-            <div className="flex flex-col gap-2 px-2 py-3 text-sm text-neutral-100">
-              <Link href="/" className={navItem} onClick={() => setOpen(false)}>
-                Home
-              </Link>
-              <Link
-                href="/projects"
-                className={navItem}
-                onClick={() => setOpen(false)}
-              >
-                Projects
-              </Link>
-              <Link
-                href="/resume"
-                className={navItem}
-                onClick={() => setOpen(false)}
-              >
-                Resume – Online
-              </Link>
-              <Link
-                href="/resume/pdf"
-                className={navItem}
-                onClick={() => setOpen(false)}
-              >
-                Resume – PDF
-              </Link>
-              <Link
-                href="/blog"
-                className={navItem}
-                onClick={() => setOpen(false)}
-              >
-                Blog
-              </Link>
-              <Link
-                href="/contact"
-                className={navItem}
-                onClick={() => setOpen(false)}
-              >
-                Contact
-              </Link>
+        {/* RIGHT DESKTOP */}
+        <div className="hidden items-center gap-2 md:flex">
+          <Link href="/calendar" className={primaryCta}>
+            Book a Call
+          </Link>
+          <ThemeToggle />
+          <AuthButton />
+        </div>
 
-              <div className="mt-2 border-t border-neutral-800 pt-2">
-                <AuthButton />
-              </div>
+        {/* MOBILE */}
+        <div className="flex items-center gap-2 md:hidden">
+          <ThemeToggle />
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            className="inline-flex items-center justify-center rounded-xl border border-border bg-card/40 p-2 text-muted-foreground hover:bg-accent/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            aria-label="Toggle menu"
+            aria-expanded={open}
+          >
+            <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d={open ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"}
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      {/* MOBILE MENU */}
+      {open && (
+        <div className="mt-2 rounded-2xl border border-border bg-card/70 backdrop-blur md:hidden animate-in fade-in duration-200">
+          <div className="flex flex-col gap-2 p-3 text-sm">
+            <Link href="/" className={navItem} onClick={() => setOpen(false)}>Home</Link>
+            <Link href="/projects" className={navItem} onClick={() => setOpen(false)}>Projects</Link>
+            <Link href="/resume" className={navItem} onClick={() => setOpen(false)}>Resume – Online</Link>
+            <Link href="/resume/pdf" className={navItem} onClick={() => setOpen(false)}>Resume – PDF</Link>
+            <Link href="/contact" className={navItem} onClick={() => setOpen(false)}>Contact</Link>
+
+            <Link href="/calendar" className={primaryCta} onClick={() => setOpen(false)}>
+              Book a Call
+            </Link>
+
+            <div className="pt-1">
+              <AuthButton />
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* subtle bottom accent line */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-primary/60 via-primary/40 to-transparent opacity-80" />
     </nav>
   );
 }

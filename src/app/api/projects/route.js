@@ -3,7 +3,6 @@ import { requireAdminOr401 } from "@/lib/admin";
 import { createProject } from "@/lib/db"; // you implement
 import { ensureProjectsTable } from "@/lib/db";
 
-export const dynamic = "force-dynamic";
 
 export async function POST(req) {
   const admin = await requireAdminOr401();

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 export function DeleteButton({ id, size = "sm", className = "" }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [confirming, setConfirming] = useState(false);
 
   const handleDelete = async (e) => {
     e.preventDefault();
@@ -14,8 +15,10 @@ export function DeleteButton({ id, size = "sm", className = "" }) {
 
     if (loading) return;
 
-    const ok = window.confirm("Are you sure you want to delete this project?");
-    if (!ok) return;
+    if (!confirming) {
+      setConfirming(true);
+      return;
+    }
 
     setLoading(true);
     try {
@@ -23,7 +26,7 @@ export function DeleteButton({ id, size = "sm", className = "" }) {
 
       if (!res.ok) {
         const text = await res.text().catch(() => "");
-        alert(text || "Failed to delete project");
+        console.error(text || "Failed to delete project");
         return;
       }
 
@@ -31,6 +34,7 @@ export function DeleteButton({ id, size = "sm", className = "" }) {
       router.refresh();
     } finally {
       setLoading(false);
+      setConfirming(false);
     }
   };
 
@@ -38,11 +42,15 @@ export function DeleteButton({ id, size = "sm", className = "" }) {
     <Button
       variant="destructive"
       size={size}
-      className={className}
+      className={`rounded-xl ${className}`}
       onClick={handleDelete}
       disabled={loading}
     >
-      {loading ? "Deleting…" : "Delete"}
+      {loading
+        ? "Deleting…"
+        : confirming
+        ? "Click again to confirm"
+        : "Delete"}
     </Button>
   );
 }

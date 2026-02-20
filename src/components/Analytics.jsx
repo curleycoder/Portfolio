@@ -9,6 +9,9 @@ export default function AnalyticsTracker() {
   const lastPathRef = useRef("");
 
   useEffect(() => {
+    // ✅ dev: don't spam analytics at all
+    if (process.env.NODE_ENV !== "production") return;
+
     if (!pathname) return;
 
     const search = searchParams?.toString();

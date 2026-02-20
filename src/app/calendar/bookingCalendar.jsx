@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 
 const TIME_SLOTS = ["10:00", "11:00", "13:00", "14:00", "15:00"];
 
@@ -15,9 +18,7 @@ function formatDateLocalISO(d) {
 function makeNext7Days() {
   const days = [];
   const today = new Date();
-  // normalize to noon to avoid DST edge weirdness
-  today.setHours(12, 0, 0, 0);
-
+  today.setHours(12, 0, 0, 0); // DST-safe-ish
   for (let i = 0; i < 7; i++) {
     const d = new Date(today);
     d.setDate(today.getDate() + i);
@@ -79,7 +80,6 @@ export default function BookingCalendar() {
 
   function selectDay(dateISO) {
     setSelectedDate(dateISO);
-    // ✅ prevent mismatched day/time
     setSelectedTime("");
     setMessage(null);
   }
@@ -125,7 +125,7 @@ export default function BookingCalendar() {
 
       if (res.status === 409) {
         setMessage({ type: "error", text: "That slot was just taken. Please choose another time." });
-        // optional: refresh bookings for accuracy
+
         const start = formatDateLocalISO(days[0]);
         const end = formatDateLocalISO(days[days.length - 1]);
         fetch(`/api/bookings?start=${start}&end=${end}`)
@@ -140,7 +140,6 @@ export default function BookingCalendar() {
         throw new Error(txt || "Failed to submit booking.");
       }
 
-      // ✅ dedupe & add
       setBookings((prev) => {
         const key = `${selectedDate}__${selectedTime}`;
         const next = prev.filter((b) => `${b?.date}__${b?.timeSlot}` !== key);
@@ -150,7 +149,6 @@ export default function BookingCalendar() {
 
       setMessage({ type: "success", text: "Request sent! I’ll email you to confirm." });
 
-      // clear inputs
       setFullName("");
       setEmail("");
       setNote("");
@@ -165,7 +163,7 @@ export default function BookingCalendar() {
   return (
     <div className="space-y-6">
       {/* Calendar grid */}
-      <div className="overflow-x-auto rounded-2xl border border-neutral-800 bg-neutral-900/70 p-4">
+      <div className="overflow-x-auto rounded-2xl border border-border bg-card/60 backdrop-blur p-4">
         <div className="grid gap-4 md:grid-cols-7">
           {days.map((date) => {
             const dateISO = formatDateLocalISO(date);
@@ -181,16 +179,21 @@ export default function BookingCalendar() {
               <div
                 key={dateISO}
                 className={[
-                  "flex flex-col rounded-xl border px-3 py-2 text-xs",
+                  "flex flex-col rounded-2xl border px-3 py-2 text-xs transition-colors",
                   isSelectedDay
-                    ? "border-purple-500/40 bg-purple-500/10"
-                    : "border-neutral-700 bg-neutral-900",
+                    ? "border-primary/35 bg-accent/40"
+                    : "border-border bg-background/25",
                 ].join(" ")}
               >
                 <button
                   type="button"
                   onClick={() => selectDay(dateISO)}
-                  className="mb-2 rounded-md px-1 text-left font-semibold text-neutral-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/60"
+                  className="
+                    mb-2 rounded-xl px-2 py-1 text-left font-semibold text-foreground
+                    hover:bg-accent/50
+                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
+                    focus-visible:ring-offset-2 focus-visible:ring-offset-background
+                  "
                 >
                   {label}
                 </button>
@@ -211,12 +214,13 @@ export default function BookingCalendar() {
                           setMessage(null);
                         }}
                         className={[
-                          "w-full rounded-md px-2 py-1 text-[11px] transition-colors",
+                          "w-full rounded-xl px-2 py-1 text-[11px] transition-colors",
+                          "border border-border",
                           booked
-                            ? "cursor-not-allowed bg-neutral-800/60 text-neutral-500"
+                            ? "cursor-not-allowed bg-background/20 text-muted-foreground/70 opacity-70"
                             : isActive
-                            ? "bg-purple-500/50 text-white"
-                            : "bg-neutral-800 text-neutral-200 hover:bg-neutral-700",
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-card/30 text-foreground hover:bg-accent/60",
                         ].join(" ")}
                       >
                         {slot}
@@ -233,82 +237,106 @@ export default function BookingCalendar() {
       {/* Booking form */}
       <form
         onSubmit={handleSubmit}
-        className="space-y-4 rounded-2xl border border-neutral-800 bg-neutral-900/70 p-4 text-sm"
+        className="space-y-4 rounded-2xl border border-border bg-card/60 backdrop-blur p-4 sm:p-5 text-sm"
       >
-        <h2 className="text-base font-semibold text-neutral-50">Request this time</h2>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <div className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
+              Request
+            </div>
+            <h2 className="mt-1 text-base font-semibold text-foreground">
+              Request this time
+            </h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Selected:{" "}
+              {selectedDate && selectedTime
+                ? `${selectedDate} at ${selectedTime}`
+                : "No time selected yet"}
+            </p>
+          </div>
 
-        <p className="text-xs text-neutral-400">
-          Selected:{" "}
-          {selectedDate && selectedTime ? `${selectedDate} at ${selectedTime}` : "No time selected yet"}
-        </p>
+          {selectedDate && selectedTime ? (
+            <span className="mt-1 inline-flex items-center rounded-full border border-border bg-card/30 px-3 py-1 text-[11px] text-muted-foreground">
+              {selectedTime}
+            </span>
+          ) : null}
+        </div>
 
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="space-y-1">
-            <label className="block text-xs font-semibold uppercase tracking-[0.16em] text-neutral-400">
+            <label className="block text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
               Full name
             </label>
-            <input
+            <Input
               name="fullName"
               required
               autoComplete="name"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="w-full rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-purple-500/40"
               placeholder="Your name"
             />
           </div>
 
           <div className="space-y-1">
-            <label className="block text-xs font-semibold uppercase tracking-[0.16em] text-neutral-400">
+            <label className="block text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
               Email
             </label>
-            <input
+            <Input
               type="email"
               name="email"
               required
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-purple-500/40"
               placeholder="you@example.com"
             />
           </div>
         </div>
 
         <div className="space-y-1">
-          <label className="block text-xs font-semibold uppercase tracking-[0.16em] text-neutral-400">
+          <label className="block text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
             Notes (optional)
           </label>
-          <textarea
+          <Textarea
             name="note"
             value={note}
             onChange={(e) => setNote(e.target.value)}
             rows={3}
-            className="w-full rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-purple-500/40"
             placeholder="Anything you’d like me to know before the call."
           />
         </div>
 
         {message && (
-          <p
+          <div
             className={[
-              "rounded-md border px-3 py-2 text-xs",
+              "rounded-xl border px-3 py-2 text-xs",
               message.type === "success"
-                ? "border-green-500/30 bg-green-500/10 text-green-200"
-                : "border-red-500/30 bg-red-500/10 text-red-200",
+                ? "border-border bg-accent/40 text-foreground"
+                : "border-destructive/40 bg-destructive/10 text-foreground",
             ].join(" ")}
           >
             {message.text}
-          </p>
+          </div>
         )}
 
-        <button
-          type="submit"
-          disabled={submitting}
-          className="rounded-md bg-purple-600/40 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-purple-500 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {submitting ? "Sending..." : "Request booking"}
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <Button type="submit" disabled={submitting}>
+            {submitting ? "Sending..." : "Request booking"}
+          </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              setSelectedDate(null);
+              setSelectedTime("");
+              setMessage(null);
+            }}
+            disabled={submitting && !message}
+          >
+            Clear
+          </Button>
+        </div>
       </form>
     </div>
   );

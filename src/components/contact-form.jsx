@@ -6,6 +6,7 @@ import { contactFormSchema } from "@/app/contact/schema";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Form,
   FormControl,
@@ -19,11 +20,7 @@ import { toast } from "sonner";
 export default function ContactForm() {
   const form = useForm({
     resolver: zodResolver(contactFormSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      message: "",
-    },
+    defaultValues: { name: "", email: "", message: "" },
   });
 
   const onSubmit = async (data) => {
@@ -54,28 +51,34 @@ export default function ContactForm() {
     }
   };
 
+  const labelCls =
+    "text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground";
+
+  const inputCls =
+    "h-10 rounded-xl border border-input bg-background/40 text-sm text-foreground " +
+    "placeholder:text-muted-foreground/70 " +
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " +
+    "focus-visible:ring-offset-2 focus-visible:ring-offset-background";
+
+  const textareaCls =
+    "flex min-h-[120px] w-full rounded-xl border border-input bg-background/40 px-3 py-2 text-sm text-foreground " +
+    "placeholder:text-muted-foreground/70 " +
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " +
+    "focus-visible:ring-offset-2 focus-visible:ring-offset-background " +
+    "disabled:cursor-not-allowed disabled:opacity-50";
+
   return (
     <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="space-y-6"
-        noValidate
-      >
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" noValidate>
         {/* NAME */}
         <FormField
           control={form.control}
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-xs font-medium uppercase tracking-[0.16em] text-neutral-400">
-                Name
-              </FormLabel>
+              <FormLabel className={labelCls}>Name</FormLabel>
               <FormControl>
-                <Input
-                  placeholder="Your name"
-                  className="h-10 rounded-lg border-neutral-700 bg-neutral-900/60 text-sm text-neutral-100 placeholder:text-neutral-500 focus-visible:ring-1 focus-visible:ring-purple-500"
-                  {...field}
-                />
+                <Input placeholder="Your name" className={inputCls} {...field} />
               </FormControl>
               <FormMessage className="text-xs" />
             </FormItem>
@@ -88,15 +91,9 @@ export default function ContactForm() {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-xs font-medium uppercase tracking-[0.16em] text-neutral-400">
-                Email
-              </FormLabel>
+              <FormLabel className={labelCls}>Email</FormLabel>
               <FormControl>
-                <Input
-                  placeholder="you@example.com"
-                  className="h-10 rounded-lg border-neutral-700 bg-neutral-900/60 text-sm text-neutral-100 placeholder:text-neutral-500 focus-visible:ring-1 focus-visible:ring-purple-500"
-                  {...field}
-                />
+                <Input placeholder="you@example.com" className={inputCls} {...field} />
               </FormControl>
               <FormMessage className="text-xs" />
             </FormItem>
@@ -109,16 +106,9 @@ export default function ContactForm() {
           name="message"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-xs font-medium uppercase tracking-[0.16em] text-neutral-400">
-                Message
-              </FormLabel>
+              <FormLabel className={labelCls}>Message</FormLabel>
               <FormControl>
-                <textarea
-                  {...field}
-                  rows={5}
-                  placeholder="Write your message..."
-                  className="flex min-h-[120px] w-full rounded-lg border border-neutral-700 bg-neutral-900/60 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-purple-500/70 disabled:cursor-not-allowed disabled:opacity-50"
-                />
+                <Textarea rows={5} placeholder="Write your message..." {...field} />
               </FormControl>
               <FormMessage className="text-xs" />
             </FormItem>
@@ -127,7 +117,11 @@ export default function ContactForm() {
 
         <Button
           type="submit"
-          className="mt-2 w-full rounded-lg border border-purple-600/80 bg-purple-500/40 text-sm font-medium hover:bg-purple-500/30"
+          className="
+            w-full rounded-xl bg-primary text-primary-foreground
+            hover:opacity-90 border border-border
+            no-underline
+          "
         >
           Send message
         </Button>

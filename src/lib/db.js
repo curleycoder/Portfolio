@@ -1,15 +1,30 @@
-import { neon } from "@neondatabase/serverless";
+// src/lib/db.js
+import postgres from "postgres";
 import { unstable_noStore as noStore } from "next/cache";
+import { slugify } from "./slug";
 
-export const sql = neon(process.env.NEON_DB_URL);
+// ---------------------------------
+// DATABASE CONNECTION (Supabase)
+// ---------------------------------
+const DB_URL = process.env.SUPABASE_DB_URL;
 
-// Tell Neon’s internal fetch not to cache
-sql.fetchOptions = { cache: "no-store" };
+if (!DB_URL) {
+  throw new Error(
+    "Missing SUPABASE_DB_URL in .env.local"
+  );
+}
 
-// One-time init per server instance
-let projectsInitPromise = null;
-let auditInitPromise = null;
+export const sql = postgres(DB_URL, {
+  ssl: "require",
+  max: 5,
+  idle_timeout: 20,
 
+  // ✅ REQUIRED for Supabase pooler (PgBouncer)
+  prepare: false,
+});
+// ---------------------------------
+// HELPERS
+// ---------------------------------
 function asArray(v) {
   if (Array.isArray(v)) return v;
   if (typeof v === "string") {
@@ -23,7 +38,12 @@ function asArray(v) {
   return [];
 }
 
-// ---- mapper MUST be above usage
+function isUuid(v) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    String(v || "")
+  );
+}
+
 function mapProject(row) {
   if (!row) return null;
   return {
@@ -33,36 +53,34 @@ function mapProject(row) {
     description: row.description,
     image: row.image,
     link: row.link ?? "",
-
     keywords: asArray(row.keywords),
     images: asArray(row.images),
-
-    // ✅ NEW
     media: asArray(row.media),
-
     whyTitle: row.why_title ?? "",
     why: row.why ?? "",
-
     rationaleProblem: row.rationale_problem ?? "",
     rationaleChallenge: row.rationale_challenge ?? "",
     rationaleSolution: row.rationale_solution ?? "",
     rationale: row.rationale ?? "",
-
     highlights: asArray(row.highlights),
-
     githubLink: row.github_link ?? "",
     demoLink: row.demo_link ?? "",
     figmaLink: row.figma_link ?? "",
-
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
 }
 
+// ---------------------------------
+// PROJECTS TABLE
+// ---------------------------------
+let projectsInitPromise = null;
+
 export async function ensureProjectsTable() {
   if (projectsInitPromise) return projectsInitPromise;
 
   projectsInitPromise = (async () => {
+
     await sql`
       CREATE TABLE IF NOT EXISTS projects (
         id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -76,10 +94,7 @@ export async function ensureProjectsTable() {
         figma_link text NOT NULL DEFAULT '',
         keywords jsonb NOT NULL DEFAULT '[]'::jsonb,
         images jsonb NOT NULL DEFAULT '[]'::jsonb,
-
-        -- ✅ NEW
         media jsonb NOT NULL DEFAULT '[]'::jsonb,
-
         why_title text NOT NULL DEFAULT '',
         why text NOT NULL DEFAULT '',
         rationale_problem text NOT NULL DEFAULT '',
@@ -96,9 +111,11 @@ export async function ensureProjectsTable() {
   return projectsInitPromise;
 }
 
-// ---------- PROJECTS (READ) ----------
-export async function fetchProjects({ limit = 20, offset = 0 } = {}) {
-  noStore(); // ✅ prevent Next RSC caching
+// ---------------------------------
+// READ
+// ---------------------------------
+export async function fetchProjects({ limit = 50, offset = 0 } = {}) {
+  noStore();
   await ensureProjectsTable();
 
   const rows = await sql`
@@ -107,12 +124,15 @@ export async function fetchProjects({ limit = 20, offset = 0 } = {}) {
     ORDER BY created_at DESC
     LIMIT ${limit} OFFSET ${offset};
   `;
+
   return rows.map(mapProject);
 }
 
 export async function fetchProjectById(id) {
-  noStore(); // ✅ prevent Next RSC caching
+  noStore();
   await ensureProjectsTable();
+
+  if (!isUuid(id)) return null;
 
   const rows = await sql`
     SELECT *
@@ -120,6 +140,7 @@ export async function fetchProjectById(id) {
     WHERE id = ${id}
     LIMIT 1;
   `;
+
   return mapProject(rows[0]);
 }
 
@@ -127,11 +148,13 @@ export async function getProjectById(id) {
   return fetchProjectById(id);
 }
 
-// ---------- PROJECTS (WRITE) ----------
+// ---------------------------------
+// WRITE
+// ---------------------------------
 export async function insertProject(data) {
   await ensureProjectsTable();
 
-  const rows = await sql`
+  const [row] = await sql`
     INSERT INTO projects (
       title, short_description, description, image, link,
       github_link, demo_link, figma_link,
@@ -146,30 +169,24 @@ export async function insertProject(data) {
       ${data.description},
       ${data.image},
       ${data.link ?? ""},
-
       ${data.githubLink ?? ""},
       ${data.demoLink ?? ""},
       ${data.figmaLink ?? ""},
-
       ${JSON.stringify(data.keywords ?? [])}::jsonb,
       ${JSON.stringify(data.images ?? [])}::jsonb,
-
-      -- ✅ NEW
       ${JSON.stringify(data.media ?? [])}::jsonb,
-
       ${data.whyTitle ?? ""},
       ${data.why ?? ""},
-
       ${data.rationaleProblem ?? ""},
       ${data.rationaleChallenge ?? ""},
       ${data.rationaleSolution ?? ""},
       ${data.rationale ?? ""},
-
       ${JSON.stringify(data.highlights ?? [])}::jsonb
     )
     RETURNING *;
   `;
-  return mapProject(rows[0]);
+
+  return mapProject(row);
 }
 
 export async function updateProject(id, updates) {
@@ -194,7 +211,6 @@ export async function updateProject(id, updates) {
         images
       ),
 
-      -- ✅ NEW
       media = COALESCE(
         ${updates.media !== undefined ? JSON.stringify(updates.media) : null}::jsonb,
         media
@@ -235,8 +251,11 @@ export async function deleteProject(id) {
   return mapProject(rows[0]);
 }
 
+// -----------------------------
+// AUDIT LOGS
+// -----------------------------
+let auditInitPromise = null;
 
-// ---------- AUDIT LOGS ----------
 export async function ensureAuditTable() {
   if (auditInitPromise) return auditInitPromise;
 
@@ -258,48 +277,64 @@ export async function ensureAuditTable() {
 
 export async function insertAuditLog({ projectId, userEmail, action, payload }) {
   await ensureAuditTable();
-
   await sql`
     INSERT INTO project_audit_logs (project_id, user_email, action, payload)
     VALUES (
       ${projectId},
       ${userEmail},
       ${action},
-      ${JSON.stringify(payload)}
+      ${JSON.stringify(payload)}::jsonb
     );
   `;
 }
 
-// ---------- HERO ----------
+// -----------------------------
+// HERO
+// -----------------------------
+// If you had these in another file, keep them there.
+// If not, define safe defaults here so db.js doesn't crash.
+const HERO_PLACEHOLDER_AVATAR = "/ai.png";
+const defaultHeroContent = {
+  avatar: HERO_PLACEHOLDER_AVATAR,
+  fullName: "Shabnam Beiraghian",
+  shortDescription: "BCIT Full-Stack Web Development student building real-world Next.js apps.",
+  longDescription:
+    "I’m transitioning into software development. I build practical Next.js apps with clean UI and reliable flows.",
+};
+
+let heroInitPromise = null;
 
 export async function ensureHeroTable() {
-  await sql`
-    CREATE TABLE IF NOT EXISTS hero (
-      id uuid PRIMARY KEY,
-      avatar text NOT NULL DEFAULT '',
-      full_name text NOT NULL,
-      short_description text NOT NULL CHECK (char_length(short_description) <= 120),
-      long_description text NOT NULL,
-      created_at timestamptz NOT NULL DEFAULT now(),
-      updated_at timestamptz NOT NULL DEFAULT now()
-    );
-  `;
+  if (heroInitPromise) return heroInitPromise;
 
-  const [{ count }] = await sql`
-    SELECT count(*)::int AS count FROM hero;
-  `;
-  if (Number(count) === 0) {
+  heroInitPromise = (async () => {
     await sql`
-      INSERT INTO hero (id, avatar, full_name, short_description, long_description)
-      VALUES (
-        gen_random_uuid(),
-        ${defaultHeroContent.avatar},
-        ${defaultHeroContent.fullName},
-        ${defaultHeroContent.shortDescription},
-        ${defaultHeroContent.longDescription}
+      CREATE TABLE IF NOT EXISTS hero (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        avatar text NOT NULL DEFAULT '',
+        full_name text NOT NULL,
+        short_description text NOT NULL CHECK (char_length(short_description) <= 120),
+        long_description text NOT NULL,
+        created_at timestamptz NOT NULL DEFAULT now(),
+        updated_at timestamptz NOT NULL DEFAULT now()
       );
     `;
-  }
+
+    const [{ count }] = await sql`SELECT count(*)::int AS count FROM hero;`;
+    if (Number(count) === 0) {
+      await sql`
+        INSERT INTO hero (avatar, full_name, short_description, long_description)
+        VALUES (
+          ${defaultHeroContent.avatar},
+          ${defaultHeroContent.fullName},
+          ${defaultHeroContent.shortDescription},
+          ${defaultHeroContent.longDescription}
+        );
+      `;
+    }
+  })();
+
+  return heroInitPromise;
 }
 
 function mapHeroRow(row) {
@@ -308,132 +343,99 @@ function mapHeroRow(row) {
     id: row.id,
     avatar: row.avatar || HERO_PLACEHOLDER_AVATAR,
     fullName: row.full_name || defaultHeroContent.fullName,
-    shortDescription:
-      row.short_description || defaultHeroContent.shortDescription,
+    shortDescription: row.short_description || defaultHeroContent.shortDescription,
     longDescription: row.long_description || defaultHeroContent.longDescription,
-    createdAt: row.createdAt,
-    updatedAt: row.updatedAt,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
   };
 }
 
 export async function getHero() {
   await ensureHeroTable();
-
-  const [row] = await sql`
-    SELECT
-      id,
-      avatar,
-      full_name,
-      short_description,
-      long_description,
-      created_at AS "createdAt",
-      updated_at AS "updatedAt"
+  const rows = await sql`
+    SELECT *
     FROM hero
     ORDER BY created_at ASC
     LIMIT 1;
   `;
-
-  return mapHeroRow(row);
+  return mapHeroRow(rows[0]);
 }
 
 export async function upsertHero(updates = {}) {
   await ensureHeroTable();
   const current = await getHero();
 
-  const merged = {
-    ...defaultHeroContent,
-    ...(current || {}),
-    ...updates,
-  };
+  const merged = { ...defaultHeroContent, ...(current || {}), ...updates };
 
-  const normalizedAvatar =
-    typeof merged.avatar === "string" &&
-    merged.avatar.trim().startsWith("data:")
-      ? merged.avatar.trim()
-      : HERO_PLACEHOLDER_AVATAR;
+  const avatar =
+    typeof merged.avatar === "string" && merged.avatar.trim() ? merged.avatar.trim() : HERO_PLACEHOLDER_AVATAR;
 
-  const shortDescription = (merged.shortDescription || "").trim().slice(0, 120);
   const fullName = (merged.fullName || "").trim();
+  const shortDescription = (merged.shortDescription || "").trim().slice(0, 120);
   const longDescription = (merged.longDescription || "").trim();
 
   if (current?.id) {
-    const [row] = await sql`
+    const rows = await sql`
       UPDATE hero
       SET
-        avatar = ${normalizedAvatar},
+        avatar = ${avatar},
         full_name = ${fullName},
         short_description = ${shortDescription},
         long_description = ${longDescription},
         updated_at = now()
       WHERE id = ${current.id}
-      RETURNING
-        id,
-        avatar,
-        full_name,
-        short_description,
-        long_description,
-        created_at AS "createdAt",
-        updated_at AS "updatedAt";
+      RETURNING *;
     `;
-
-    return mapHeroRow(row);
+    return mapHeroRow(rows[0]);
   }
 
-  const [row] = await sql`
-    INSERT INTO hero (id, avatar, full_name, short_description, long_description)
-    VALUES (
-      gen_random_uuid(),
-      ${normalizedAvatar},
-      ${fullName},
-      ${shortDescription},
-      ${longDescription}
-    )
-    RETURNING
-      id,
-      avatar,
-      full_name,
-      short_description,
-      long_description,
-      created_at AS "createdAt",
-      updated_at AS "updatedAt";
+  const rows = await sql`
+    INSERT INTO hero (avatar, full_name, short_description, long_description)
+    VALUES (${avatar}, ${fullName}, ${shortDescription}, ${longDescription})
+    RETURNING *;
   `;
-
-  return mapHeroRow(row);
+  return mapHeroRow(rows[0]);
 }
-// --- BLOG HELPERS ----------------------------------------------------
 
-import { slugify } from "./slug";
+// -----------------------------
+// BLOG
+// -----------------------------
+let blogInitPromise = null;
 
-// 1. Create table helper
 export async function ensureBlogPostTable() {
-  await sql`
-    CREATE TABLE IF NOT EXISTS blog_posts (
-      id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-      slug         text NOT NULL UNIQUE,
-      title        text NOT NULL,
-      excerpt      text,
-      content      text NOT NULL,
-      author_email text NOT NULL,
-      published_at timestamptz NOT NULL DEFAULT now(),
-      created_at   timestamptz NOT NULL DEFAULT now(),
-      updated_at   timestamptz NOT NULL DEFAULT now()
-    );
-  `;
+  if (blogInitPromise) return blogInitPromise;
+
+  blogInitPromise = (async () => {
+    await sql`
+      CREATE TABLE IF NOT EXISTS blog_posts (
+        id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        slug         text NOT NULL UNIQUE,
+        title        text NOT NULL,
+        excerpt      text,
+        content      text NOT NULL,
+        author_email text NOT NULL,
+        published_at timestamptz NOT NULL DEFAULT now(),
+        created_at   timestamptz NOT NULL DEFAULT now(),
+        updated_at   timestamptz NOT NULL DEFAULT now()
+      );
+    `;
+  })();
+
+  return blogInitPromise;
 }
 
 function mapBlogPostRow(row) {
   if (!row) return null;
-
   return {
     id: row.id,
     slug: row.slug,
     title: row.title,
     excerpt: row.excerpt || "",
     content: row.content,
-    authorEmail: row.author_email ?? row.authorEmail,
-    publishedAt: row.publishedAt ?? row.published_at,
-    createdAt: row.createdAt ?? row.created_at,
-    updatedAt: row.updatedAt ?? row.updated_at,
+    authorEmail: row.author_email,
+    publishedAt: row.published_at,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
   };
 }
 
@@ -446,18 +448,9 @@ async function blogSlugExists(slug) {
   return Number(count) > 0;
 }
 
-// 2. Create post
-export async function insertBlogPost({
-  title,
-  excerpt = "",
-  content,
-  authorEmail,
-}) {
+export async function insertBlogPost({ title, excerpt = "", content, authorEmail }) {
   await ensureBlogPostTable();
-
-  if (!title || !content) {
-    throw new Error("Title and content are required");
-  }
+  if (!title || !content) throw new Error("Title and content are required");
 
   const baseSlug = slugify(title) || "post";
   let slug = baseSlug;
@@ -467,73 +460,30 @@ export async function insertBlogPost({
     slug = `${baseSlug}-${suffix++}`;
   }
 
-  const [row] = await sql`
+  const rows = await sql`
     INSERT INTO blog_posts (slug, title, excerpt, content, author_email)
-    VALUES (
-      ${slug},
-      ${title},
-      ${excerpt},
-      ${content},
-      ${authorEmail}
-    )
-    RETURNING
-      id,
-      slug,
-      title,
-      excerpt,
-      content,
-      author_email,
-      published_at AS "publishedAt",
-      created_at AS "createdAt",
-      updated_at AS "updatedAt";
+    VALUES (${slug}, ${title}, ${excerpt}, ${content}, ${authorEmail})
+    RETURNING *;
   `;
-
-  return mapBlogPostRow(row);
+  return mapBlogPostRow(rows[0]);
 }
 
-// 3. Read one post
 export async function fetchBlogPostBySlug(slug) {
-  const [row] = await sql`
-    SELECT
-      id,
-      slug,
-      title,
-      excerpt,
-      content,
-      author_email,
-      published_at AS "publishedAt",
-      created_at AS "createdAt",
-      updated_at AS "updatedAt"
-    FROM blog_posts
-    WHERE slug = ${slug}
-    LIMIT 1;
-  `;
-
-  return mapBlogPostRow(row);
+  await ensureBlogPostTable();
+  const rows = await sql`SELECT * FROM blog_posts WHERE slug = ${slug} LIMIT 1;`;
+  return mapBlogPostRow(rows[0]);
 }
 
-// 4. Count posts
 export async function countBlogPosts() {
-  const [{ count }] = await sql`
-    SELECT count(*)::int AS count
-    FROM blog_posts;
-  `;
+  await ensureBlogPostTable();
+  const [{ count }] = await sql`SELECT count(*)::int AS count FROM blog_posts;`;
   return Number(count) || 0;
 }
 
-// 5. Paginated list
 export async function fetchBlogPostsPage({ limit, offset }) {
+  await ensureBlogPostTable();
   const rows = await sql`
-    SELECT
-      id,
-      slug,
-      title,
-      excerpt,
-      content,
-      author_email,
-      published_at AS "publishedAt",
-      created_at AS "createdAt",
-      updated_at AS "updatedAt"
+    SELECT *
     FROM blog_posts
     ORDER BY published_at DESC
     LIMIT ${limit}
@@ -541,39 +491,42 @@ export async function fetchBlogPostsPage({ limit, offset }) {
   `;
   return rows.map(mapBlogPostRow);
 }
-// --- BOOKING / AVAILABILITY -----------------------------------------
+
+// -----------------------------
+// BOOKINGS
+// -----------------------------
+let bookingsInitPromise = null;
 
 export async function ensureBookingRequestsTable() {
-  await sql`
-    CREATE TABLE IF NOT EXISTS booking_requests (
-      id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-      full_name  text NOT NULL,
-      email      text NOT NULL,
-      date       date NOT NULL,
-      time_slot  text NOT NULL,
-      note       text,
-      status     text NOT NULL DEFAULT 'pending',
-      created_at timestamptz NOT NULL DEFAULT now()
-    );
-  `;
+  if (bookingsInitPromise) return bookingsInitPromise;
 
-  // Try to add unique index; if duplicates exist, don't crash the app.
-  try {
+  bookingsInitPromise = (async () => {
     await sql`
-      CREATE UNIQUE INDEX IF NOT EXISTS booking_requests_unique_slot
-      ON booking_requests (date, time_slot);
-    `;
-  } catch (e) {
-    // 23505 = unique_violation (duplicates exist)
-    if (e?.code === "23505") {
-      console.warn(
-        "[booking_requests] Unique index NOT created because duplicates exist. Run dedupe SQL once.",
+      CREATE TABLE IF NOT EXISTS booking_requests (
+        id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        full_name  text NOT NULL,
+        email      text NOT NULL,
+        date       date NOT NULL,
+        time_slot  text NOT NULL,
+        note       text,
+        status     text NOT NULL DEFAULT 'pending',
+        created_at timestamptz NOT NULL DEFAULT now()
       );
-    } else {
-      // Unknown error: log it, but don't take down the site
-      console.error("[booking_requests] Failed to create unique index:", e);
+    `;
+
+    // unique slot index (safe)
+    try {
+      await sql`
+        CREATE UNIQUE INDEX IF NOT EXISTS booking_requests_unique_slot
+        ON booking_requests (date, time_slot);
+      `;
+    } catch (e) {
+      // don't crash app
+      console.warn("[booking_requests] unique index not created:", e?.code || e);
     }
-  }
+  })();
+
+  return bookingsInitPromise;
 }
 
 function mapBookingRow(row) {
@@ -590,89 +543,65 @@ function mapBookingRow(row) {
   };
 }
 
-export async function insertBookingRequest({
-  fullName,
-  email,
-  date,
-  timeSlot,
-  note = "",
-}) {
+export async function insertBookingRequest({ fullName, email, date, timeSlot, note = "" }) {
   await ensureBookingRequestsTable();
 
-  const [row] = await sql`
+  const rows = await sql`
     INSERT INTO booking_requests (full_name, email, date, time_slot, note)
     VALUES (${fullName}, ${email}, ${date}, ${timeSlot}, ${note})
-    RETURNING
-      id,
-      full_name,
-      email,
-      date,
-      time_slot,
-      note,
-      status,
-      created_at;
+    RETURNING *;
   `;
-
-  return mapBookingRow(row);
+  return mapBookingRow(rows[0]);
 }
 
 export async function fetchBookingsBetween({ startDate, endDate }) {
   await ensureBookingRequestsTable();
 
   const rows = await sql`
-    SELECT
-      id,
-      full_name,
-      email,
-      date,
-      time_slot,
-      note,
-      status,
-      created_at
+    SELECT *
     FROM booking_requests
     WHERE date BETWEEN ${startDate} AND ${endDate}
       AND status IN ('pending','confirmed')
     ORDER BY date ASC, time_slot ASC;
   `;
-
   return rows.map(mapBookingRow);
 }
 
-// --- ANALYTICS: ROUTE VIEWS ------------------------------------------
+// -----------------------------
+// ANALYTICS: ROUTE VIEWS
+// -----------------------------
+let routeViewsInitPromise = null;
 
 export async function ensureRouteViewsTable() {
-  await sql`
-    CREATE TABLE IF NOT EXISTS route_views (
-      id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-      path       text NOT NULL,
-      created_at timestamptz NOT NULL DEFAULT now()
-    );
-  `;
+  if (routeViewsInitPromise) return routeViewsInitPromise;
+
+  routeViewsInitPromise = (async () => {
+    await sql`
+      CREATE TABLE IF NOT EXISTS route_views (
+        id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        path       text NOT NULL,
+        created_at timestamptz NOT NULL DEFAULT now()
+      );
+    `;
+  })();
+
+  return routeViewsInitPromise;
 }
 
-export async function insertRouteView(path) {
+export async function insertRouteView(pathValue) {
   await ensureRouteViewsTable();
-
-  await sql`
-    INSERT INTO route_views (path)
-    VALUES (${path});
-  `;
+  await sql`INSERT INTO route_views (path) VALUES (${pathValue});`;
 }
 
 export async function getRouteViewCounts() {
   await ensureRouteViewsTable();
 
   const rows = await sql`
-    SELECT
-      path,
-      count(*)::int AS views
+    SELECT path, count(*)::int AS views
     FROM route_views
     GROUP BY path
     ORDER BY views DESC;
   `;
 
-  return rows.map((row) => ({
-    path: row.path,
-    views: row.views,
-  }));
+  return rows.map((row) => ({ path: row.path, views: row.views }));
 }

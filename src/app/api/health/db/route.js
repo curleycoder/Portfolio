@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
 
-export const dynamic = "force-dynamic";
 
 const sql = neon(process.env.NEON_DB_URL);
 sql.fetchOptions = { cache: "no-store" };

@@ -3,7 +3,6 @@ import { auth0 } from "@/lib/auth0";
 import { getRouteViewCounts } from "@/lib/db";
 import { Card } from "@/components/ui/card";
 
-export const dynamic = "force-dynamic";
 
 export default async function AnalyticsDashboardPage() {
   const session = await auth0.getSession();

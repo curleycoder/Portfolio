@@ -1,17 +1,16 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-const Input = React.forwardRef(function Input(
-  { className, type, ...props },
+const Textarea = React.forwardRef(function Textarea(
+  { className, ...props },
   ref
 ) {
   return (
-    <input
+    <textarea
       ref={ref}
-      type={type}
       className={cn(
         // base structure
-        "flex h-11 w-full rounded-xl border border-input px-3 py-2 text-sm",
+        "flex min-h-[140px] w-full rounded-xl border border-input px-3 py-2 text-sm",
         
         // surface
         "bg-background/40 backdrop-blur",
@@ -36,4 +35,4 @@ const Input = React.forwardRef(function Input(
   );
 });
 
-export { Input };
+export { Textarea };
