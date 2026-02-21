@@ -19,11 +19,11 @@ export default function Footer() {
         <div className="pointer-events-none absolute left-0 top-0 h-[2px] w-full bg-primary/25" />
 
         {/* subtle sheen */}
-        <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+        <div>
           <div className="absolute inset-0 bg-gradient-to-b from-foreground/[0.05] to-transparent" />
         </div>
 
-        <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-2">
             <div className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
               Let’s build something real
@@ -65,7 +65,7 @@ export default function Footer() {
       </div>
 
       {/* Bottom row */}
-      <div className="mt-8 flex flex-col gap-4 border-t border-border/70 pt-6 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mt-8 flex flex-col  sm:flex-row sm:items-center sm:justify-between">
         <p className="text-xs text-muted-foreground">
           © {year} Shabnam Beiraghian. Built with Next.js + Tailwind.
         </p>

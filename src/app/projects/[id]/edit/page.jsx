@@ -42,8 +42,7 @@ export default async function EditProjectPage({ params }) {
     );
   }
 
-      const project = await fetchProjectById(params.id);  // ✅ await
-
+const project = await fetchProjectById(id);
   if (!project) notFound();
 
   const linkText = project.link?.replace(/^https?:\/\//, "") || "case study";
@@ -103,7 +102,7 @@ export default async function EditProjectPage({ params }) {
               {/* Form body */}
               <div className="px-6 sm:px-0 pb-6">
                 {/* ✅ IMPORTANT: pass the whole project (includes id) */}
-                <EditProjectForm key={project.id} project={project} />
+                <EditProjectForm key={project.id} project={project} id={id} />
 
               </div>
             </div>

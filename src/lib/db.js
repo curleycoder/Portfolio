@@ -27,14 +27,29 @@ export const sql = postgres(DB_URL, {
 // ---------------------------------
 function asArray(v) {
   if (Array.isArray(v)) return v;
+
   if (typeof v === "string") {
+    const s = v.trim();
+    if (!s) return [];
+
     try {
-      const parsed = JSON.parse(v);
-      return Array.isArray(parsed) ? parsed : [];
+      const once = JSON.parse(s);
+
+      // ✅ normal case
+      if (Array.isArray(once)) return once;
+
+      // ✅ double-stringified case: once is a string like '["a","b"]'
+      if (typeof once === "string") {
+        const twice = JSON.parse(once);
+        return Array.isArray(twice) ? twice : [];
+      }
+
+      return [];
     } catch {
       return [];
     }
   }
+
   return [];
 }
 
@@ -68,6 +83,7 @@ function mapProject(row) {
     figmaLink: row.figma_link ?? "",
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    repoYear: row.repo_year ?? null,
   };
 }
 
@@ -189,8 +205,50 @@ export async function insertProject(data) {
   return mapProject(row);
 }
 
+function asJsonArray(v) {
+  if (v === undefined) return undefined; // means "don't change"
+  if (v === null) return []; // optional: if you ever pass null, treat as empty
+
+  // already array
+  if (Array.isArray(v)) return v;
+
+  // if it's a string, try parsing once or twice
+  if (typeof v === "string") {
+    const s = v.trim();
+    if (!s) return [];
+    try {
+      const once = JSON.parse(s);
+      if (Array.isArray(once)) return once;
+
+      // double-stringified
+      if (typeof once === "string") {
+        const twice = JSON.parse(once);
+        return Array.isArray(twice) ? twice : [];
+      }
+      return [];
+    } catch {
+      return [];
+    }
+  }
+
+  return [];
+}
+
+function asJsonArrayOfObjects(v) {
+  const arr = asJsonArray(v);
+  // if someone sends objects already, good; if strings, drop
+  return Array.isArray(arr) ? arr.filter((x) => x && typeof x === "object") : [];
+}
+
 export async function updateProject(id, updates) {
   await ensureProjectsTable();
+
+  const keywords = asJsonArray(updates.keywords);
+  const images = asJsonArray(updates.images);
+
+  const media = updates.media === undefined ? undefined : asJsonArray(updates.media);
+  const highlights =
+    updates.highlights === undefined ? undefined : asJsonArray(updates.highlights);
 
   const rows = await sql`
     UPDATE projects
@@ -202,17 +260,17 @@ export async function updateProject(id, updates) {
       link = COALESCE(${updates.link ?? null}, link),
 
       keywords = COALESCE(
-        ${updates.keywords !== undefined ? JSON.stringify(updates.keywords) : null}::jsonb,
+        ${keywords !== undefined ? sql.json(keywords) : null}::jsonb,
         keywords
       ),
 
       images = COALESCE(
-        ${updates.images !== undefined ? JSON.stringify(updates.images) : null}::jsonb,
+        ${images !== undefined ? sql.json(images) : null}::jsonb,
         images
       ),
 
       media = COALESCE(
-        ${updates.media !== undefined ? JSON.stringify(updates.media) : null}::jsonb,
+        ${media !== undefined ? sql.json(media) : null}::jsonb,
         media
       ),
 
@@ -225,7 +283,7 @@ export async function updateProject(id, updates) {
       rationale = COALESCE(${updates.rationale ?? null}, rationale),
 
       highlights = COALESCE(
-        ${updates.highlights !== undefined ? JSON.stringify(updates.highlights) : null}::jsonb,
+        ${highlights !== undefined ? sql.json(highlights) : null}::jsonb,
         highlights
       ),
 
@@ -233,10 +291,13 @@ export async function updateProject(id, updates) {
       demo_link = COALESCE(${updates.demoLink ?? null}, demo_link),
       figma_link = COALESCE(${updates.figmaLink ?? null}, figma_link),
 
+      repo_year = COALESCE(${updates.repoYear ?? null}, repo_year),
+
       updated_at = now()
     WHERE id = ${id}
     RETURNING *;
   `;
+
   return mapProject(rows[0]);
 }
 

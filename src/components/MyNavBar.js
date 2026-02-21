@@ -21,7 +21,8 @@ const navItem =
   "border border-border/60 bg-card/30 " +
   "hover:bg-accent/60 hover:text-foreground " +
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 " +
-  "focus-visible:ring-offset-background";
+  "focus-visible:ring-offset-background"
+  ;
 
 const primaryCta =
   "inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold " +
@@ -147,7 +148,7 @@ export default function MyNavBar() {
       )}
 
       {/* subtle bottom accent line */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-primary/60 via-primary/40 to-transparent opacity-80" />
+      {/* <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-primary/60 via-primary/40 to-transparent opacity-80" /> */}
     </nav>
   );
 }

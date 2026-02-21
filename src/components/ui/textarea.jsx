@@ -20,7 +20,6 @@ const Textarea = React.forwardRef(function Textarea(
         
         // interaction
         "transition-colors",
-        "hover:bg-accent/40",
         "focus-visible:outline-none",
         "focus-visible:ring-2 focus-visible:ring-ring",
         "focus-visible:ring-offset-2 focus-visible:ring-offset-background",

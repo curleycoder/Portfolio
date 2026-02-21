@@ -160,11 +160,11 @@ export default function HomePage() {
 
         {/* PROJECTS */}
         <Reveal delay={0.05}>
-          <GlassSection>
+          {/* <GlassSection> */}
             <div className="p-5 sm:p-6">
               <ProjectPreviewCard count={2} />
             </div>
-          </GlassSection>
+          {/* </GlassSection> */}
         </Reveal>
 
         {/* GITHUB */}
@@ -177,7 +177,7 @@ export default function HomePage() {
         </Reveal>
 
         {/* bottom breathing room before footer in RootLayout */}
-        <div className="h-10" />
+
       </div>
     </div>
   );

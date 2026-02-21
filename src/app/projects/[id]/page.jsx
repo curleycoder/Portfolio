@@ -44,13 +44,7 @@ function FlowStep({ step, idx }) {
       <div className="overflow-hidden rounded-2xl border border-border bg-card/60 backdrop-blur">
         <div className="relative aspect-video w-full bg-background/30">
           {type === "video" ? (
-            <video
-              className="h-full w-full object-cover"
-              src={src}
-              controls
-              playsInline
-              preload="metadata"
-            />
+            <video className="h-full w-full object-cover" src={src} controls playsInline preload="metadata" />
           ) : (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={src} alt={`step-${idx + 1}`} className="h-full w-full object-cover" />
@@ -59,9 +53,7 @@ function FlowStep({ step, idx }) {
 
         {caption ? (
           <div className="border-t border-border px-4 py-3">
-            <p className="text-sm text-muted-foreground whitespace-pre-line">
-              {caption}
-            </p>
+            <p className="text-sm text-muted-foreground whitespace-pre-line">{caption}</p>
           </div>
         ) : null}
       </div>
@@ -80,15 +72,23 @@ export default async function ProjectPage({ params }) {
   const shortDescription = String(project.shortDescription ?? "").trim();
 
   const whatItDoesLines = splitLines(project.description);
+  const betterThanLines = splitLines(project.betterThan);
 
   const keywords = Array.isArray(project.keywords) ? project.keywords : [];
   const imagesExtra = Array.isArray(project.images) ? project.images : [];
-  const heroImages = dedupe([project.image, ...imagesExtra].filter(Boolean));
+
+  // Cover/logo should NOT be part of slider — slider is screenshots only
+  const heroImages = dedupe(imagesExtra.filter(Boolean));
 
   const highlights = Array.isArray(project.highlights) ? project.highlights : [];
   const media = Array.isArray(project.media) ? project.media : [];
 
-  const blob = [title, shortDescription, project.description, ...keywords, project.link]
+  const rProblem = String(project.rationaleProblem ?? "").trim();
+  const rChallenge = String(project.rationaleChallenge ?? "").trim();
+  const rSolution = String(project.rationaleSolution ?? "").trim();
+  const hasRationale = !!(rProblem || rChallenge || rSolution);
+
+  const blob = [title, shortDescription, project.description, project.betterThan, ...keywords, project.link]
     .filter(Boolean)
     .map((v) => String(v).toLowerCase())
     .join(" ");
@@ -103,25 +103,14 @@ export default async function ProjectPage({ params }) {
       <RevealIn>
         <Link
           href="/projects"
-          className="
-            inline-flex items-center gap-2 text-xs font-mono
-            text-muted-foreground hover:text-foreground
-            no-underline
-          "
+          className="inline-flex items-center gap-2 text-xs font-mono text-muted-foreground hover:text-foreground no-underline"
         >
           <span className="opacity-70">←</span> back to projects
         </Link>
       </RevealIn>
 
       <RevealIn delay={0.05}>
-        <section
-          className="
-            relative overflow-hidden rounded-2xl border border-border
-            bg-card/70 text-card-foreground backdrop-blur
-            shadow-[0_10px_30px_-18px_rgba(0,0,0,0.35)]
-          "
-        >
-          {/* micro accent line */}
+        <section className="relative overflow-hidden rounded-2xl border border-border bg-card/70 text-card-foreground backdrop-blur shadow-[0_10px_30px_-18px_rgba(0,0,0,0.35)]">
           <div className="pointer-events-none absolute left-0 top-0 h-[2px] w-full bg-primary/25" />
 
           <div className="space-y-10 p-5 sm:p-6 lg:p-8">
@@ -133,38 +122,43 @@ export default async function ProjectPage({ params }) {
                     case study
                   </div>
 
-                  <h1 className="font-heading text-4xl sm:text-5xl leading-[1.02] tracking-[-0.02em]">
-                    {title}
-                  </h1>
+                  <div className="flex items-center gap-3">
+                    {project.image ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={project.image}
+                        alt={`${title}-logo`}
+                        className="h-12 w-12 rounded-xl border border-border object-cover bg-background/30"
+                      />
+                    ) : null}
+
+                    <h1 className="font-heading text-4xl sm:text-5xl leading-[1.02] tracking-[-0.02em]">
+                      {title}
+                    </h1>
+                  </div>
 
                   {shortDescription ? (
-                    <p className="text-base text-muted-foreground max-w-2xl">
-                      {shortDescription}
-                    </p>
+                    <p className="text-base text-muted-foreground max-w-2xl">{shortDescription}</p>
                   ) : null}
                 </div>
 
                 <div className="flex items-center gap-2 rounded-xl border border-border bg-background/35 px-3 py-2 text-[11px]">
                   <span className="font-mono text-muted-foreground/70">$</span>
-                  <span className="font-mono uppercase tracking-[0.18em] text-foreground">
-                    {label}
-                  </span>
+                  <span className="font-mono uppercase tracking-[0.18em] text-foreground">{label}</span>
                   <span className="text-muted-foreground/50">•</span>
-                  <span className="font-mono truncate max-w-[220px] text-muted-foreground/80">
-                    {linkText}
-                  </span>
+                  <span className="font-mono truncate max-w-[220px] text-muted-foreground/80">{linkText}</span>
                 </div>
               </div>
             </header>
 
-            {/* TECH STACK */}
-            <RevealIn delay={0.08}>
-              <section className="space-y-3">
-                <h2 className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                  tech stack
-                </h2>
+            {/* TECH STACK (only if exists) */}
+            {keywords.length ? (
+              <RevealIn delay={0.08}>
+                <section className="space-y-3">
+                  <h2 className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                    tech stack
+                  </h2>
 
-                {keywords.length ? (
                   <div className="flex flex-wrap gap-2">
                     {keywords.map((k, i) => (
                       <span
@@ -175,108 +169,121 @@ export default async function ProjectPage({ params }) {
                       </span>
                     ))}
                   </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    Add keywords (Expo, Hono, Drizzle, Neon, Auth0…).
-                  </p>
-                )}
-              </section>
-            </RevealIn>
+                </section>
+              </RevealIn>
+            ) : null}
 
-            {/* HERO */}
-            <RevealIn delay={0.1}>
-              <div className="rounded-2xl overflow-hidden border border-border bg-background/25">
-                <GallerySlider
-                  title={title}
-                  isMobile={isMobile}
-                  linkText={linkText}
-                  images={heroImages}
-                  showControlsWhenSingle
-                  className="w-full"
-                />
-              </div>
-            </RevealIn>
+            {/* HERO (only if screenshots exist) */}
+            {heroImages.length ? (
+              <RevealIn delay={0.1}>
+                <div className="rounded-2xl overflow-hidden border border-border bg-background/25">
+                  <GallerySlider
+                    title={title}
+                    isMobile={isMobile}
+                    linkText={linkText}
+                    images={heroImages}
+                    showControlsWhenSingle
+                    className="w-full"
+                  />
+                </div>
+              </RevealIn>
+            ) : null}
 
             {/* BUTTONS */}
-            <RevealIn delay={0.12}>
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="flex flex-wrap gap-2">
-                  {project.link ? (
-                    <Button
-                      asChild
-                      size="lg"
-                      className="rounded-xl bg-primary text-primary-foreground hover:opacity-90 border border-border no-underline"
-                    >
-                      <a href={project.link} target="_blank" rel="noreferrer">
-                        Visit
-                      </a>
-                    </Button>
-                  ) : null}
+            {(project.link || project.githubLink || project.demoLink || project.figmaLink || project.id) ? (
+              <RevealIn delay={0.12}>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex flex-wrap gap-2">
+                    {project.link ? (
+                      <Button
+                        asChild
+                        size="lg"
+                        className="rounded-xl bg-primary text-primary-foreground hover:opacity-90 border border-border no-underline"
+                      >
+                        <a href={project.link} target="_blank" rel="noreferrer">
+                          Visit
+                        </a>
+                      </Button>
+                    ) : null}
 
-                  {project.githubLink ? (
-                    <Button
-                      asChild
-                      size="sm"
-                      variant="outline"
-                      className="rounded-xl border-border bg-transparent text-foreground hover:bg-accent/60 no-underline"
-                    >
-                      <a href={project.githubLink} target="_blank" rel="noreferrer">
-                        GitHub
-                      </a>
-                    </Button>
-                  ) : null}
+                    {project.githubLink ? (
+                      <Button
+                        asChild
+                        size="sm"
+                        variant="outline"
+                        className="rounded-xl border-border bg-transparent text-foreground hover:bg-accent/60 no-underline"
+                      >
+                        <a href={project.githubLink} target="_blank" rel="noreferrer">
+                          GitHub
+                        </a>
+                      </Button>
+                    ) : null}
 
-                  {project.demoLink ? (
-                    <Button
-                      asChild
-                      size="sm"
-                      variant="outline"
-                      className="rounded-xl border-border bg-transparent text-foreground hover:bg-accent/60 no-underline"
-                    >
-                      <a href={project.demoLink} target="_blank" rel="noreferrer">
-                        Demo
-                      </a>
-                    </Button>
-                  ) : null}
+                    {project.demoLink ? (
+                      <Button
+                        asChild
+                        size="sm"
+                        variant="outline"
+                        className="rounded-xl border-border bg-transparent text-foreground hover:bg-accent/60 no-underline"
+                      >
+                        <a href={project.demoLink} target="_blank" rel="noreferrer">
+                          Demo
+                        </a>
+                      </Button>
+                    ) : null}
 
-                  {project.figmaLink ? (
-                    <Button
-                      asChild
-                      size="sm"
-                      variant="outline"
-                      className="rounded-xl border-border bg-transparent text-foreground hover:bg-accent/60 no-underline"
-                    >
-                      <a href={project.figmaLink} target="_blank" rel="noreferrer">
-                        Figma
-                      </a>
-                    </Button>
-                  ) : null}
+                    {project.figmaLink ? (
+                      <Button
+                        asChild
+                        size="sm"
+                        variant="outline"
+                        className="rounded-xl border-border bg-transparent text-foreground hover:bg-accent/60 no-underline"
+                      >
+                        <a href={project.figmaLink} target="_blank" rel="noreferrer">
+                          Figma
+                        </a>
+                      </Button>
+                    ) : null}
+                  </div>
+
+                  <AdminProjectActions id={project.id} />
                 </div>
-
-                <AdminProjectActions id={project.id} />
-              </div>
-            </RevealIn>
+              </RevealIn>
+            ) : null}
 
             {/* WHAT IT DOES */}
-            <RevealIn delay={0.14}>
-              <section className="space-y-3">
-                <h2 className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                  what it does
-                </h2>
+            {whatItDoesLines.length ? (
+              <RevealIn delay={0.14}>
+                <section className="space-y-3">
+                  <h2 className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                    what it does
+                  </h2>
 
-                {whatItDoesLines.length ? (
                   <ul className="space-y-1 pl-5 text-sm leading-relaxed text-foreground/90 [&>li]:list-item list-disc">
-                    {whatItDoesLines.slice(0, 7).map((line, idx) => (
+                    {whatItDoesLines.slice(0, 10).map((line, idx) => (
                       <li key={idx}>{line}</li>
                     ))}
                   </ul>
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    Add bullets (one per line) in the editor.
-                  </p>
-                )}
-              </section>
-            </RevealIn>
+                </section>
+              </RevealIn>
+            ) : null}
+
+            {/* BETTER THAN ALTERNATIVES */}
+            {betterThanLines.length ? (
+              <RevealIn delay={0.155}>
+                <section className="space-y-3">
+                  <h2 className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                    better than alternatives
+                  </h2>
+
+                  <ul className="space-y-1 pl-5 text-sm leading-relaxed text-foreground/90 [&>li]:list-item list-disc">
+                    {betterThanLines.slice(0, 10).map((line, idx) => (
+                      <li key={idx}>{line}</li>
+                    ))}
+                  </ul>
+                </section>
+              </RevealIn>
+            ) : null}
 
             {/* FLOW */}
             {media.length ? (
@@ -295,47 +302,45 @@ export default async function ProjectPage({ params }) {
               </RevealIn>
             ) : null}
 
-            {/* RATIONALE */}
-            <RevealIn delay={0.18}>
-              <section className="space-y-3">
-                <h2 className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                  rationale
-                </h2>
+            {/* RATIONALE (only if any field exists) */}
+            {hasRationale ? (
+              <RevealIn delay={0.18}>
+                <section className="space-y-3">
+                  <h2 className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                    rationale
+                  </h2>
 
-                <div className="grid gap-3 sm:grid-cols-3">
-                  {[
-                    ["Context", project.rationaleProblem],
-                    ["Requirements", project.rationaleChallenge],
-                    ["Outcome", project.rationaleSolution],
-                  ].map(([lab, txt]) => (
-                    <div
-                      key={lab}
-                      className="rounded-2xl border border-border bg-background/25 p-4"
-                    >
-                      <p className="text-xs font-mono text-muted-foreground">{lab}</p>
-                      <p className="mt-2 text-sm text-foreground/90 whitespace-pre-line">
-                        {String(txt || "").trim() || "—"}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            </RevealIn>
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    {[
+                      ["Context", rProblem],
+                      ["Requirements", rChallenge],
+                      ["Outcome", rSolution],
+                    ]
+                      .filter(([, txt]) => String(txt || "").trim().length)
+                      .map(([lab, txt]) => (
+                        <div key={lab} className="rounded-2xl border border-border bg-background/25 p-4">
+                          <p className="text-xs font-mono text-muted-foreground">{lab}</p>
+                          <p className="mt-2 text-sm text-foreground/90 whitespace-pre-line">
+                            {String(txt || "").trim()}
+                          </p>
+                        </div>
+                      ))}
+                  </div>
+                </section>
+              </RevealIn>
+            ) : null}
 
             {/* HIGHLIGHTS */}
-            <RevealIn delay={0.2}>
-              <section className="space-y-3">
-                <h3 className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                  highlights
-                </h3>
+            {highlights.length ? (
+              <RevealIn delay={0.2}>
+                <section className="space-y-3">
+                  <h3 className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                    highlights
+                  </h3>
 
-                {highlights.length ? (
                   <div className="grid gap-4 sm:grid-cols-2">
                     {highlights.slice(0, 6).map((h, idx) => (
-                      <div
-                        key={idx}
-                        className="rounded-2xl border border-border bg-background/25 p-4"
-                      >
+                      <div key={idx} className="rounded-2xl border border-border bg-background/25 p-4">
                         <p className="text-xs font-semibold text-foreground">
                           {h?.title || `Highlight ${idx + 1}`}
                         </p>
@@ -354,13 +359,9 @@ export default async function ProjectPage({ params }) {
                       </div>
                     ))}
                   </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    Add 1–5 highlight blocks (image + 1–2 line caption).
-                  </p>
-                )}
-              </section>
-            </RevealIn>
+                </section>
+              </RevealIn>
+            ) : null}
           </div>
         </section>
       </RevealIn>

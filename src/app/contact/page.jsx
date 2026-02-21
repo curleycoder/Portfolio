@@ -19,16 +19,12 @@ export default function ContactPage() {
       </header>
 
       <section
-        className="
-          relative overflow-hidden rounded-2xl border border-border
-          bg-card/70 backdrop-blur
-          shadow-[0_10px_30px_-18px_rgba(0,0,0,0.35)]
-        "
+
       >
         {/* micro accent line */}
         <div className="pointer-events-none absolute left-0 top-0 h-[2px] w-full bg-primary/25" />
 
-        <div className="p-5 sm:p-6 max-w-lg">
+        <div className="mx-auto w-full max-w-lg p-5 sm:p-6">
           <ContactForm />
         </div>
       </section>

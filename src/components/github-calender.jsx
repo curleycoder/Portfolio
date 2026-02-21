@@ -62,7 +62,7 @@ export default function GitHubCalendar() {
       </div>
 
       {/* calendar wrapper */}
-      <div className="relative overflow-x-auto rounded-2xl border border-border bg-background/20 p-3 backdrop-blur">
+      <div className="relative overflow-x-auto p-3">
         {!loaded && (
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-background/65 backdrop-blur-sm">
             <div className="flex gap-1">
@@ -84,7 +84,7 @@ export default function GitHubCalendar() {
       {/* footer note */}
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[10px] text-muted-foreground">
         <span>Built with github-calendar</span>
-        <span className="font-mono">theme: tokenized</span>
+        <span className="font-mono">Shabnam Beiraghian</span>
       </div>
     </section>
   );

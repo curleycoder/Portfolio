@@ -67,9 +67,14 @@ export default function ContactForm() {
     "focus-visible:ring-offset-2 focus-visible:ring-offset-background " +
     "disabled:cursor-not-allowed disabled:opacity-50";
 
-  return (
+return (
+  <div className="mx-auto w-full max-w-lg">
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" noValidate>
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="space-y-6"
+        noValidate
+      >
         {/* NAME */}
         <FormField
           control={form.control}
@@ -117,15 +122,12 @@ export default function ContactForm() {
 
         <Button
           type="submit"
-          className="
-            w-full rounded-xl bg-primary text-primary-foreground
-            hover:opacity-90 border border-border
-            no-underline
-          "
+          className="w-full rounded-xl bg-primary text-primary-foreground hover:opacity-90 border border-border no-underline"
         >
           Send message
         </Button>
       </form>
     </Form>
-  );
+  </div>
+);
 }

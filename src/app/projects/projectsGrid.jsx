@@ -100,24 +100,18 @@ function BrowserFrame({ src, alt, linkText }) {
   );
 }
 
-/* ---------- tile ---------- */
-
 function ProjectTile({ p, idx }) {
-  const mobile = isMobileProject(p);
-  const subtitle = safeText(p?.shortDescription || p?.description);
-  const linkText = stripProtocol(p?.link);
+  const subtitle = safeText(p?.shortDescription || "");
+  const cover = safeText(p?.image);     // ✅ cover image
+  const logo = safeText(p?.logo);       // ✅ logo image (new field)
 
-  // stagger (messy / hen-ry-ish)
+  // stagger (keep your vibe)
   const stagger =
     idx % 3 === 0
       ? "lg:-translate-y-6"
       : idx % 3 === 1
       ? "lg:translate-y-12"
       : "lg:translate-y-2";
-
-  // sizing difference: mobile is taller
-  const frameMin =
-    mobile ? "min-h-[420px] sm:min-h-[480px]" : "min-h-[260px] sm:min-h-[320px]";
 
   return (
     <Link
@@ -127,54 +121,85 @@ function ProjectTile({ p, idx }) {
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         stagger,
       ].join(" ")}
+      aria-label={`Open ${p.title}`}
     >
       <div
         className={[
-          "relative h-full overflow-hidden rounded-[28px]",
+          "relative overflow-hidden rounded-[28px]",
           "border border-border/50 bg-card/35 backdrop-blur-xl",
           "shadow-[0_18px_60px_-40px_rgba(0,0,0,0.55)]",
           "transition-transform duration-300 group-hover:scale-[1.01]",
         ].join(" ")}
       >
-        {/* inner outline + glow */}
-        <div className="pointer-events-none absolute inset-5 rounded-[24px] " />
-        <div className="pointer-events-none absolute -left-10 -top-10 h-44 w-44 rounded-full bg-primary/10 blur-3xl" />
-        <div className="pointer-events-none absolute -right-10 -bottom-10 h-44 w-44 rounded-full bg-primary/8 blur-3xl" />
+        {/* COVER */}
+        <div className="relative h-[260px] sm:h-[320px] w-full">
+          {cover ? (
+            <Image
+              src={cover}
+              alt={`${p.title} cover`}
+              fill
+              className="object-cover"
+              unoptimized={isDataUrl(cover)}
+              sizes="(min-width:1024px) 50vw, 100vw"
+              priority={idx < 2}
+            />
+          ) : (
+            <div className="h-full w-full bg-background/20" />
+          )}
 
-        <div className="relative p-5 sm:p-7">
-          {/* FRAME */}
-          <div
-            className={[
-              " p-2 overflow-hidden",
-              frameMin,
-            ].join(" ")}
-          >
-            {mobile ? (
-              <PhoneFrame src={p.image} alt={p.title} />
-            ) : (
-              <BrowserFrame src={p.image} alt={p.title} linkText={linkText} />
-            )}
-          </div>
+          {/* dark overlay for text legibility */}
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 
-          {/* TEXT */}
-          <div className="mt-6 space-y-2">
+          {/* Header strip (logo + title) */}
+          <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-6">
             <div className="flex items-center justify-between gap-3">
-              <h3 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
-                {p.title}
-              </h3>
+              <div className="flex items-center gap-3 min-w-0">
+                {/* LOGO */}
+                {logo ? (
+  <div
+    className="
+      h-10 px-3
+      inline-flex items-center
+      rounded-full
+      border border-white/12
+      bg-black/35
+      backdrop-blur
+      shadow-[0_10px_30px_-18px_rgba(0,0,0,0.45)]
+    "
+    title={`${p.title} logo`}
+  >
+    <Image
+      src={logo}
+      alt={`${p.title} logo`}
+      width={84}
+      height={28}
+      className="h-6 w-auto object-contain"
+      unoptimized={isDataUrl(logo)}
+      priority={idx < 2}
+    />
+  </div>
+) : null}
 
-              <span className="rounded-full border border-border/60 bg-background/30 px-3 py-1 text-[11px] text-muted-foreground">
-                {mobile ? "Mobile" : "Web"}
-              </span>
+                <h3 className="min-w-0 truncate text-xl sm:text-2xl font-semibold tracking-tight text-white">
+                  {p.title}
+                </h3>
+              </div>
+
+              {/* optional tag pill - keep if you want */}
+              {Array.isArray(p?.keywords) && p.keywords.length ? (
+                <span className="shrink-0 rounded-full border border-white/15 bg-black/30 px-3 py-1 text-[11px] text-white/80">
+                  {isMobileProject(p) ? "Mobile" : "Web"}
+                </span>
+              ) : null}
             </div>
 
             {subtitle ? (
-              <p className="text-sm text-muted-foreground line-clamp-2">
+              <p className="mt-2 text-sm text-white/75 line-clamp-2 max-w-[60ch]">
                 {subtitle}
               </p>
             ) : null}
 
-            <div className="pt-2 inline-flex items-center gap-2 text-xs text-muted-foreground">
+            <div className="mt-3 inline-flex items-center gap-2 text-xs text-white/70">
               <span className="uppercase tracking-[0.18em]">View case study</span>
               <span className="opacity-70 group-hover:opacity-100">→</span>
             </div>

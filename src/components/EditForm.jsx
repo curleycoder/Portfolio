@@ -13,7 +13,7 @@ function UploadButton({
   onUploaded, // (url, file) => void
   disabled,
   multiple = false,
-  maxMB = 120, // adjust if you want
+  maxMB = 120,
 }) {
   const [uploading, setUploading] = React.useState(false);
 
@@ -30,7 +30,6 @@ function UploadButton({
       setUploading(true);
       try {
         for (const file of files) {
-          // client-side size guard
           if (file.size > maxMB * 1024 * 1024) {
             alert(`"${file.name}" is too large. Max ${maxMB}MB.`);
             continue;
@@ -39,14 +38,10 @@ function UploadButton({
           const form = new FormData();
           form.append("file", file);
 
-          const res = await fetch("/api/upload", {
-            method: "POST",
-            body: form, // ✅ do NOT set Content-Type manually
-          });
-
+          const res = await fetch("/api/upload", { method: "POST", body: form });
           const data = await res.json().catch(() => null);
-          if (!res.ok) throw new Error(data?.error || `Upload failed (${res.status})`);
 
+          if (!res.ok) throw new Error(data?.error || `Upload failed (${res.status})`);
           const url = data?.url;
           if (!url) throw new Error("Upload succeeded but no url returned.");
 
@@ -109,14 +104,16 @@ const mediaItemSchema = z.object({
 const highlightSchema = z.object({
   title: safeString,
   caption: safeString,
-  image: safeString,
+  image: safeString, // URL stored from upload
 });
 
 const projectSchema = z.object({
   title: safeString,
   shortDescription: safeString,
-  description: safeString,
+  description: safeString, // what it does (bullets)
 
+  betterThan: safeString, // ✅ NEW (bullets)
+repoYear: z.number().int().min(2000).max(2100).optional(),
   whyTitle: safeString,
   why: safeString,
 
@@ -124,17 +121,18 @@ const projectSchema = z.object({
   rationaleChallenge: safeString,
   rationaleSolution: safeString,
 
-  image: safeString,
+  logo: safeString,
+  image: safeString, // cover/logo
   link: safeString,
   githubLink: safeString,
   demoLink: safeString,
   figmaLink: safeString,
 
   keywords: z.array(safeString).default([]),
-  images: z.array(safeString).default([]),
+  images: z.array(safeString).default([]), // gallery images
 
   media: z.array(mediaItemSchema).default([]),
-  highlights: z.array(highlightSchema).default([{ title: "", caption: "", image: "" }]),
+  highlights: z.array(highlightSchema).default([]),
 });
 
 function normalizeDefaults(project) {
@@ -146,6 +144,10 @@ function normalizeDefaults(project) {
     shortDescription: project?.shortDescription ?? "",
     description: project?.description ?? "",
 
+    repoYear: project?.repoYear ?? "",
+
+    betterThan: project?.betterThan ?? "",
+logo: project?.logo ?? "",
     image: project?.image ?? "",
     images: Array.isArray(project?.images) ? project.images : [],
 
@@ -171,25 +173,22 @@ function normalizeDefaults(project) {
       }))
       .filter((m) => m.src),
 
-    highlights:
-      h.length > 0
-        ? [
-            {
-              title: h[0]?.title ?? "",
-              caption: h[0]?.caption ?? "",
-              image: h[0]?.image ?? "",
-            },
-          ]
-        : [{ title: "", caption: "", image: "" }],
+    highlights: h
+      .map((x) => ({
+        title: String(x?.title ?? "").trim(),
+        caption: String(x?.caption ?? "").trim(),
+        image: String(x?.image ?? "").trim(),
+      }))
+      .filter((x) => x.image),
   };
 }
 
-export default function EditProjectForm({ project }) {
+export default function EditProjectForm({ project, id }) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
 
   const [draftKeyword, setDraftKeyword] = useState("");
-  const [draftImage, setDraftImage] = useState("");
+  const MAX_GALLERY = 10;
 
   const form = useForm({
     resolver: zodResolver(projectSchema),
@@ -201,25 +200,18 @@ export default function EditProjectForm({ project }) {
   const { register, handleSubmit, setValue, watch, reset } = form;
 
   useEffect(() => {
-    if (!project?.id) return;
+    if (!project?.id && !id) return;
     reset(normalizeDefaults(project), { keepErrors: false });
-  }, [project?.id, reset, project]);
+  }, [project?.id, id, reset, project]);
+
+  const projectId = id || project?.id;
 
   const keywords = watch("keywords") || [];
-  const images = watch("images") || [];
   const cover = watch("image");
   const gallery = watch("images") || [];
 
   const highlightsFA = useFieldArray({ control: form.control, name: "highlights" });
   const mediaFA = useFieldArray({ control: form.control, name: "media" });
-
-  // Ensure highlight[0]
-  useEffect(() => {
-    if (!highlightsFA.fields.length) {
-      highlightsFA.append({ title: "", caption: "", image: "" });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [highlightsFA.fields.length]);
 
   const addKeyword = () => {
     const v = String(draftKeyword || "").trim();
@@ -237,18 +229,10 @@ export default function EditProjectForm({ project }) {
     );
   };
 
-  const addImage = () => {
-    const v = String(draftImage || "").trim();
-    if (!v) return;
-    const next = Array.from(new Set([...(images || []), v]));
-    setValue("images", next, { shouldValidate: true });
-    setDraftImage("");
-  };
-
   const removeImage = (src) => {
     setValue(
       "images",
-      (images || []).filter((x) => x !== src),
+      (gallery || []).filter((x) => x !== src),
       { shouldValidate: true }
     );
   };
@@ -268,80 +252,68 @@ export default function EditProjectForm({ project }) {
     <form
       className="space-y-10"
       onSubmit={handleSubmit(async (values) => {
-  if (!project?.id) return;
+        if (!projectId) return;
 
-  setSaving(true);
-  try {
-    // 1) Trim + drop empty strings
-    const cleaned = Object.fromEntries(
-      Object.entries(values).map(([k, v]) => {
-        if (typeof v === "string") return [k, v.trim()];
-        return [k, v];
-      })
-    );
+        setSaving(true);
+        try {
+          const cleaned = Object.fromEntries(
+            Object.entries(values).map(([k, v]) => {
+              if (typeof v === "string") return [k, v.trim()];
+              return [k, v];
+            })
+          );
 
-    // 2) Remove highlight rows that are basically empty
-    cleaned.highlights = Array.isArray(cleaned.highlights)
-      ? cleaned.highlights
-          .map((h) => ({
-            title: String(h?.title ?? "").trim(),
-            caption: String(h?.caption ?? "").trim(),
-            image: String(h?.image ?? "").trim(),
-          }))
-          .filter((h) => h.image) // keep only valid ones
-      : [];
+          cleaned.highlights = Array.isArray(cleaned.highlights)
+            ? cleaned.highlights
+                .map((h) => ({
+                  title: String(h?.title ?? "").trim(),
+                  caption: String(h?.caption ?? "").trim(),
+                  image: String(h?.image ?? "").trim(),
+                }))
+                .filter((h) => h.image)
+            : [];
 
-    // 3) Remove media steps with empty src
-    cleaned.media = Array.isArray(cleaned.media)
-      ? cleaned.media
-          .map((m) => ({
-            type: m?.type === "video" ? "video" : "image",
-            src: String(m?.src ?? "").trim(),
-            caption: String(m?.caption ?? "").trim(),
-          }))
-          .filter((m) => m.src)
-      : [];
+          cleaned.media = Array.isArray(cleaned.media)
+            ? cleaned.media
+                .map((m) => ({
+                  type: m?.type === "video" ? "video" : "image",
+                  src: String(m?.src ?? "").trim(),
+                  caption: String(m?.caption ?? "").trim(),
+                }))
+                .filter((m) => m.src)
+            : [];
 
-    // 4) Remove empty keywords/images
-    cleaned.keywords = Array.isArray(cleaned.keywords)
-      ? cleaned.keywords.map((x) => String(x ?? "").trim()).filter(Boolean)
-      : [];
+          cleaned.keywords = Array.isArray(cleaned.keywords)
+            ? cleaned.keywords.map((x) => String(x ?? "").trim()).filter(Boolean)
+            : [];
 
-    cleaned.images = Array.isArray(cleaned.images)
-      ? cleaned.images.map((x) => String(x ?? "").trim()).filter(Boolean)
-      : [];
+          cleaned.images = Array.isArray(cleaned.images)
+            ? cleaned.images.map((x) => String(x ?? "").trim()).filter(Boolean).slice(0, MAX_GALLERY)
+            : [];
 
-    // 5) IMPORTANT:
-    // If your DB columns are json/text and expect stringified JSON, uncomment these:
-    // cleaned.keywords = JSON.stringify(cleaned.keywords);
-    // cleaned.images = JSON.stringify(cleaned.images);
-    // cleaned.media = JSON.stringify(cleaned.media);
-    // cleaned.highlights = JSON.stringify(cleaned.highlights);
+          const res = await fetch(`/api/projects/${projectId}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(cleaned),
+          });
 
-    const res = await fetch(`/api/projects/${project.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(cleaned),
-    });
+          const payload = await res.json().catch(() => null);
 
-    const payload = await res.json().catch(() => null);
+          if (!res.ok) {
+            console.error("Save failed:", payload);
+            alert(payload?.detail || payload?.error || `Save failed (${res.status})`);
+            return;
+          }
 
-    if (!res.ok) {
-      console.error("Save failed:", payload);
-      alert(payload?.detail || payload?.error || `Save failed (${res.status})`);
-      return;
-    }
-
-    router.push(`/projects/${project.id}?t=${Date.now()}`);
-    router.refresh();
-  } catch (err) {
-    console.error(err);
-    alert("Save failed (network/server error)");
-  } finally {
-    setSaving(false);
-  }
-})}
-
+          router.push(`/projects/${projectId}?t=${Date.now()}`);
+          router.refresh();
+        } catch (err) {
+          console.error(err);
+          alert("Save failed (network/server error)");
+        } finally {
+          setSaving(false);
+        }
+      })}
     >
       {/* BASICS */}
       <section className="space-y-3">
@@ -357,18 +329,32 @@ export default function EditProjectForm({ project }) {
 
           <div className="sm:col-span-2">
             <label className="text-xs text-neutral-400">Short description</label>
-            <InputX
-              {...register("shortDescription")}
-              placeholder="1–2 lines: what it is + outcome"
-            />
+            <InputX {...register("shortDescription")} placeholder="1–2 lines: what it is + outcome" />
+          </div>
+
+          <div className="sm:col-span-2">
+            <label className="text-xs text-neutral-400">What it does (one bullet per line)</label>
+            <Textarea {...register("description")} rows={6} />
           </div>
 
           <div className="sm:col-span-2">
             <label className="text-xs text-neutral-400">
-              What it does (one bullet per line)
+              Better than alternatives (one bullet per line)
             </label>
-            <Textarea {...register("description")} rows={6} />
+            <Textarea {...register("betterThan")} rows={5} />
           </div>
+          <div>
+  <label className="text-xs text-neutral-400">Year created</label>
+  <InputX
+    type="number"
+    min="2000"
+    max="2100"
+    placeholder="2025"
+    {...register("repoYear", {
+      setValueAs: (v) => (v === "" ? undefined : Number(v)),
+    })}
+  />
+</div>
         </div>
       </section>
 
@@ -416,12 +402,6 @@ export default function EditProjectForm({ project }) {
               {k} <span className="opacity-60">×</span>
             </button>
           ))}
-
-          {!keywords.length ? (
-            <p className="text-sm text-neutral-500">
-              Add stack keywords (Expo, Hono, Drizzle, Neon, Clerk, GenAI…).
-            </p>
-          ) : null}
         </div>
 
         <div className="flex gap-2">
@@ -444,78 +424,119 @@ export default function EditProjectForm({ project }) {
 
         <div className="space-y-3">
           <div>
-            <label className="text-xs text-neutral-400">Main cover image</label>
-            <InputX {...register("image")} placeholder="/forge.png or https://…" />
+            <label className="text-xs text-neutral-400">
+              Cover image (logo) — used on preview card + project page
+            </label>
+
             {cover ? (
               <div className="mt-2 overflow-hidden rounded-xl border border-neutral-800">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={cover} alt="Cover preview" className="h-[200px] w-full object-cover" />
               </div>
-              
-            ) : null}
-            <UploadButton
-  label="Upload cover"
-  accept="image/*"
-  disabled={saving}
-  onUploaded={(url) => setValue("image", url, { shouldValidate: true })}
-/>
+            ) : (
+              <p className="mt-2 text-sm text-neutral-500">Upload a cover image.</p>
+            )}
 
+            <UploadButton
+              label={cover ? "Replace cover" : "Upload cover"}
+              accept="image/*"
+              disabled={saving}
+              onUploaded={(url) => setValue("image", url, { shouldValidate: true })}
+            />
           </div>
 
           <div className="rounded-2xl border border-neutral-800/80 bg-neutral-950/40 p-3">
-            <p className="mb-2 text-xs text-neutral-400">Extra gallery images (for slider)</p>
+            <p className="mb-2 text-xs text-neutral-400">Gallery images (max {MAX_GALLERY})</p>
 
-            <div className="grid gap-3 sm:grid-cols-2">
-              {gallery.map((src) => (
-                <div key={src} className="rounded-xl border border-neutral-800 bg-neutral-950/60 p-2">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={src} alt="Gallery preview" className="h-[160px] w-full rounded-lg object-cover" />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="mt-2 w-full border-neutral-800 bg-transparent text-neutral-200 hover:bg-neutral-900"
-                    onClick={() => removeImage(src)}
-                  >
-                    Remove
-                  </Button>
-                </div>
-                
-              ))}
+            {gallery.length ? (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {gallery.map((src) => (
+                  <div key={src} className="rounded-xl border border-neutral-800 bg-neutral-950/60 p-2">
+                    <img src={src} alt="Gallery preview" className="h-[160px] w-full rounded-lg object-cover" />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="mt-2 w-full border-neutral-800 bg-transparent text-neutral-200 hover:bg-neutral-900"
+                      onClick={() => removeImage(src)}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-neutral-500">Upload up to {MAX_GALLERY} screenshots.</p>
+            )}
 
-              {!gallery.length ? (
-                <p className="text-sm text-neutral-500">Add screenshots used in the hero slider.</p>
-              ) : null}
-            </div>
-            <div className="mt-3">
-  <UploadButton
-    label="Upload gallery image"
-    accept="image/*"
-    disabled={saving}
-    onUploaded={(url) => {
-      const current = watch("images") || [];
-      setValue("images", Array.from(new Set([...current, url])), { shouldValidate: true });
-    }}
-  />
-</div>
-
-            <div className="mt-3 flex gap-2">
-              <InputX
-                value={draftImage}
-                onChange={(e) => setDraftImage(e.target.value)}
-                placeholder="Paste image URL/path"
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <UploadButton
+                label={`Upload gallery images (${gallery.length}/${MAX_GALLERY})`}
+                accept="image/*"
+                multiple
+                disabled={saving || gallery.length >= MAX_GALLERY}
+                onUploaded={(url) => {
+                  const current = Array.isArray(watch("images")) ? watch("images") : [];
+                  if (current.length >= MAX_GALLERY) return;
+                  const next = Array.from(new Set([...current, url])).slice(0, MAX_GALLERY);
+                  setValue("images", next, { shouldValidate: true });
+                }}
               />
-              <Button
-                type="button"
-                onClick={addImage}
-                variant="outline"
-                className="border-neutral-800 bg-transparent text-neutral-200 hover:bg-neutral-900"
-              >
-                Add
-              </Button>
+              <p className="text-xs text-neutral-500">Upload only.</p>
             </div>
           </div>
         </div>
       </section>
+      {/* BRAND */}
+<section className="space-y-3">
+  <h2 className="text-xs font-semibold uppercase tracking-[0.22em] text-neutral-400">
+    brand
+  </h2>
+
+  <div className="grid gap-4 sm:grid-cols-2">
+    {/* Logo */}
+    <div className="space-y-2">
+      <label className="text-xs text-neutral-400">Logo (small icon near title)</label>
+
+      {watch("logo") ? (
+  <div className="inline-flex h-12 items-center rounded-full border border-neutral-800 bg-neutral-950 px-4">
+    <img
+      src={watch("logo")}
+      alt="Logo preview"
+      className="h-7 w-auto object-contain"
+    />
+  </div>
+) : (
+  <p className="text-sm text-neutral-500">Upload a logo (transparent PNG works best).</p>
+)}
+
+      <UploadButton
+        label={watch("logo") ? "Replace logo" : "Upload logo"}
+        accept="image/*"
+        disabled={saving}
+        onUploaded={(url) => setValue("logo", url, { shouldValidate: true })}
+      />
+    </div>
+
+    {/* Cover */}
+    <div className="space-y-2">
+      <label className="text-xs text-neutral-400">Cover image (tile background)</label>
+
+      {watch("image") ? (
+        <div className="h-24 overflow-hidden rounded-xl border border-neutral-800">
+          <img src={watch("image")} alt="Cover preview" className="h-full w-full object-cover" />
+        </div>
+      ) : (
+        <p className="text-sm text-neutral-500">Upload a cover image.</p>
+      )}
+
+      <UploadButton
+        label={watch("image") ? "Replace cover" : "Upload cover"}
+        accept="image/*"
+        disabled={saving}
+        onUploaded={(url) => setValue("image", url, { shouldValidate: true })}
+      />
+    </div>
+  </div>
+</section>
 
       {/* FLOW */}
       <section className="space-y-3">
@@ -525,7 +546,7 @@ export default function EditProjectForm({ project }) {
               how it works
             </h2>
             <p className="mt-1 text-sm text-neutral-500">
-              Show the interaction flow. Supports raw <span className="font-mono">.mp4</span>.
+              Upload images/videos showing the flow (each step can be image or mp4).
             </p>
           </div>
 
@@ -591,9 +612,30 @@ export default function EditProjectForm({ project }) {
                   </div>
 
                   <div className="sm:col-span-2">
-                    <label className="text-xs text-neutral-400">Source</label>
-                    <InputX {...register(`media.${idx}.src`)} placeholder="/forge-flow.mp4 or https://…" />
-                      <div className="mt-2">
+                    <label className="text-xs text-neutral-400">Step media (upload only)</label>
+
+                    {watch(`media.${idx}.src`) ? (
+                      <div className="mt-2 overflow-hidden rounded-xl border border-neutral-800">
+                        {watch(`media.${idx}.type`) === "video" ? (
+                          <video
+                            src={watch(`media.${idx}.src`)}
+                            controls
+                            playsInline
+                            className="h-[220px] w-full object-cover"
+                          />
+                        ) : (
+                          <img
+                            src={watch(`media.${idx}.src`)}
+                            alt={`step-${idx + 1}`}
+                            className="h-[220px] w-full object-cover"
+                          />
+                        )}
+                      </div>
+                    ) : (
+                      <p className="mt-2 text-sm text-neutral-500">Upload an image or video for this step.</p>
+                    )}
+
+                    <div className="mt-2">
                       <UploadButton
                         label="Upload step (image/video)"
                         accept="image/*,video/*"
@@ -616,13 +658,11 @@ export default function EditProjectForm({ project }) {
             ))}
           </div>
         ) : (
-          <p className="text-sm text-neutral-500">
-            Add 3–6 steps (map click → exploration → AI Q&amp;A).
-          </p>
+          <p className="text-sm text-neutral-500">Add 3–6 steps.</p>
         )}
       </section>
 
-      {/* RATIONALE (assignment rules) */}
+      {/* RATIONALE */}
       <section className="space-y-3">
         <h2 className="text-xs font-semibold uppercase tracking-[0.22em] text-neutral-400">
           rationale (grading rules)
@@ -638,21 +678,21 @@ export default function EditProjectForm({ project }) {
 
         <div className="grid gap-3 sm:grid-cols-3">
           <div>
-            <label className="text-xs text-neutral-400">Context (what it is / who for)</label>
+            <label className="text-xs text-neutral-400">Context</label>
             <Textarea {...register("rationaleProblem")} rows={5} />
           </div>
           <div>
-            <label className="text-xs text-neutral-400">Requirements (constraints)</label>
+            <label className="text-xs text-neutral-400">Requirements</label>
             <Textarea {...register("rationaleChallenge")} rows={5} />
           </div>
           <div>
-            <label className="text-xs text-neutral-400">Outcome (why it looks/works this way)</label>
+            <label className="text-xs text-neutral-400">Outcome</label>
             <Textarea {...register("rationaleSolution")} rows={5} />
           </div>
         </div>
       </section>
 
-      {/* HIGHLIGHTS */}
+      {/* HIGHLIGHTS (upload-only images) */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-xs font-semibold uppercase tracking-[0.22em] text-neutral-400">
@@ -668,28 +708,65 @@ export default function EditProjectForm({ project }) {
           </Button>
         </div>
 
-        {highlightsFA.fields[0] ? (
-          <div className="rounded-2xl border border-neutral-800/80 bg-neutral-950/40 p-4">
-            <p className="text-xs font-mono text-neutral-400">highlight 1</p>
+        {highlightsFA.fields.length ? (
+          <div className="space-y-4">
+            {highlightsFA.fields.map((f, idx) => {
+              const img = watch(`highlights.${idx}.image`);
+              return (
+                <div key={f.id} className="rounded-2xl border border-neutral-800/80 bg-neutral-950/40 p-4">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-mono text-neutral-400">
+                      highlight {String(idx + 1).padStart(2, "0")}
+                    </p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="border-neutral-800 bg-transparent text-red-200 hover:bg-neutral-900"
+                      onClick={() => highlightsFA.remove(idx)}
+                    >
+                      Remove
+                    </Button>
+                  </div>
 
-            <div className="mt-3 grid gap-3">
-              <div>
-                <label className="text-xs text-neutral-400">Title</label>
-                <InputX {...register("highlights.0.title")} />
-              </div>
+                  <div className="mt-3 grid gap-3">
+                    <div>
+                      <label className="text-xs text-neutral-400">Title</label>
+                      <InputX {...register(`highlights.${idx}.title`)} />
+                    </div>
 
-              <div>
-                <label className="text-xs text-neutral-400">Image</label>
-                <InputX {...register("highlights.0.image")} placeholder="/forge-highlight.png or https://…" />
-              </div>
+                    <div>
+                      <label className="text-xs text-neutral-400">Image (upload only)</label>
 
-              <div>
-                <label className="text-xs text-neutral-400">Caption</label>
-                <Textarea {...register("highlights.0.caption")} rows={3} />
-              </div>
-            </div>
+                      {img ? (
+                        <div className="mt-2 overflow-hidden rounded-xl border border-neutral-800">
+                          <img src={img} alt={`highlight-${idx + 1}`} className="h-[200px] w-full object-cover" />
+                        </div>
+                      ) : (
+                        <p className="mt-2 text-sm text-neutral-500">Upload a highlight image.</p>
+                      )}
+
+                      <div className="mt-2">
+                        <UploadButton
+                          label={img ? "Replace highlight image" : "Upload highlight image"}
+                          accept="image/*"
+                          disabled={saving}
+                          onUploaded={(url) => setValue(`highlights.${idx}.image`, url, { shouldValidate: true })}
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-xs text-neutral-400">Caption</label>
+                      <Textarea {...register(`highlights.${idx}.caption`)} rows={3} />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        ) : null}
+        ) : (
+          <p className="text-sm text-neutral-500">Add 1–5 highlight blocks.</p>
+        )}
       </section>
 
       {/* SAVE */}
