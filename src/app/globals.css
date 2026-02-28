@@ -294,3 +294,11 @@ body {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
 }
+
+@keyframes shake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  50% { transform: translateX(6px); }
+  75% { transform: translateX(-4px); }
+  100% { transform: translateX(0); }
+}

@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback } from "react";
-import Particles from "react-tsparticles";
-import { loadSlim } from "tsparticles-slim";
+import Particles from "@tsparticles/react";
+import { loadSlim } from "@tsparticles/slim";
 import { useReducedMotion } from "framer-motion";
 
 export default function ParticlesHero() {
