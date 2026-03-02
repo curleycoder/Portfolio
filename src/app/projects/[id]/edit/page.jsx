@@ -1,5 +1,5 @@
 
-export const revalidate = 3600;
+export const revalidate = 0;
 
 
 import Link from "next/link";

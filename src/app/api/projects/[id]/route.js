@@ -31,9 +31,14 @@ function uniqKeepOrder(arr) {
  * - if you store in /uploads/... then allow "/uploads/"
  * - if you use S3/R2 with a fixed CDN, allow that base URL
  */
+// ✅ READY TO PASTE (replace these parts in your /api/projects/[id]/route.js)
+
+// ----- Upload-only enforcement (FIXED for Supabase) -----
 const ALLOWED_MEDIA_PREFIXES = [
-  "/uploads/", // common local pattern
-  // "https://YOUR_CDN_DOMAIN/",
+  "/uploads/", // local pattern (if you ever use it)
+
+  // ✅ Supabase public storage URLs
+  `${process.env.SUPABASE_URL}/storage/v1/object/public/`,
 ];
 
 function isAllowedMediaUrl(url) {
@@ -123,82 +128,85 @@ export async function PATCH(req, { params }) {
     // -------- sanitize / enforce rules --------
     const data = parsed.data;
 
-    const cleaned = {
-      // strings (trim + drop empty)
-      title: trimOrUndef(data.title),
-      shortDescription: trimOrUndef(data.shortDescription),
-      description: trimOrUndef(data.description),
+// ----- PATCH (replace your cleaned object block with this one) -----
+const cleaned = {
+  // strings (trim + drop empty)
+  title: trimOrUndef(data.title),
+  shortDescription: trimOrUndef(data.shortDescription),
+  description: trimOrUndef(data.description),
 
-      image: trimOrUndef(data.image),
-      link: trimOrUndef(data.link),
-      githubLink: trimOrUndef(data.githubLink),
-      demoLink: trimOrUndef(data.demoLink),
-      figmaLink: trimOrUndef(data.figmaLink),
+  // ✅ include logo + cover, allow Supabase URLs
+  logo: data.logo ? (isAllowedMediaUrl(data.logo) ? trimOrUndef(data.logo) : undefined) : undefined,
+  image: data.image ? (isAllowedMediaUrl(data.image) ? trimOrUndef(data.image) : undefined) : undefined,
 
-      whyTitle: trimOrUndef(data.whyTitle),
-      why: trimOrUndef(data.why),
+  link: trimOrUndef(data.link),
+  githubLink: trimOrUndef(data.githubLink),
+  demoLink: trimOrUndef(data.demoLink),
+  figmaLink: trimOrUndef(data.figmaLink),
 
-      rationaleProblem: trimOrUndef(data.rationaleProblem),
-      rationaleChallenge: trimOrUndef(data.rationaleChallenge),
-      rationaleSolution: trimOrUndef(data.rationaleSolution),
-      rationale: trimOrUndef(data.rationale),
+  whyTitle: trimOrUndef(data.whyTitle),
+  why: trimOrUndef(data.why),
 
-      // arrays
-      keywords: data.keywords ? uniqKeepOrder(data.keywords) : undefined,
+  rationaleProblem: trimOrUndef(data.rationaleProblem),
+  rationaleChallenge: trimOrUndef(data.rationaleChallenge),
+  rationaleSolution: trimOrUndef(data.rationaleSolution),
+  rationale: trimOrUndef(data.rationale),
 
-      // ✅ enforce max 10 gallery, dedupe, remove empties, "upload-only" filter (optional)
-      images: data.images
-        ? uniqKeepOrder(data.images)
-            .slice(0, MAX_GALLERY)
-            // comment this line out if you want to allow remote urls for gallery
-            .filter(isAllowedMediaUrl)
-        : undefined,
+  // arrays
+  keywords: data.keywords ? uniqKeepOrder(data.keywords) : undefined,
 
-      // ✅ cover image (logo) "upload-only" (optional)
-      image: data.image ? (isAllowedMediaUrl(data.image) ? trimOrUndef(data.image) : undefined) : cleaned?.image,
+  // ✅ gallery: max 10, dedupe, only allow uploads (Supabase/local)
+  images: data.images
+    ? uniqKeepOrder(data.images)
+        .slice(0, MAX_GALLERY)
+        .filter(isAllowedMediaUrl)
+    : undefined,
 
-      // ✅ media steps: normalize type, require src, "upload-only" filter (optional)
-      media: Array.isArray(data.media)
-        ? data.media
-            .map((m) => {
-              const src = trimOrUndef(m?.src);
-              if (!src) return null;
+  // ✅ media steps: normalize type, require src, only allow uploads
+  media: Array.isArray(data.media)
+    ? data.media
+        .map((m) => {
+          const src = trimOrUndef(m?.src);
+          if (!src) return null;
 
-              const type =
-                m?.type === "video" || (m?.type !== "image" && src.match(/\.(mp4|webm|mov)(\?|$)/i))
-                  ? "video"
-                  : "image";
+          const type =
+            m?.type === "video" ||
+            (m?.type !== "image" && src.match(/\.(mp4|webm|mov)(\?|$)/i))
+              ? "video"
+              : "image";
 
-              // upload-only gate (optional)
-              if (!isAllowedMediaUrl(src)) return null;
+          if (!isAllowedMediaUrl(src)) return null;
 
-              return {
-                type,
-                src,
-                caption: trimOrUndef(m?.caption) ?? "",
-              };
-            })
-            .filter(Boolean)
-        : undefined,
+          return {
+            type,
+            src,
+            caption: trimOrUndef(m?.caption) ?? "",
+          };
+        })
+        .filter(Boolean)
+    : undefined,
 
-      // ✅ highlights: require image, "upload-only" filter (optional)
-      highlights: Array.isArray(data.highlights)
-        ? data.highlights
-            .map((h) => {
-              const image = trimOrUndef(h?.image);
-              if (!image) return null;
+  // ✅ highlights: require image, only allow uploads
+  highlights: Array.isArray(data.highlights)
+    ? data.highlights
+        .map((h) => {
+          const image = trimOrUndef(h?.image);
+          if (!image) return null;
 
-              if (!isAllowedMediaUrl(image)) return null;
+          if (!isAllowedMediaUrl(image)) return null;
 
-              return {
-                title: trimOrUndef(h?.title) ?? "",
-                caption: trimOrUndef(h?.caption) ?? "",
-                image,
-              };
-            })
-            .filter(Boolean)
-        : undefined,
-    };
+          return {
+            title: trimOrUndef(h?.title) ?? "",
+            caption: trimOrUndef(h?.caption) ?? "",
+            image,
+          };
+        })
+        .filter(Boolean)
+    : undefined,
+
+  // ✅ keep repoYear (you had it in schema but weren't saving it)
+  repoYear: typeof data.repoYear === "number" ? data.repoYear : undefined,
+};
 
     // Important: remove keys that are still undefined
     const finalUpdates = Object.fromEntries(
