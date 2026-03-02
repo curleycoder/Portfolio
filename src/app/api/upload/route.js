@@ -1,54 +1,44 @@
-// src/app/api/upload/route.js
 import { NextResponse } from "next/server";
-import { writeFile, mkdir } from "node:fs/promises";
-import path from "node:path";
-import crypto from "node:crypto";
+import { createClient } from "@supabase/supabase-js";
 
-export const runtime = "nodejs";
+export const runtime = "nodejs"; // important on Vercel
 
-const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
-
-function safeExt(filename = "") {
-  const ext = path.extname(filename).toLowerCase();
-  const ok = new Set([".png", ".jpg", ".jpeg", ".webp", ".gif", ".mp4", ".mov", ".webm"]);
-  return ok.has(ext) ? ext : "";
-}
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
 export async function POST(req) {
   try {
-    let form;
-    try {
-      form = await req.formData();
-    } catch (e) {
-      console.error("req.formData() failed:", e);
-      return NextResponse.json({ error: "Invalid multipart form data" }, { status: 400 });
+    const formData = await req.formData();
+    const file = formData.get("file");
+
+    if (!file) {
+      return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
-
-    const file = form.get("file");
-
-    // ✅ NEVER throw on empty body
-    if (!file || typeof file === "string") {
-      return NextResponse.json({ error: "Missing file" }, { status: 400 });
-    }
-
-    const ext = safeExt(file.name);
-    if (!ext) {
-      return NextResponse.json({ error: "Unsupported file type" }, { status: 400 });
-    }
-
-    await mkdir(UPLOAD_DIR, { recursive: true });
 
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    const filename = `${crypto.randomUUID()}${ext}`;
-    const filepath = path.join(UPLOAD_DIR, filename);
+    const ext = (file.name.split(".").pop() || "bin").toLowerCase();
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const key = `uploads/${Date.now()}_${crypto.randomUUID()}_${safeName}`;
 
-    await writeFile(filepath, buffer);
+    const { error } = await supabase.storage
+      .from("portfolio")
+      .upload(key, buffer, {
+        contentType: file.type || "application/octet-stream",
+        upsert: false,
+      });
 
-    return NextResponse.json({ ok: true, url: `/uploads/${filename}` });
-  } catch (err) {
-    console.error("POST /api/upload error:", err);
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    const { data } = supabase.storage.from("portfolio").getPublicUrl(key);
+
+    return NextResponse.json({ url: data.publicUrl, path: key });
+  } catch (e) {
     return NextResponse.json({ error: "Upload failed" }, { status: 500 });
   }
 }

@@ -13,17 +13,22 @@ function UploadButton({
   onUploaded,
   disabled,
   multiple = false,
-  maxMB = 4, // keep small
+  maxMB = 4,
 }) {
   const [uploading, setUploading] = React.useState(false);
 
-  const fileToDataUrl = (file) =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => resolve(e.target.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
+  async function uploadFile(file) {
+    const fd = new FormData();
+    fd.append("file", file);
+
+    const res = await fetch("/api/upload", { method: "POST", body: fd });
+    const data = await res.json().catch(() => null);
+
+    if (!res.ok) throw new Error(data?.error || "Upload failed");
+    if (!data?.url) throw new Error("Upload failed: missing URL");
+
+    return data.url; // ✅ store this in DB
+  }
 
   const pickFile = () => {
     const input = document.createElement("input");
@@ -43,11 +48,12 @@ function UploadButton({
             continue;
           }
 
-          const dataUrl = await fileToDataUrl(file);
-          onUploaded?.(dataUrl, file);
+          const url = await uploadFile(file);     // ✅ real upload
+          onUploaded?.(url, file);                // ✅ store URL
         }
       } catch (e) {
-        alert("Upload failed");
+        console.error(e);
+        alert(e?.message || "Upload failed");
       } finally {
         setUploading(false);
       }
