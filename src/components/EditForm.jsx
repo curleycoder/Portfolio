@@ -10,12 +10,20 @@ import { Button } from "@/components/ui/button";
 function UploadButton({
   label = "Upload",
   accept = "image/*,video/*",
-  onUploaded, // (url, file) => void
+  onUploaded,
   disabled,
   multiple = false,
-  maxMB = 120,
+  maxMB = 4, // keep small
 }) {
   const [uploading, setUploading] = React.useState(false);
+
+  const fileToDataUrl = (file) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
 
   const pickFile = () => {
     const input = document.createElement("input");
@@ -35,20 +43,11 @@ function UploadButton({
             continue;
           }
 
-          const form = new FormData();
-          form.append("file", file);
-
-          const res = await fetch("/api/upload", { method: "POST", body: form });
-          const data = await res.json().catch(() => null);
-
-          if (!res.ok) throw new Error(data?.error || `Upload failed (${res.status})`);
-          const url = data?.url;
-          if (!url) throw new Error("Upload succeeded but no url returned.");
-
-          onUploaded?.(url, file);
+          const dataUrl = await fileToDataUrl(file);
+          onUploaded?.(dataUrl, file);
         }
       } catch (e) {
-        alert(e?.message || "Upload failed");
+        alert("Upload failed");
       } finally {
         setUploading(false);
       }
@@ -68,7 +67,6 @@ function UploadButton({
     </button>
   );
 }
-
 const Textarea = React.forwardRef(function Textarea(props, ref) {
   return (
     <textarea
