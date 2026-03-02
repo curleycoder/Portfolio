@@ -121,7 +121,7 @@ export default function HomePage() {
                   <StaggerItem>
                     <MyHero hero={hero} />
                   </StaggerItem>
-                </Stagger>∏
+                </Stagger>
               </div>
             </div>
           </Reveal>

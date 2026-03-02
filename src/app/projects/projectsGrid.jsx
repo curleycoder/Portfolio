@@ -200,7 +200,7 @@ function ProjectTile({ p, idx }) {
             ) : null}
 
             <div className="mt-3 inline-flex items-center gap-2 text-xs text-white/70">
-              <span className="uppercase tracking-[0.18em]">View case study</span>
+              <span className="uppercase tracking-[0.18em]">View Project</span>
               <span className="opacity-70 group-hover:opacity-100">→</span>
             </div>
           </div>

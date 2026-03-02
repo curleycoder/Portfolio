@@ -61,29 +61,44 @@ function isUuid(v) {
 
 function mapProject(row) {
   if (!row) return null;
+
   return {
     id: row.id,
-    title: row.title,
+
+    title: row.title ?? "",
     shortDescription: row.short_description ?? "",
-    description: row.description,
-    image: row.image,
+    description: row.description ?? "",
+
+    // NEW fields (must exist in DB)
+    betterThan: row.better_than ?? "",
+    logo: row.logo ?? "",
+    repoYear: row.repo_year ?? null,
+
+    // images/links
+    image: row.image ?? "",
     link: row.link ?? "",
+    githubLink: row.github_link ?? "",
+    demoLink: row.demo_link ?? "",
+    figmaLink: row.figma_link ?? "",
+
+    // arrays (jsonb)
     keywords: asArray(row.keywords),
     images: asArray(row.images),
+
+    // IMPORTANT: these are arrays of OBJECTS (not strings)
     media: asArray(row.media),
+    highlights: asArray(row.highlights),
+
+    // text
     whyTitle: row.why_title ?? "",
     why: row.why ?? "",
     rationaleProblem: row.rationale_problem ?? "",
     rationaleChallenge: row.rationale_challenge ?? "",
     rationaleSolution: row.rationale_solution ?? "",
     rationale: row.rationale ?? "",
-    highlights: asArray(row.highlights),
-    githubLink: row.github_link ?? "",
-    demoLink: row.demo_link ?? "",
-    figmaLink: row.figma_link ?? "",
+
     createdAt: row.created_at,
     updatedAt: row.updated_at,
-    repoYear: row.repo_year ?? null,
   };
 }
 
@@ -96,37 +111,56 @@ export async function ensureProjectsTable() {
   if (projectsInitPromise) return projectsInitPromise;
 
   projectsInitPromise = (async () => {
-
+    // 1) Create table (fresh DB)
     await sql`
       CREATE TABLE IF NOT EXISTS projects (
         id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+
         title text NOT NULL,
         short_description text NOT NULL DEFAULT '',
-        description text NOT NULL,
-        image text NOT NULL,
+        description text NOT NULL DEFAULT '',
+
+        -- NEW
+        better_than text NOT NULL DEFAULT '',
+        logo text NOT NULL DEFAULT '',
+        repo_year int,
+
+        image text NOT NULL DEFAULT '',
         link text NOT NULL DEFAULT '',
         github_link text NOT NULL DEFAULT '',
         demo_link text NOT NULL DEFAULT '',
         figma_link text NOT NULL DEFAULT '',
+
         keywords jsonb NOT NULL DEFAULT '[]'::jsonb,
         images jsonb NOT NULL DEFAULT '[]'::jsonb,
         media jsonb NOT NULL DEFAULT '[]'::jsonb,
+
         why_title text NOT NULL DEFAULT '',
         why text NOT NULL DEFAULT '',
+
         rationale_problem text NOT NULL DEFAULT '',
         rationale_challenge text NOT NULL DEFAULT '',
         rationale_solution text NOT NULL DEFAULT '',
         rationale text NOT NULL DEFAULT '',
+
         highlights jsonb NOT NULL DEFAULT '[]'::jsonb,
+
         created_at timestamptz NOT NULL DEFAULT now(),
         updated_at timestamptz NOT NULL DEFAULT now()
       );
+    `;
+
+    // 2) Ensure existing DB gets the new columns too (safe to run repeatedly)
+    await sql`
+      ALTER TABLE projects
+        ADD COLUMN IF NOT EXISTS better_than text NOT NULL DEFAULT '',
+        ADD COLUMN IF NOT EXISTS logo text NOT NULL DEFAULT '',
+        ADD COLUMN IF NOT EXISTS repo_year int;
     `;
   })();
 
   return projectsInitPromise;
 }
-
 // ---------------------------------
 // READ
 // ---------------------------------
@@ -171,34 +205,40 @@ export async function insertProject(data) {
   await ensureProjectsTable();
 
   const [row] = await sql`
-    INSERT INTO projects (
-      title, short_description, description, image, link,
-      github_link, demo_link, figma_link,
-      keywords, images, media,
-      why_title, why,
-      rationale_problem, rationale_challenge, rationale_solution, rationale,
-      highlights
-    )
-    VALUES (
-      ${data.title},
-      ${data.shortDescription ?? ""},
-      ${data.description},
-      ${data.image},
-      ${data.link ?? ""},
-      ${data.githubLink ?? ""},
-      ${data.demoLink ?? ""},
-      ${data.figmaLink ?? ""},
-      ${JSON.stringify(data.keywords ?? [])}::jsonb,
-      ${JSON.stringify(data.images ?? [])}::jsonb,
-      ${JSON.stringify(data.media ?? [])}::jsonb,
-      ${data.whyTitle ?? ""},
-      ${data.why ?? ""},
-      ${data.rationaleProblem ?? ""},
-      ${data.rationaleChallenge ?? ""},
-      ${data.rationaleSolution ?? ""},
-      ${data.rationale ?? ""},
-      ${JSON.stringify(data.highlights ?? [])}::jsonb
-    )
+INSERT INTO projects (
+  title, short_description, description,
+  better_than, logo,
+  image, link,
+  github_link, demo_link, figma_link,
+  keywords, images, media,
+  why_title, why,
+  rationale_problem, rationale_challenge, rationale_solution, rationale,
+  highlights,
+  repo_year
+)
+VALUES (
+  ${data.title},
+  ${data.shortDescription ?? ""},
+  ${data.description ?? ""},
+  ${data.betterThan ?? ""},
+  ${data.logo ?? ""},
+  ${data.image},
+  ${data.link ?? ""},
+  ${data.githubLink ?? ""},
+  ${data.demoLink ?? ""},
+  ${data.figmaLink ?? ""},
+  ${JSON.stringify(data.keywords ?? [])}::jsonb,
+  ${JSON.stringify(data.images ?? [])}::jsonb,
+  ${JSON.stringify(data.media ?? [])}::jsonb,
+  ${data.whyTitle ?? ""},
+  ${data.why ?? ""},
+  ${data.rationaleProblem ?? ""},
+  ${data.rationaleChallenge ?? ""},
+  ${data.rationaleSolution ?? ""},
+  ${data.rationale ?? ""},
+  ${JSON.stringify(data.highlights ?? [])}::jsonb,
+  ${data.repoYear ?? null}
+)
     RETURNING *;
   `;
 
@@ -245,10 +285,8 @@ export async function updateProject(id, updates) {
 
   const keywords = asJsonArray(updates.keywords);
   const images = asJsonArray(updates.images);
-
   const media = updates.media === undefined ? undefined : asJsonArray(updates.media);
-  const highlights =
-    updates.highlights === undefined ? undefined : asJsonArray(updates.highlights);
+  const highlights = updates.highlights === undefined ? undefined : asJsonArray(updates.highlights);
 
   const rows = await sql`
     UPDATE projects
@@ -256,6 +294,10 @@ export async function updateProject(id, updates) {
       title = COALESCE(${updates.title ?? null}, title),
       short_description = COALESCE(${updates.shortDescription ?? null}, short_description),
       description = COALESCE(${updates.description ?? null}, description),
+
+      better_than = COALESCE(${updates.betterThan ?? null}, better_than),
+      logo = COALESCE(${updates.logo ?? null}, logo),
+
       image = COALESCE(${updates.image ?? null}, image),
       link = COALESCE(${updates.link ?? null}, link),
 
@@ -263,12 +305,10 @@ export async function updateProject(id, updates) {
         ${keywords !== undefined ? sql.json(keywords) : null}::jsonb,
         keywords
       ),
-
       images = COALESCE(
         ${images !== undefined ? sql.json(images) : null}::jsonb,
         images
       ),
-
       media = COALESCE(
         ${media !== undefined ? sql.json(media) : null}::jsonb,
         media

@@ -22,6 +22,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
+const safeString = z.any().optional().transform((v) => String(v ?? "").trim());
+
 const imageSchema = z
   .string()
   .min(1)
@@ -34,13 +36,48 @@ const imageSchema = z
     { message: "Must be a URL (https://...) or /path or data:image..." }
   );
 
+// allow empty OR a valid URL
+const urlOrEmpty = z
+  .string()
+  .optional()
+  .transform((v) => String(v ?? "").trim())
+  .refine((v) => v === "" || /^https?:\/\/.+/i.test(v), {
+    message: "Must be empty or a valid URL (https://...)",
+  });
+
 const newProjectSchema = z.object({
   title: z.string().min(2).max(200),
-  description: z.string().min(5).max(700),
+
+  // match edit form
+  shortDescription: safeString,
+  description: safeString,     // bullets, one per line (same as edit)
+  betterThan: safeString,
+
+  repoYear: z
+    .union([z.number().int().min(2000).max(2100), z.nan()])
+    .optional()
+    .transform((v) => (typeof v === "number" && !Number.isNaN(v) ? v : undefined)),
+
+  logo: safeString,
+
   image: imageSchema,
-  link: z.string().url(),
-  keywords: z.array(z.string().min(1)).max(20).optional().default([]),
+  link: urlOrEmpty,
+  githubLink: urlOrEmpty,
+  demoLink: urlOrEmpty,
+  figmaLink: urlOrEmpty,
+
+  keywords: z.array(z.string().min(1)).max(30).optional().default([]),
   images: z.array(imageSchema).optional().default([]),
+
+  // keep structure compatible with edit even if you don’t show UI yet
+  whyTitle: safeString,
+  why: safeString,
+  rationaleProblem: safeString,
+  rationaleChallenge: safeString,
+  rationaleSolution: safeString,
+
+  media: z.array(z.any()).optional().default([]),
+  highlights: z.array(z.any()).optional().default([]),
 });
 
 export default function NewProjectForm() {
@@ -50,16 +87,35 @@ export default function NewProjectForm() {
   const router = useRouter();
 
   const form = useForm({
-    resolver: zodResolver(newProjectSchema),
-    defaultValues: {
-      title: "",
-      description: "",
-      image: "",
-      link: "",
-      keywords: [],
-      images: [],
-    },
-  });
+  resolver: zodResolver(newProjectSchema),
+  defaultValues: {
+    title: "",
+    shortDescription: "",
+    description: "",
+    betterThan: "",
+    repoYear: undefined,
+
+    logo: "",
+
+    image: "",
+    link: "",
+    githubLink: "",
+    demoLink: "",
+    figmaLink: "",
+
+    keywords: [],
+    images: [],
+
+    whyTitle: "",
+    why: "",
+    rationaleProblem: "",
+    rationaleChallenge: "",
+    rationaleSolution: "",
+
+    media: [],
+    highlights: [],
+  },
+});
 
   function fileToDataUrl(file) {
     return new Promise((resolve, reject) => {
@@ -209,6 +265,7 @@ export default function NewProjectForm() {
   )}
 />
 
+
                 <FormField
                   control={form.control}
                   name="image"
@@ -332,6 +389,60 @@ export default function NewProjectForm() {
                     );
                   }}
                 />
+                <FormField
+  control={form.control}
+  name="shortDescription"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+        Short description
+      </FormLabel>
+      <FormControl>
+        <Input {...field} placeholder="1–2 lines: what it is + outcome" />
+      </FormControl>
+      <FormMessage className="text-xs" />
+    </FormItem>
+  )}
+/>
+
+<FormField
+  control={form.control}
+  name="betterThan"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+        Better than alternatives (one bullet per line)
+      </FormLabel>
+      <FormControl>
+        <Textarea {...field} rows={4} placeholder="- Faster load\n- Cleaner UX\n- ..." />
+      </FormControl>
+      <FormMessage className="text-xs" />
+    </FormItem>
+  )}
+/>
+
+<FormField
+  control={form.control}
+  name="repoYear"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+        Year created
+      </FormLabel>
+      <FormControl>
+        <Input
+          type="number"
+          min="2000"
+          max="2100"
+          value={field.value ?? ""}
+          onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))}
+          placeholder="2025"
+        />
+      </FormControl>
+      <FormMessage className="text-xs" />
+    </FormItem>
+  )}
+/>
 
                 <Button type="submit" className="mt-2 w-full rounded-xl">
                   Save project

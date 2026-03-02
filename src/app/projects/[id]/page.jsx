@@ -60,6 +60,33 @@ function FlowStep({ step, idx }) {
     </div>
   );
 }
+function asArray(v) {
+  if (Array.isArray(v)) return v;
+
+  if (typeof v === "string") {
+    const s = v.trim();
+    if (!s) return [];
+
+    try {
+      const once = JSON.parse(s);
+
+      // normal JSON array
+      if (Array.isArray(once)) return once;
+
+      // double-stringified JSON array
+      if (typeof once === "string") {
+        const twice = JSON.parse(once);
+        return Array.isArray(twice) ? twice : [];
+      }
+
+      return [];
+    } catch {
+      return [];
+    }
+  }
+
+  return [];
+}
 
 export default async function ProjectPage({ params }) {
   const id = params?.id;
@@ -80,8 +107,15 @@ export default async function ProjectPage({ params }) {
   // Cover/logo should NOT be part of slider — slider is screenshots only
   const heroImages = dedupe(imagesExtra.filter(Boolean));
 
-  const highlights = Array.isArray(project.highlights) ? project.highlights : [];
-  const media = Array.isArray(project.media) ? project.media : [];
+const media = asArray(project.media).map((m) => {
+  if (typeof m === "string") return { type: "image", src: m, caption: "" };
+  return m;
+});
+
+const highlights = asArray(project.highlights).map((h) => {
+  if (typeof h === "string") return { title: "", caption: "", image: h };
+  return h;
+});
 
   const rProblem = String(project.rationaleProblem ?? "").trim();
   const rChallenge = String(project.rationaleChallenge ?? "").trim();
@@ -123,14 +157,14 @@ export default async function ProjectPage({ params }) {
                   </div>
 
                   <div className="flex items-center gap-3">
-                    {project.image ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={project.image}
-                        alt={`${title}-logo`}
-                        className="h-12 w-12 rounded-xl border border-border object-cover bg-background/30"
-                      />
-                    ) : null}
+                    {project.logo ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={project.logo}
+                      alt={`${title}-logo`}
+                      className="h-12 w-12 rounded-xl border border-border object-cover bg-background/30"
+                    />
+                  ) : null}
 
                     <h1 className="font-heading text-4xl sm:text-5xl leading-[1.02] tracking-[-0.02em]">
                       {title}
