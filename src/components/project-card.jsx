@@ -164,16 +164,20 @@ function BrowserFrame({ src, alt, linkText, type = "image" }) {
   );
 }
 function getYear(p) {
-  // Prefer explicit year if you add it later
+  // ✅ Prefer explicit repoYear from your form/db
+  const ry = p?.repoYear ?? p?.repo_year;
+  if (typeof ry === "number" && ry >= 1900) return String(ry);
+  if (typeof ry === "string" && /^\d{4}$/.test(ry.trim())) return ry.trim();
+
+  // legacy aliases (if you ever used them)
   const y = p?.year ?? p?.createdYear;
-  if (typeof y === "number" && y > 1900) return String(y);
+  if (typeof y === "number" && y >= 1900) return String(y);
   if (typeof y === "string" && /^\d{4}$/.test(y.trim())) return y.trim();
 
-  // Fall back to created timestamps if present
-  const d =
-    p?.createdAt || p?.created_at || p?.created || p?.date || p?.updatedAt || p?.updated_at;
-
+  // fallback: timestamps
+  const d = p?.createdAt || p?.created_at || p?.created || p?.date || p?.updatedAt || p?.updated_at;
   if (!d) return "";
+
   const dt = new Date(d);
   if (Number.isNaN(dt.getTime())) return "";
   return String(dt.getFullYear());
@@ -302,11 +306,6 @@ function WorkTile({ p, idx }) {
             <div className="mt-auto" />
           )}
         </div>
-        {p.repoYear ? (
-  <div className="mt-6 text-xs uppercase tracking-[0.18em] text-muted-foreground">
-    {p.repoYear}
-  </div>
-) : null}
       </div>
     </Link>
   );
