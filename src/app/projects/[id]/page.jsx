@@ -274,7 +274,7 @@ const highlights = asArray(project.highlights).map((h) => {
                         className="rounded-xl border-border bg-transparent text-foreground hover:bg-accent/60 no-underline"
                       >
                         <a href={project.figmaLink} target="_blank" rel="noreferrer">
-                          Figma
+                          Wire Frame
                         </a>
                       </Button>
                     ) : null}
