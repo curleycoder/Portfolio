@@ -83,15 +83,16 @@ function PhoneFrame({ src, alt, type = "image" }) {
   const safe = safeText(src);
 
   return (
-    <div className="relative mx-auto w-[210px] max-w-full">
+    <div className="relative mx-auto w-full max-w-[260px] sm:max-w-[290px]">
       <div className="relative overflow-hidden rounded-[28px] bg-background/20 shadow-[0_18px_50px_-35px_rgba(0,0,0,0.6)]">
         <div className="pointer-events-none absolute inset-0 rounded-[28px] ring-1 ring-white/5" />
 
-        <div className="relative aspect-[9/19] w-full bg-black/15">
+        {/* a bit more “phone-like” ratio, but still flexible */}
+        <div className="relative aspect-[10/19] w-full bg-black/15">
           {safe ? (
             type === "video" ? (
               <video
-                className="h-full w-full object-cover"
+                className="h-full w-full object-contain"
                 src={safe}
                 muted
                 playsInline
@@ -102,9 +103,9 @@ function PhoneFrame({ src, alt, type = "image" }) {
                 src={safe}
                 alt={alt}
                 fill
-                className="object-cover"
+                className="object-contain"
                 unoptimized={isDataUrl(safe)}
-                sizes="210px"
+                sizes="(max-width: 640px) 80vw, 290px"
               />
             )
           ) : (
@@ -112,7 +113,8 @@ function PhoneFrame({ src, alt, type = "image" }) {
               No preview
             </div>
           )}
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
+
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent" />
         </div>
       </div>
     </div>
@@ -227,7 +229,7 @@ function WorkTile({ p, idx }) {
       : "lg:translate-y-2";
 
   const frameMin =
-    mobile ? "min-h-[420px] sm:min-h-[480px]" : "min-h-[260px] sm:min-h-[320px]";
+    mobile ? "min-h-[320px] sm:min-h-[380px]" : "min-h-[260px] sm:min-h-[320px]";
 
   return (
     <Link
