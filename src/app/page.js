@@ -98,16 +98,16 @@ function GlassSection({ children, className = "" }) {
 
 export default function HomePage() {
   return (
-        <div className="relative overflow-x-hidden">
+        <div className="relative">
       {/* ✅ page-local glow only (doesn't reset background / width) */}
-      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+      <div className="pointer-events-none absolute inset-0 -z-10 ">
         <div className="absolute -left-40 top-10 h-80 w-80 rounded-full bg-primary/10 blur-3xl" />
         <div className="absolute right-20 top-40 h-72 w-72 rounded-full bg-primary/8 blur-3xl" />
         <div className="absolute -bottom-28 left-1/3 h-96 w-96 rounded-full bg-primary/6 blur-3xl" />
       </div>
 
       {/* ✅ consistent vertical rhythm (hen-ry spacing) */}
-      <div className="flex flex-col gap-10 pt-10 sm:pt-14 lg:pt-18">
+      <div className="flex flex-col gap-10 pt-10 sm:pt-14 lg:pt-18 overflow-hidden">
         {/* HERO */}
         <section className="flex flex-col gap-6">
           <Reveal className="relative">
