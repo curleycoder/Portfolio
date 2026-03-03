@@ -321,39 +321,38 @@ export default async function ProjectPreviewCard({ count = 2 }) {
 
   const items = projects.slice(0, count);
 
-  return (
-    <section className="space-y-8 pb-9">
-      <div className="flex items-end justify-between gap-6">
-        <div className="space-y-1">
-          <div className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
-            Work
-          </div>
-          <h2 className="text-lg font-semibold tracking-tight text-foreground">
-            Selected Projects
-          </h2>
+return (
+  <section className="space-y-8 pb-9 overflow-x-hidden">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-6">
+      <div className="min-w-0 space-y-1">
+        <div className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
+          Work
         </div>
-
-        <Link
-          href="/projects"
-          className="
-            inline-flex items-center rounded-xl px-3 py-2 text-xs
-            text-muted-foreground transition
-           
-            hover:bg-accent/60 hover:text-foreground
-            focus-visible:outline-none
-            focus-visible:ring-2 focus-visible:ring-ring
-            focus-visible:ring-offset-2 focus-visible:ring-offset-background
-          "
-        >
-          View all →
-        </Link>
+        <h2 className="text-lg font-semibold tracking-tight text-foreground">
+          Selected Projects
+        </h2>
       </div>
 
-      <div className="grid gap-7 lg:grid-cols-2 lg:gap-10">
-        {items.map((p, idx) => (
-          <WorkTile key={p.id} p={p} idx={idx} />
-        ))}
-      </div>
-    </section>
-  );
+      <Link
+        href="/projects"
+        className="
+          shrink-0 inline-flex items-center self-start sm:self-auto
+          rounded-xl px-3 py-2 text-xs text-muted-foreground transition
+          hover:bg-accent/60 hover:text-foreground
+          focus-visible:outline-none
+          focus-visible:ring-2 focus-visible:ring-ring
+          focus-visible:ring-offset-2 focus-visible:ring-offset-background
+        "
+      >
+        View all →
+      </Link>
+    </div>
+
+    <div className="grid gap-7 lg:grid-cols-2 lg:gap-10">
+      {items.map((p, idx) => (
+        <WorkTile key={p.id} p={p} idx={idx} />
+      ))}
+    </div>
+  </section>
+);
 }
