@@ -280,7 +280,7 @@ function WorkTile({ p, idx }) {
           </div>
 
           {/* ✅ FRAME (cover media) */}
-          <div className={["p-2 overflow-hidden", frameMin].join(" ")}>
+          <div className={["p-2 overflow-hidden min-h-0", frameMin].join(" ")}>
             {mobile ? (
               <PhoneFrame src={preview.src} type={preview.type} alt={p.title} />
             ) : (
