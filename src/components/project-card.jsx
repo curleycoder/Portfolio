@@ -135,11 +135,12 @@ function BrowserFrame({ src, alt, linkText, type = "image" }) {
         <span className="ml-2 flex-1 truncate opacity-80">{linkText}</span>
       </div>
 
-      <div className="relative aspect-[16/10] w-full bg-black/10">
+      {/* ✅ Taller on phones, normal on larger screens */}
+      <div className="relative aspect-[4/3] sm:aspect-[16/10] w-full bg-black/10">
         {safe ? (
           type === "video" ? (
             <video
-              className="h-full w-full object-contain"
+              className="h-full w-full object-cover sm:object-contain"
               src={safe}
               muted
               playsInline
@@ -150,7 +151,7 @@ function BrowserFrame({ src, alt, linkText, type = "image" }) {
               src={safe}
               alt={alt}
               fill
-              className="object-contain"
+              className="object-cover sm:object-contain"
               unoptimized={isDataUrl(safe)}
               sizes="(min-width: 1024px) 40vw, 100vw"
             />
@@ -160,6 +161,7 @@ function BrowserFrame({ src, alt, linkText, type = "image" }) {
             No preview
           </div>
         )}
+
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
       </div>
     </div>
@@ -229,7 +231,7 @@ function WorkTile({ p, idx }) {
       : "lg:translate-y-2";
 
   const frameMin =
-    mobile ? "min-h-[320px] sm:min-h-[380px]" : "min-h-[260px] sm:min-h-[320px]";
+    mobile ? "min-h-[320px] sm:min-h-[380px]" : "min-h-[300px] sm:min-h-[360px]";
 
   return (
     <Link
