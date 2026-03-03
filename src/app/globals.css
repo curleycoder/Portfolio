@@ -262,6 +262,21 @@ body {
   color: var(--foreground);
 }
 
+/* react-github-calendar cleanup */
+.react-activity-calendar__legend-colors,
+.react-activity-calendar__legend-text {
+  display: none !important;
+}
+
+.react-activity-calendar__count {
+  opacity: 0.85;
+}
+
+.react-activity-calendar__block {
+  rx: 4px;
+  ry: 4px;
+}
+
 /* Typography inside the widget */
 .calendar text,
 .calendar .text-muted,
